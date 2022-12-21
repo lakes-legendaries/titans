@@ -1,4 +1,4 @@
-"""Interface with email credentials table"""
+"""Interface with credentials table"""
 
 from argparse import ArgumentParser
 import json
