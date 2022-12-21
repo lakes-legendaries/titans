@@ -12,6 +12,10 @@ def create(
     secrets_dir: str = os.environ['SECRETS_DIR'],
     email_creds_fname: str = 'titans-email-creds',
     email_token_fname: str = 'titans-email-token',
+    fileserver_dev_fname: str = 'titans-fileserver-dev',
+    fileserver_dev_sas_fname: str = 'titans-fileserver-dev-sas',
+    fileserver_fname: str = 'titans-fileserver',
+    fileserver_sas_fname: str = 'titans-fileserver-sas',
 ):
     """Create email credentials table
 
@@ -24,18 +28,34 @@ def create(
         CLIENT_SECRET)
     email_token_fname: str, optional, default='titans-email-token'
         file containing email token
-    """
+    fileserver_dev_fname: str, optional, default='titans-fileserver-dev'
+        azure connection string to dev fileserver
+    fileserver_dev_sas_fname: str, optional, default='titans-fileserver-sas-dev'
+        azcopy sas token for dev fileserver
+    fileserver_fname: str, optional, default='titans-fileserver-dev'
+        azure connection string to production fileserver
+    fileserver_sas_fname: str, optional, default='titans-fileserver-sas'
+        azcopy sas token for production fileserver
+    """  # noqa
 
     # load credentials and token
     token_data = json.load(open(join(secrets_dir, email_token_fname), 'r'))
     pairs = json.load(open(join(secrets_dir, email_creds_fname), 'r'))
     pairs['access_token'] = token_data['access_token']
     pairs['refresh_token'] = token_data['refresh_token']
+    pairs['dev_conn'] = \
+        open(join(secrets_dir, fileserver_dev_fname), 'r').read().strip()
+    pairs['dev_sas'] = \
+        open(join(secrets_dir, fileserver_dev_sas_fname), 'r').read().strip()
+    pairs['prod_conn'] = \
+        open(join(secrets_dir, fileserver_fname), 'r').read().strip()
+    pairs['prod_sas'] = \
+        open(join(secrets_dir, fileserver_sas_fname), 'r').read().strip()
 
     # create table
     engine = connect()
     engine.execute("""
-        CREATE TABLE creds (
+        CREATE TABLE IF NOT EXISTS creds (
             Name TEXT,
             Value TEXT
         )
@@ -45,7 +65,7 @@ def create(
     for key, value in pairs.items():
         engine.execute(f"""
             INSERT INTO creds
-            VALUES ("{key}", "{value}")
+            VALUES ("{key}", "{value.replace('%', '%%')}")
         """)
 
 
