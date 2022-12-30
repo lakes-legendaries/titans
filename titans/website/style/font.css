@@ -1,0 +1,70 @@
+:root {
+    --font-family: "Roboto";
+    --font-color: #FFFFFF;
+    --font-color-bg: #C0C0C0;
+    --font-size-h1: 24px;
+    --font-size-h2: 20px;
+    --font-size-p0: 20px;
+    --font-size-p1: 16px;
+    --font-size-p2: 14px;
+}
+
+@media (pointer:none), (pointer:coarse) {
+    :root {
+        --font-size-h1: 50px;
+        --font-size-h2: 30px;
+        --font-size-p0: 30px;
+        --font-size-p1: 18px;
+        --font-size-p2: 12px;
+    }
+}
+
+p, a {
+    font-family: var(--font-family);
+    color: var(--font-color);
+    text-decoration: none;
+}
+
+p.h1 {
+    font-size: var(--font-size-h1);
+    font-weight: 700;
+    margin-bottom: 0px;
+}
+
+p.h2, p.p0 {
+    font-size: var(--font-size-h2);
+    font-weight: 500;
+    margin-bottom: 0px;
+}
+
+p.p0 {
+    font-weight: 400;
+}
+
+p.p1 {
+    font-size: var(--font-size-p1);
+    font-weight: 400;
+}
+
+.p2 {
+    font-size: var(--font-size-p2);
+    font-weight: 400;
+}
+
+p.justified {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.bgcolor {
+    color: var(--font-color-bg);
+}
+
+span.ks {
+    color: #05ce78;
+}
+
+.link {
+    text-decoration: underline;
+    cursor: pointer;
+}

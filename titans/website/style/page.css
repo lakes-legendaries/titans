@@ -1,0 +1,59 @@
+:root {
+    --max-width: 1080px;
+    --max-width-p: 1080px;
+    --credits-width: 600px;
+}
+
+@media (pointer:none), (pointer:coarse) {
+    :root {
+        --credits-width: 95%;
+        --max-width-p: 90%;
+    }
+}
+
+body {
+    background-color: #000000;
+}
+
+div.centered {
+    margin: 0 auto;
+    max-width: var(--max-width);
+    text-align: center;
+}
+
+div.text-block {
+    max-width: var(--max-width-p);
+}
+
+div.stacked-parent {
+    position: relative;
+    top: 0px;
+    max-width: var(--max-width);
+}
+
+div.stacked {
+    position: absolute;
+    top: 0px;
+}
+
+div.padding {
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+div.header_footer {
+    opacity: 1;
+}
+
+div.credits {
+    width: var(--credits-width);
+}
+
+.collapsed {
+    display: none;
+}
+
+iframe.std {
+    border: None;
+    width: 100%;
+}

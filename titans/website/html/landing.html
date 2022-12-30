@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Evolved Deck-Building | Titans Of Eden</title>
+        <!-- html/partial/include.html -->
+        <style>div.header_footer {opacity: 0;}</style>
+    </head>
+    <body>
+
+        <!-- Header -->
+        <!-- html/partial/header.html -->
+
+        <!-- Body -->
+        <div class="centered">
+            <div class="padding" id="body">
+                <div class="stacked-parent">
+
+                    <!-- Main Video -->
+                    <div class="stacked">
+                        <video class="collapsed std" id="primary_video" controls>
+                            <source src="vid/landing_video.h265.mp4" type="video/mp4; codecs=hev1" />
+                            <source src="vid/landing_video.av1.mp4" type="video/mp4; codecs=av01.0.09M.08" />
+                            <source src="vid/landing_video.vp9.webm" type="video/webm; codecs=vp9" />
+                            <source src="vid/landing_video.h264.mp4" type="video/mp4" />
+                         </video>
+                    </div>
+
+                    <!-- Video Cover -->
+                    <div class="stacked">
+                        <img class="collapsed" src="img/landing_cover.png" id="video_cover">
+                    </div>
+
+                    <!-- Loading Screen -->
+                    <div class="stacked">
+                        <video class="std" id="loading_video" autoplay muted>
+                            <source src="vid/title_video.h265.mp4" type="video/mp4; codecs=hev1" />
+                            <source src="vid/title_video.av1.mp4" type="video/mp4; codecs=av01.0.09M.08" />
+                            <source src="vid/title_video.vp9.webm" type="video/webm; codecs=vp9" />
+                            <source src="vid/title_video.h264.mp4" type="video/mp4" />
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <!-- html/partial/footer.html -->
+
+        <!-- Scripts -->
+        <script type="text/javascript" src="script/loading_screen.js"></script>
+        <script type="text/javascript" src="script/video_cover.js"></script>
+
+    </body>
+</html>

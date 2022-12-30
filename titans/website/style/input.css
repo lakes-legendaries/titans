@@ -1,0 +1,63 @@
+:root {
+    --button-font-size: 16px;
+    --button-font-weight: 700;
+    --button-border-width: 2px;
+    --button-width: 20%;
+    --button-color: #C0C0C0;
+    --button-bg-color: #000000;
+    --button-hover-color: #FFFFFF;
+    --button-padding: 10px;
+    --input-width: 25%;
+    --input-font-weight: 400;
+    --submit-width: unset;
+    --comments-width: 75%;
+}
+
+@media (pointer:none), (pointer:coarse) {
+    :root {
+        --button-font-size: 36px;
+        --button-border-width: 4px;
+        --button-width: 45%;
+        --input-width: 67%;
+        --submit-width: 20%;
+        --comments-width: 90%;
+    }
+}
+
+button, input[type=text], textarea {
+    background-color: var(--button-bg-color);
+    color: var(--button-color);
+    border: var(--button-border-width) solid var(--button-color);
+    width: var(--button-width);
+    padding: var(--button-padding);
+    font-family: var(--font-family);
+    font-weight: var(--button-font-weight);
+    font-size: var(--button-font-size);
+    margin: var(--button-padding);
+}
+
+button:hover, button.clicked {
+    background-color: var(--button-hover-color);
+    color: var(--button-bg-color);
+}
+
+button.subscribe {
+    width: var(--submit-width);
+}
+
+input[type=text], textarea {
+    color: var(--font-color);
+    font-weight: var(--input-font-weight);
+}
+
+input[type=text] {
+    text-align: center;
+    width: var(--input-width);
+}
+
+textarea {
+    width: var(--comments-width);
+    max-width: var(--max-width);
+    resize: none;
+    font-weight: var(--input-font-weight);
+}

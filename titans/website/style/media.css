@@ -1,0 +1,50 @@
+:root {
+    --partial-img-width: 67%;
+    --mobile-full-width: 67%;
+    --full-margin: 25px;
+}
+
+@media (pointer:none), (pointer:coarse) {
+    :root {
+        --partial-img-width: 100%;
+        --mobile-full-width: 100%;
+        --full-margin: 0px;
+    }
+}
+
+img.logo {
+    top: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+}
+
+img.divider {
+    margin-top: 25px;
+    margin-bottom: 25px;
+    width: 100%;
+    max-width: var(--max-width);
+}
+
+img.thumbnail {
+    width: calc(0.20 * var(--max-width));
+}
+
+img.std, video.std {
+    width: 100%;
+    max-width: var(--max-width);
+}
+
+img.partial, img.full, img.mobile_full {
+    width: var(--partial-img-width);
+    max-width: var(--max-width);
+    margin: var(--full-margin);
+}
+
+img.full {
+    width: 95%;
+}
+
+img.mobile_full {
+    width: var(--mobile-full-width);
+}
