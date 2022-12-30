@@ -132,7 +132,7 @@ def unsubscribe(email: str):
     }
 
 
-@app.get('/comment/{comment}')
+@app.get('/comment/')
 def comment(comment: str, email: Optional[str] = ''):
     """Leave a question or comment
 
