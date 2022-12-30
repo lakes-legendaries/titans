@@ -88,7 +88,7 @@ def upload(
     cmd.extend(args)
 
     # execute upload command
-    output = run(cmd, capture_output=True, text=True)
+    output = run(cmd, capture_output=True, check=True, text=True)
     if output.returncode:
         print('stdout:', output.stdout)
         print('stderr:', output.stderr)
