@@ -11,6 +11,7 @@ def upload(
     source: str,
     /,
     *args,
+    container: str = '$web',
     dest: str = None,
     server: str = 'dev',
 ):
@@ -24,6 +25,11 @@ def upload(
         destination file/folder. If None, use :code:`basename(source)`
     *args: Any
         extra args to pass to :code:`az storage blob upload` command
+    container: str, optional, default='$web'
+        blob container to upload to
+    dest: str, optional, default=None
+        destination filepath in container. If None, use
+        :code:`basename(source)`
     server: str, optional, default='dev'
         server to upload to. Valid choices include :code:`prod` and
         :code:`dev`.
@@ -63,7 +69,7 @@ def upload(
             if not is_dir
             else '-d'
         ),
-        '$web',
+        container,
 
         # destination
         (
