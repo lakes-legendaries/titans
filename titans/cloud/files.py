@@ -1,7 +1,7 @@
 """Azure storage interface"""
 
 import os
-from os.path import basename, isdir
+from os.path import basename, isdir, join
 from subprocess import SubprocessError, run
 
 from titans.sql import connect
@@ -39,11 +39,22 @@ def upload(
     if server not in ['prod', 'dev']:
         raise ValueError('Invalid server')
 
-    # get credentials
-    conn_str = connect().execute(f"""
-        SELECT Value from creds
-        Where Name = '{server}_conn'
-    """).fetchone()[0]
+    # get credentials from sql database
+    try:
+        conn_str = connect().execute(f"""
+            SELECT Value from creds
+            Where Name = '{server}_conn'
+        """).fetchone()[0]
+
+    # get credentials from local file
+    except Exception:
+        conn_basename = 'titans-fileserver'
+        if server == 'dev':
+            conn_basename += '-dev'
+        conn_fname = join(os.environ['SECRETS_DIR'], conn_basename)
+        conn_str = open(conn_fname, 'r').read().strip()
+
+    # save credentials as env var
     os.environ['AZURE_STORAGE_CONNECTION_STRING'] = conn_str
 
     # determine file or directory, and get destination
