@@ -10,6 +10,8 @@ from titans.sql.common import connect
 
 def create(
     secrets_dir: str = os.environ['SECRETS_DIR'],
+    batch_fname: str = 'titans-batch',
+    container_fname: str = 'titans-container-registry',
     email_creds_fname: str = 'titans-email-creds',
     email_token_fname: str = 'titans-email-token',
     fileserver_dev_fname: str = 'titans-fileserver-dev',
@@ -23,6 +25,10 @@ def create(
     ----------
     secrets_dir: str, optional, default=os.environ['SECRETS_DIR']
         secrets directory
+    batch_fname: str, optional, default='titans-batch'
+        primary access key for azure batch account
+    container_fname: str, optional, default='titans-container-registry'
+        password for azure container registry
     email_creds_fname: str, optional, default='titans-email-creds'
         file containing email credentials (TENANT, CLIENT_ID, and
         CLIENT_SECRET)
@@ -39,6 +45,7 @@ def create(
     """  # noqa
 
     # load credentials and token
+    pairs = {}
     token_data = json.load(open(join(secrets_dir, email_token_fname), 'r'))
     pairs = json.load(open(join(secrets_dir, email_creds_fname), 'r'))
     pairs['access_token'] = token_data['access_token']
@@ -51,6 +58,10 @@ def create(
         open(join(secrets_dir, fileserver_fname), 'r').read().strip()
     pairs['prod_sas'] = \
         open(join(secrets_dir, fileserver_sas_fname), 'r').read().strip()
+    pairs['azurecr'] = \
+        open(join(secrets_dir, container_fname), 'r').read().strip()
+    pairs['batch'] = \
+        open(join(secrets_dir, batch_fname), 'r').read().strip()
 
     # create table
     engine = connect()
@@ -70,9 +81,9 @@ def create(
 
 
 def delete():
-    """Delete contacts table"""
+    """Delete credentials table"""
     response = input(
-        'WARNING: Email credentials table will be dropped. Continue? [y/n] '
+        'WARNING: Credentials table will be dropped. Continue? [y/n] '
     )
     if response == 'y':
         connect().execute('DROP TABLE creds')
@@ -82,7 +93,9 @@ def delete():
 if __name__ == '__main__':
 
     # parse cli
-    parser = ArgumentParser(description='Interface with MySQL database')
+    parser = ArgumentParser(
+        description='Interface with MySQL credentials table'
+    )
     parser.add_argument(
         '--create',
         default=False,
