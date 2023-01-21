@@ -2,7 +2,26 @@ FROM python:3.9-slim
 
 # setup unix
 RUN apt-get update
-RUN apt-get install -y curl wget xz-utils
+RUN apt-get install -y \
+    build-essential \
+    cmake \
+    curl \
+    git \
+    libdbus-1-dev \
+    libegl-dev
+    libwayland-dev \
+    libx11-dev \
+    libxcursor-dev \
+    libxi-dev \
+    libxinerama-dev \
+    libxkbcommon-dev \
+    libxrandr-dev \
+    libxxf86vm-dev \
+    linux-libc-dev \
+    subversion \
+    wayland-protocols \
+    wget \
+    xz-utils \
 
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
