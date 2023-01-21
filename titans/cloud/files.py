@@ -2,6 +2,7 @@
 
 import os
 from os.path import basename, isdir, join
+from pathlib import Path
 from subprocess import SubprocessError, run
 
 from titans.sql import connect
@@ -110,6 +111,53 @@ def upload(
         print('stdout:', output.stdout)
         print('stderr:', output.stderr)
         raise SubprocessError(f'Command {cmd} failed')
+
+
+def download(
+    source: str,
+    dest: str = None,
+    /,
+):
+    """Download directory from production server
+
+    Parameters
+    ----------
+    source: str
+        directory to download from
+    dest: str, optional, default=None
+        directory to download to. If None, then use :code:`source`
+    """
+
+    # get credentials
+    conn_str = connect().execute("""
+        SELECT Value from creds
+        Where Name = 'prod_conn'
+    """).fetchone()[0]
+    os.environ['AZURE_STORAGE_CONNECTION_STRING'] = conn_str
+
+    # get default dest dir
+    if dest is None:
+        dest = source
+
+    # make dest directory, if DNE
+    Path(dest).mkdir(exist_ok=True)
+
+    # download from server
+    run(
+        [
+            'az',
+            'storage',
+            'blob',
+            'download-batch',
+            '--source',
+            source,
+            '--destination',
+            dest,
+            '--overwrite',
+        ],
+        capture_output=True,
+        check=True,
+    )
 
 
 def release():
