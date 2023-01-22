@@ -8,7 +8,7 @@ RUN apt-get install -y \
     curl \
     git \
     libdbus-1-dev \
-    libegl-dev
+    libegl-dev \
     libwayland-dev \
     libx11-dev \
     libxcursor-dev \
@@ -21,7 +21,7 @@ RUN apt-get install -y \
     subversion \
     wayland-protocols \
     wget \
-    xz-utils \
+    xz-utils
 
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
