@@ -37,6 +37,6 @@ RUN mv $BLENDER_FNAME /blender
 # set working directory
 WORKDIR /code
 
-# copy in blender files
-COPY assets /code/assets
-COPY blend /code/blend
+# run render.py as entrypoint
+COPY render.py .
+ENTRYPOINT ["python", "render.py"]
