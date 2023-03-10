@@ -1,0 +1,135 @@
+set_name: Genesis
+cards: [
+
+    # Storm cards
+    ["Major", 4, "Luna, The Radiant"],
+    ["Major", 4, "Nikolai, The Cursed"],
+    ["Major", 4, "Skylar, Sun's Chosen"],
+    ["Major", 4, "Ava, Aeronaut"],
+    ["Major", 4, "Bloodlust"],
+    ["Major", 4, "Dawn of Flight"],
+    ["Major", 4, "Storm's Roar"],
+    ["Major", 4, "Wind's Howl"],
+    ["Major", 4, "Aurora Draco"],
+    ["Major", 4, "Soldier's Bane"],
+    ["Major", 4, "Thunderbringer"],
+    ["Major", 4, "Year of Rain"],
+    ["Major", 4, "Madness of A Thousand Stars"],
+    ["Major", 4, "Merciless Winds"],
+    ["Major", 4, "The Storm"],
+    ["Major", 4, "Total Eclipse"],
+    
+    # Fire cards
+    ["Major", 4, "Caiden, Fire Lord"],
+    ["Major", 4, "Kovu, Shadow Expeller"],
+    ["Major", 4, "Zephyr, The Unforgiving"],
+    ["Major", 4, "Zodiac, The Eternal"],
+    ["Major", 4, "Devil's Horns"],
+    ["Major", 4, "Glorious Phoenix"],
+    ["Major", 4, "Living Volcano"],
+    ["Major", 4, "Stampeding Flame"],
+    ["Major", 4, "Beast Eater"],
+    ["Major", 4, "Metalwing"],
+    ["Major", 4, "Smoldering Dragon"],
+    ["Major", 4, "World Ignited"],
+    ["Major", 4, "Eternal Vigil"],
+    ["Major", 4, "Face of the False God"],
+    ["Major", 4, "Final Judgment"],
+    ["Major", 4, "Inferno"],
+    
+    # Ice cards
+    ["Major", 4, "Aria, Queen Of Winter"],
+    ["Major", 4, "Crystal, Kingbreaker"],
+    ["Major", 4, "Erik, Revered Watchman"],
+    ["Major", 4, "Jace, Winter's Firstborn"],
+    ["Major", 4, "Blizzard's Scream"],
+    ["Major", 4, "Frost's Bite"],
+    ["Major", 4, "Return of the Frost Giants"],
+    ["Major", 4, "Shipwrecker"],
+    ["Major", 4, "Squall Seeker"],
+    ["Major", 4, "Frostbreath"],
+    ["Major", 4, "Keeper of the Dead"],
+    ["Major", 4, "Snow's Herald"],
+    ["Major", 4, "Army Of You"],
+    ["Major", 4, "Winter's Return"],
+    ["Major", 4, "The Death Of Summer"],
+    ["Major", 4, "Hell, Frozen Over"],
+    
+    # Rock cards
+    ["Major", 4, "Akari, Timeless Fighter"],
+    ["Major", 4, "Terra, Grave Robber"],
+    ["Major", 4, "Kanna, Soldier of Gaia"],
+    ["Major", 4, "Riku, Warrior Supreme"],
+    ["Major", 4, "Beacon Of Knowledge"],
+    ["Major", 4, "Boulder Bear"],
+    ["Major", 4, "Spine Splitter"],
+    ["Major", 4, "Stone Eagle"],
+    ["Major", 4, "The Alpha"],
+    ["Major", 4, "Cavern's Defender"],
+    ["Major", 4, "God Killer"],
+    ["Major", 4, "Great Stone Dragon"],
+    ["Major", 4, "Civilization's Collapse"],
+    ["Major", 4, "Meteoric Fall"],
+    ["Major", 4, "He The Earth Quakes For"],
+    ["Major", 4, "What Lies Beneath"],
+    
+    # Player 1 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Player 2 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Player 3 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Player 4 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Player 5 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Player 6 cards
+    ["Major", 8, "Monk"],
+    ["Major", 4, "Wizard"],
+    ["Minor", 1, "Surge"],
+    ["Minor", 1, "Reference Sheet"],
+    
+    # Arena set 1
+    ["Minor", 1, "Avatar"],
+    ["Minor", 2, "Temple"],
+    ["Major", 12, "Ghost"],
+    ["Major", 8, "Traveler"],
+    
+    # Arena set 2
+    ["Major", 12, "Ghost"],
+    ["Major", 8, "Traveler"],
+    
+    # Arena set 3
+    ["Minor", 4, "Temple"],
+    ["Major", 12, "Ghost"],
+    ["Major", 8, "Traveler"],
+    
+    # Subversions
+    ["Minor", 8, "Exhausted"],
+    ["Minor", 8, "Feral"],
+    ["Minor", 8, "Harmless"],
+    ["Minor", 8, "Mindless"],
+    ["Minor", 8, "Stunted"],
+    ["Minor", 8, "Traitorous"],
+    ["Minor", 8, "Wounded"],
+]
