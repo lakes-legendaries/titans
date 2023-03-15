@@ -49,7 +49,9 @@ if __name__ == "__main__":
             ' && docker run --env'
             f' AZURE_STORAGE_CONNECTION_STRING=\\"{creds["prod_conn"]}\\"'
             ' titansofeden.azurecr.io/titans:videos'
-            ' --fname x3.txt"'
+            ' --fname \\"No-Wait Anim\\"'
+            ' --frame 0'
+            '"'
         )
 
         # create batch json

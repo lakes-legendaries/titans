@@ -10,7 +10,9 @@ from subprocess import run
 if __name__ == '__main__':
 
     # parse cli
-    parser = ArgumentParser(description='render Titans Of Eden videos')
+    parser = ArgumentParser(description='render videos')
+    parser.add_argument('--fname', help='File to render')
+    parser.add_argument('--frame', type=int, help='Frame to render')
     args = parser.parse_args()
 
     # check env
@@ -38,20 +40,22 @@ if __name__ == '__main__':
             check=True,
         )
 
-    # run blender
+    # hard-coded parameters
     odir = 'rendered'
+
+    # run blender
     Path(odir).mkdir(exist_ok=True)
     run(
         [
             '/blender/blender',
             '-b',
-            'blend/Storm Title.blend',
+            f'blend/{args.fname}.blend',
             '--render-output',
-            f'{odir}/Storm Title',
+            f'{odir}/{args.fname}',
             '-s',
-            '0',
+            f'{args.frame}',
             '-e',
-            '0',
+            f'{args.frame}',
             '-a',
         ],
         capture_output=True,
@@ -71,6 +75,6 @@ if __name__ == '__main__':
             odir,
             '--overwrite',
         ],
-        # capture_output=True,
+        capture_output=True,
         check=True,
     )
