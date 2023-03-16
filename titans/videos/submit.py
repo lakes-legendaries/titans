@@ -81,6 +81,9 @@ if __name__ == "__main__":
                         "autoUser": {
                             "elevationLevel": "admin"
                         }
+                    },
+                    'constraints': {
+                        'maxTaskRetryCount': 3,
                     }
                 }]
                 json.dump(task_json, open(json_fname, 'w'))
