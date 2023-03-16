@@ -14,6 +14,12 @@ from titans.sql import connect
 # cli
 if __name__ == "__main__":
 
+    # hard-coded parameters
+    frames_dict = {
+        'No-Wait Anim': 1680,
+    }
+    frames_per_job = 4
+
     # pull creds
     creds = {
         key: connect().execute(f"""
@@ -33,54 +39,67 @@ if __name__ == "__main__":
 
     # get task & json fname
     suffix = re.sub(r'[:.]', r'-', datetime.now().isoformat())
-    task_id = f'test-{suffix}'
-    json_fname = join('/', 'tmp', f'{task_id}.json')
+    json_fname = join('/', 'tmp', f'{suffix}.json')
 
     # submit task
     try:
 
-        # create command
-        cmd = (
-            '/bin/bash -c'
-            ' "docker login'
-            ' titansofeden.azurecr.io'
-            ' --username titansofeden'
-            f' --password {creds["azurecr"]}'
-            ' && docker run --env'
-            f' AZURE_STORAGE_CONNECTION_STRING=\\"{creds["prod_conn"]}\\"'
-            ' titansofeden.azurecr.io/titans:videos'
-            ' --fname \\"No-Wait Anim\\"'
-            ' --frame 0'
-            '"'
-        )
+        # render all frames
+        for blender_fname, num_frames in frames_dict.items():
+            for first_frame in range(0, num_frames, frames_per_job):
 
-        # create batch json
-        task_json = [{
-            "id": task_id,
-            "commandLine": cmd,
-            "userIdentity": {
-                "autoUser": {
-                    "elevationLevel": "admin"
-                }
-            }
-        }]
-        json.dump(task_json, open(json_fname, 'w'))
+                # get final frame
+                final_frame = min(
+                    first_frame + frames_per_job - 1,
+                    num_frames - 1,
+                )
 
-        # create batch task
-        run(
-            [
-                'az',
-                'batch',
-                'task',
-                'create',
-                '--job-id',
-                'render',
-                '--json-file',
-                json_fname,
-            ],
-            capture_output=True,
-            check=True,
-        )
+                # create command
+                cmd = (
+                    '/bin/bash -c'
+                    ' "docker login'
+                    ' titansofeden.azurecr.io'
+                    ' --username titansofeden'
+                    f' --password {creds["azurecr"]}'
+                    ' && docker run --env'
+                    ' AZURE_STORAGE_CONNECTION_STRING='
+                    f'\\"{creds["prod_conn"]}\\"'
+                    ' titansofeden.azurecr.io/titans:videos'
+                    f' --fname \\"{blender_fname}\\"'
+                    f' --first_frame {first_frame}'
+                    f' --final_frame {final_frame}'
+                    '"'
+                )
+
+                # create batch json
+                pro_fname = blender_fname.replace(' ', '_').lower()
+                task_id = f'render-{suffix}-{pro_fname}-{first_frame}'
+                task_json = [{
+                    "id": task_id,
+                    "commandLine": cmd,
+                    "userIdentity": {
+                        "autoUser": {
+                            "elevationLevel": "admin"
+                        }
+                    }
+                }]
+                json.dump(task_json, open(json_fname, 'w'))
+
+                # create batch task
+                run(
+                    [
+                        'az',
+                        'batch',
+                        'task',
+                        'create',
+                        '--job-id',
+                        'render',
+                        '--json-file',
+                        json_fname,
+                    ],
+                    capture_output=True,
+                    check=True,
+                )
 
     # clean-up
     finally:

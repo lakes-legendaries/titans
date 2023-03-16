@@ -12,7 +12,16 @@ if __name__ == '__main__':
     # parse cli
     parser = ArgumentParser(description='render videos')
     parser.add_argument('--fname', help='File to render')
-    parser.add_argument('--frame', type=int, help='Frame to render')
+    parser.add_argument(
+        '--first_frame',
+        type=int,
+        help='First frame to render',
+    )
+    parser.add_argument(
+        '--final_frame',
+        type=int,
+        help='Last frame to render (inclusive)',
+    )
     args = parser.parse_args()
 
     # check env
@@ -53,9 +62,9 @@ if __name__ == '__main__':
             '--render-output',
             f'{odir}/{args.fname}',
             '-s',
-            f'{args.frame}',
+            f'{args.first_frame}',
             '-e',
-            f'{args.frame}',
+            f'{args.final_frame}',
             '-a',
         ],
         capture_output=True,
