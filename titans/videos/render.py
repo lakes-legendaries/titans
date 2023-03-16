@@ -1,4 +1,7 @@
-"""CLI for rendering videos"""
+"""CLI for rendering videos
+
+This is run in the docker contain to do the actual rendering
+"""
 
 from argparse import ArgumentParser
 import os
