@@ -6,7 +6,7 @@ import os
 from os import remove
 from os.path import isfile, join
 import re
-from subprocess import run
+import sh
 
 from titans.sql import connect
 
@@ -15,12 +15,14 @@ from titans.sql import connect
 if __name__ == "__main__":
 
     # hard-coded parameters
-    frames_dict = {
-        'No-Wait Anim': 1680,
-    }
     frames_per_job = 4
 
-    # pull creds
+    # animation files details
+    animations = {
+        'No-Wait Anim': 1680,
+    }
+
+    # pull creds from db
     creds = {
         key: connect().execute(f"""
             SELECT Value from creds
@@ -29,7 +31,7 @@ if __name__ == "__main__":
         for key in ['azurecr', 'batch', 'prod_conn']
     }
 
-    # set batch env vars
+    # set env vars that let us submit jobs to azure batch
     for key, value in {
         'AZURE_BATCH_ACCOUNT': 'titansbatch',
         'AZURE_BATCH_ENDPOINT': 'https://titansbatch.eastus.batch.azure.com',
@@ -37,15 +39,15 @@ if __name__ == "__main__":
     }.items():
         os.environ[key] = value
 
-    # get task & json fname
-    suffix = re.sub(r'[:.]', r'-', datetime.now().isoformat())
-    json_fname = join('/', 'tmp', f'{suffix}.json')
+    # get json fname
+    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
+    json_fname = join('/', 'tmp', f'{submission_time}.json')
 
     # submit task
     try:
 
         # render all frames
-        for blender_fname, num_frames in frames_dict.items():
+        for blender_fname, num_frames in animations.items():
             for first_frame in range(0, num_frames, frames_per_job):
 
                 # get final frame
@@ -55,31 +57,31 @@ if __name__ == "__main__":
                 )
 
                 # create command
-                cmd = (
-                    '/bin/bash -c'
-                    ' "docker login'
-                    ' titansofeden.azurecr.io'
-                    ' --username titansofeden'
-                    f' --password {creds["azurecr"]}'
-                    ' && docker run --env'
-                    ' AZURE_STORAGE_CONNECTION_STRING='
-                    f'\\"{creds["prod_conn"]}\\"'
-                    ' titansofeden.azurecr.io/titans:videos'
-                    f' --fname \\"{blender_fname}\\"'
-                    f' --first_frame {first_frame}'
-                    f' --final_frame {final_frame}'
-                    '"'
-                )
+                az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
+                cmd = re.sub(r'\s+', r' ', f"""/bin/bash -c '
+                    docker login titansofeden.azurecr.io
+                        --username titansofeden
+                        --password "{creds['azurecr']}"
+                    && docker run
+                        --env {az_env_var}="{creds['prod_conn']}"
+                        titansofeden.azurecr.io/titans:videos
+                        --fname "{blender_fname}"
+                        --first_frame {first_frame}
+                        --final_frame {final_frame}
+                '""")
 
                 # create batch json
-                pro_fname = blender_fname.replace(' ', '_').lower()
-                task_id = f'render-{suffix}-{pro_fname}-{first_frame}'
                 task_json = [{
-                    "id": task_id,
-                    "commandLine": cmd,
-                    "userIdentity": {
-                        "autoUser": {
-                            "elevationLevel": "admin"
+                    'id': (
+                        'render'
+                        f'-{submission_time}'
+                        f"-{blender_fname.replace(' ', '_').lower()}"
+                        f'-{first_frame}'
+                    ),
+                    'commandLine': cmd,
+                    'userIdentity': {
+                        'autoUser': {
+                            'elevationLevel': 'admin'
                         }
                     },
                     'constraints': {
@@ -89,19 +91,14 @@ if __name__ == "__main__":
                 json.dump(task_json, open(json_fname, 'w'))
 
                 # create batch task
-                run(
-                    [
-                        'az',
-                        'batch',
-                        'task',
-                        'create',
-                        '--job-id',
-                        'render',
-                        '--json-file',
-                        json_fname,
-                    ],
-                    capture_output=True,
-                    check=True,
+                sh.az(
+                    'batch',
+                    'task',
+                    'create',
+                    '--job-id',
+                    'render',
+                    '--json-file',
+                    json_fname,
                 )
 
     # clean-up
