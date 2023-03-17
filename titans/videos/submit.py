@@ -78,7 +78,8 @@ def animate(
     # submit task
     try:
 
-        # render all frames
+        # get all tasks
+        all_tasks: list[dict] = []
         for blender_fname, num_frames in render_dict.items():
             for first_frame in (
                 range(0, num_frames, frames_per_job)
@@ -112,7 +113,7 @@ def animate(
                     continue
 
                 # create batch json
-                task_json = [{
+                all_tasks.append({
                     'id': (
                         'render'
                         f'-{submission_time}'
@@ -128,19 +129,28 @@ def animate(
                     'constraints': {
                         'maxTaskRetryCount': 3,
                     }
-                }]
-                json.dump(task_json, open(json_fname, 'w'))
+                })
 
-                # create batch task
-                sh.az(
-                    'batch',
-                    'task',
-                    'create',
-                    '--job-id',
-                    'render',
-                    '--json-file',
-                    json_fname,
-                )
+        # submit jobs to batch
+        for first_task in range(0, len(all_tasks), 100):  # 100 jobs per json
+
+            # get task ceiling
+            last_task = first_task + min(first_task + 100, len(all_tasks))
+
+            # create json
+            with open(json_fname, 'w') as file:
+                json.dump(all_tasks[first_task: last_task], file)
+
+            # create batch task
+            sh.az(
+                'batch',
+                'task',
+                'create',
+                '--job-id',
+                'render',
+                '--json-file',
+                json_fname,
+            )
 
     # clean-up
     finally:
