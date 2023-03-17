@@ -8,19 +8,44 @@ from os.path import isfile, join
 import re
 import sh
 
+import typer
+from typer import Option
+
 from titans.sql import connect
 
 
-# cli
-if __name__ == "__main__":
+# blender file parameters
+animations: dict[str, int] = {
+    'No-Wait Anim': 1680,
+    'Constructed Anim': 1600,
+}
 
-    # hard-coded parameters
-    frames_per_job = 4
+# cli help
+frames_per_job_help: str = """
+    Number of frames for each batch job. Fewer frames render faster, but have a
+    higher marginal cost.
+"""
+local_help: str = """
+    run locally (instead of on batch). For debugging.
+"""
+blender_fname_help: str = """
+    if provided, only render this blender file (instead of all files)
+"""
+frame_help: str = """
+    if provided, only render this frame (for debugging). If you provide this,
+    we strongly recommend you also provide blender_fname.
+"""
 
-    # animation files details
-    animations = {
-        'No-Wait Anim': 1680,
-    }
+
+# cli function
+def animate(
+    frames_per_job: int = Option(4, help=frames_per_job_help),
+    *,
+    blender_fname: str = Option(None, help=blender_fname_help),
+    local: bool = Option(False, help=local_help),
+    frame: int = Option(None, help=frame_help),
+):
+    """Animate frames on azure batch"""
 
     # pull creds from db
     creds = {
@@ -30,6 +55,13 @@ if __name__ == "__main__":
         """).fetchone()[0]
         for key in ['azurecr', 'batch', 'prod_conn']
     }
+
+    # process cli
+    render_dict = (
+        animations
+        if not blender_fname
+        else {blender_fname: animations[blender_fname]}
+    )
 
     # set env vars that let us submit jobs to azure batch
     for key, value in {
@@ -47,18 +79,22 @@ if __name__ == "__main__":
     try:
 
         # render all frames
-        for blender_fname, num_frames in animations.items():
-            for first_frame in range(0, num_frames, frames_per_job):
+        for blender_fname, num_frames in render_dict.items():
+            for first_frame in (
+                range(0, num_frames, frames_per_job)
+                if frame is None
+                else [frame]
+            ):
 
                 # get final frame
                 final_frame = min(
                     first_frame + frames_per_job - 1,
                     num_frames - 1,
-                )
+                ) if frame is None else frame
 
                 # create command
                 az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
-                cmd = re.sub(r'\s+', r' ', f"""/bin/bash -c '
+                bash_cmd = re.sub(r'\s+', r' ', f"""
                     docker login titansofeden.azurecr.io
                         --username titansofeden
                         --password "{creds['azurecr']}"
@@ -68,7 +104,12 @@ if __name__ == "__main__":
                         --fname "{blender_fname}"
                         --first_frame {first_frame}
                         --final_frame {final_frame}
-                '""")
+                """).strip()
+
+                # run locally
+                if local:
+                    sh.bash('-c', bash_cmd.replace('docker', 'sudo docker'))
+                    continue
 
                 # create batch json
                 task_json = [{
@@ -78,7 +119,7 @@ if __name__ == "__main__":
                         f"-{blender_fname.replace(' ', '_').lower()}"
                         f'-{first_frame}'
                     ),
-                    'commandLine': cmd,
+                    'commandLine': f"/bin/bash -c '{bash_cmd}'",
                     'userIdentity': {
                         'autoUser': {
                             'elevationLevel': 'admin'
@@ -105,3 +146,8 @@ if __name__ == "__main__":
     finally:
         if isfile(json_fname):
             remove(json_fname)
+
+
+# cli
+if __name__ == "__main__":
+    typer.run(animate)
