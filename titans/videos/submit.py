@@ -16,8 +16,9 @@ from titans.sql import connect
 
 # blender file parameters
 animations: dict[str, int] = {
-    'No-Wait Anim': 1680,
     'Constructed Anim': 1600,
+    'Empire Anim': 8600,
+    'No-Wait Anim': 1680,
 }
 
 # cli help
