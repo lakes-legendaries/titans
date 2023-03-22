@@ -65,7 +65,7 @@ URL=https://raw.githubusercontent.com/lakes-legendaries/titans/main/webserver/ru
 sudo rm -f $CRONDIR/$USER
 sudo rm -f $CRONDIR/root
 echo "@reboot /bin/bash -c \"curl $URL | bash\"" | sudo tee -a $CRONDIR/$USER
-echo "0 0 1 * * reboot" | sudo tee $CRONDIR/root
+echo "0 0 1 * * /sbin/shutdown -r now" | sudo tee $CRONDIR/root
 sudo chmod 0600 $CRONDIR/$USER
 sudo chmod 0600 $CRONDIR/root
 
