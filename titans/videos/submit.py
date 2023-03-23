@@ -44,7 +44,6 @@ frame_help: str = """
     we strongly recommend you also provide blender_fname.
 """
 
-
 # cli function
 def animate(
     frames_per_job: int = Option(4, help=frames_per_job_help),
