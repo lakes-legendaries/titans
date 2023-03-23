@@ -16,6 +16,13 @@ from titans.sql import connect
 
 # blender file parameters
 animations: dict[str, int] = {
+    '60-Sec Classic': 540,
+    '60-Sec Constructed': 540,
+    '60-Sec Haunt': 480,
+    '60-Sec No Wait': 720,
+    '60-Sec Opening': 660,
+    '60-Sec Subvert': 540,
+    '60-Sec Temples': 780,
     'Constructed Anim': 1600,
     'Empire Anim': 8600,
     'No-Wait Anim': 1680,
