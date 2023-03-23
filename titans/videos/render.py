@@ -6,7 +6,8 @@ This is run in the docker contain to do the actual rendering
 from argparse import ArgumentParser
 import os
 from pathlib import Path
-from subprocess import run
+
+import sh
 
 
 # cli
@@ -36,57 +37,38 @@ if __name__ == '__main__':
     containers = ['assets', 'blend']
     for container in containers:
         Path(container).mkdir(exist_ok=True)
-        run(
-            [
-                'az',
-                'storage',
-                'blob',
-                'download-batch',
-                '--source',
-                container,
-                '--destination',
-                container,
-                '--overwrite',
-            ],
-            capture_output=True,
-            check=True,
-        )
+        sh.az.storage.blob([
+            'download-batch',
+            '--source',
+            container,
+            '--destination',
+            container,
+            '--overwrite',
+        ])
 
     # hard-coded parameters
     odir = 'rendered'
 
     # run blender
     Path(odir).mkdir(exist_ok=True)
-    run(
-        [
-            '/blender/blender',
-            '-b',
-            f'blend/{args.fname}.blend',
-            '--render-output',
-            f'{odir}/{args.fname}',
-            '-s',
-            f'{args.first_frame}',
-            '-e',
-            f'{args.final_frame}',
-            '-a',
-        ],
-        capture_output=True,
-        check=True,
-    )
+    sh.Command('/blender/blender')([
+        '-b',
+        f'blend/{args.fname}.blend',
+        '--render-output',
+        f'{odir}/{args.fname}',
+        '-s',
+        f'{args.first_frame}',
+        '-e',
+        f'{args.final_frame}',
+        '-a',
+    ])
 
     # upload result
-    run(
-        [
-            'az',
-            'storage',
-            'blob',
-            'upload-batch',
-            '-s',
-            odir,
-            '-d',
-            odir,
-            '--overwrite',
-        ],
-        capture_output=True,
-        check=True,
-    )
+    sh.az.storage.blob([
+        'upload-batch',
+        '-s',
+        odir,
+        '-d',
+        odir,
+        '--overwrite',
+    ])

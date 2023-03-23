@@ -34,6 +34,10 @@ RUN tar xvf $BLENDER_FNAME.tar.xz
 RUN rm $BLENDER_FNAME.tar.xz
 RUN mv $BLENDER_FNAME /blender
 
+# setup python
+RUN pip install --upgrade pip
+RUN pip install sh
+
 # set working directory
 WORKDIR /code
 
