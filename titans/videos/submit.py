@@ -18,7 +18,110 @@ from titans.sql import connect
 app = typer.Typer()
 
 
-# animate videos
+def _submit(args: list[str], /, *, local: bool = False):
+    """Submit jobs to azure batch
+
+    Parameters
+    ----------
+    args : list[str]
+        command line arguments to pass to docker run command
+    local: bool, optional, default=False
+        if True, run locally instead of submitting to azure batch
+    """
+
+    # pull creds from db
+    creds = {
+        key: connect().execute(f"""
+            SELECT Value from creds
+            Where Name = '{key}'
+        """).fetchone()[0]
+        for key in ['azurecr', 'batch', 'prod_conn']
+    }
+
+    # set env vars that let us submit jobs to azure batch
+    for key, value in {
+        'AZURE_BATCH_ACCOUNT': 'titansbatch',
+        'AZURE_BATCH_ENDPOINT': 'https://titansbatch.eastus.batch.azure.com',
+        'AZURE_BATCH_ACCESS_KEY': creds['batch'],
+    }.items():
+        os.environ[key] = value
+
+    # build tasks json
+    all_tasks: list[dict] = []
+    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
+    for argset in args:
+
+        # create command
+        az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
+        bash_cmd = re.sub(r'\s+', r' ', f"""
+            docker login titansofeden.azurecr.io
+                --username titansofeden
+                --password "{creds['azurecr']}"
+            && docker run
+                --env {az_env_var}="{creds['prod_conn']}"
+                titansofeden.azurecr.io/titans:videos
+                {argset}
+        """).strip()
+
+        # create batch json
+        all_tasks.append({
+            'id': (
+                f"render-{submission_time}-"
+                + re.sub(r"[^a-zA-Z0-9]+", "_", argset)
+            ),
+            'commandLine': f"/bin/bash -c '{bash_cmd}'",
+            'userIdentity': {
+                'autoUser': {
+                    'elevationLevel': 'admin'
+                }
+            },
+            'constraints': {
+                'maxTaskRetryCount': 3,
+            }
+        })
+
+    # run locally
+    if local:
+        for task in all_tasks:
+            bash_cmd = (
+                task['commandLine']
+                .replace('/bin/bash -c ', '')
+                .replace('docker', 'sudo docker')
+            )
+            sh.bash('-c', bash_cmd)
+        return
+
+    # submit tasks
+    for first_task in range(0, len(all_tasks), 100):  # 100 jobs per json
+
+        # get task ceiling
+        last_task = first_task + min(first_task + 100, len(all_tasks))
+
+        # auto-clean-up writing json file
+        try:
+
+            # write json file
+            json_fname = join('/', 'tmp', f'{submission_time}.json')
+            with open(json_fname, 'w') as file:
+                json.dump(all_tasks[first_task: last_task], file)
+
+            # submit batch task
+            sh.az(
+                'batch',
+                'task',
+                'create',
+                '--job-id',
+                'render',
+                '--json-file',
+                json_fname,
+            )
+
+        # clean-up
+        finally:
+            if isfile(json_fname):
+                remove(json_fname)
+
+
 @app.command()
 def animate(
     frames_per_job: int = Option(10, help="""
@@ -53,115 +156,37 @@ def animate(
         'No-Wait Anim': 1680,
     }
 
-    # pull creds from db
-    creds = {
-        key: connect().execute(f"""
-            SELECT Value from creds
-            Where Name = '{key}'
-        """).fetchone()[0]
-        for key in ['azurecr', 'batch', 'prod_conn']
-    }
-
-    # process cli
+    # process args
     render_dict = (
         animations
         if not blender_fname
         else {blender_fname: animations[blender_fname]}
     )
 
-    # set env vars that let us submit jobs to azure batch
-    for key, value in {
-        'AZURE_BATCH_ACCOUNT': 'titansbatch',
-        'AZURE_BATCH_ENDPOINT': 'https://titansbatch.eastus.batch.azure.com',
-        'AZURE_BATCH_ACCESS_KEY': creds['batch'],
-    }.items():
-        os.environ[key] = value
+    # build argsets
+    args = []
+    for blender_fname, num_frames in render_dict.items():
+        for first_frame in (
+            range(0, num_frames, frames_per_job)
+            if frame is None
+            else [frame]
+        ):
 
-    # get json fname
-    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
-    json_fname = join('/', 'tmp', f'{submission_time}.json')
+            # get final frame
+            final_frame = min(
+                first_frame + frames_per_job - 1,
+                num_frames - 1,
+            ) if frame is None else frame
 
-    # submit task
-    try:
+            # save argset
+            args.append(f"""
+                --fname "{blender_fname}"
+                --first_frame {first_frame}
+                --final_frame {final_frame}
+            """)
 
-        # get all tasks
-        all_tasks: list[dict] = []
-        for blender_fname, num_frames in render_dict.items():
-            for first_frame in (
-                range(0, num_frames, frames_per_job)
-                if frame is None
-                else [frame]
-            ):
-
-                # get final frame
-                final_frame = min(
-                    first_frame + frames_per_job - 1,
-                    num_frames - 1,
-                ) if frame is None else frame
-
-                # create command
-                az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
-                bash_cmd = re.sub(r'\s+', r' ', f"""
-                    docker login titansofeden.azurecr.io
-                        --username titansofeden
-                        --password "{creds['azurecr']}"
-                    && docker run
-                        --env {az_env_var}="{creds['prod_conn']}"
-                        titansofeden.azurecr.io/titans:videos
-                        --fname "{blender_fname}"
-                        --first_frame {first_frame}
-                        --final_frame {final_frame}
-                """).strip()
-
-                # run locally
-                if local:
-                    sh.bash('-c', bash_cmd.replace('docker', 'sudo docker'))
-                    continue
-
-                # create batch json
-                all_tasks.append({
-                    'id': (
-                        'render'
-                        f'-{submission_time}'
-                        f"-{blender_fname.replace(' ', '_').lower()}"
-                        f'-{first_frame}'
-                    ),
-                    'commandLine': f"/bin/bash -c '{bash_cmd}'",
-                    'userIdentity': {
-                        'autoUser': {
-                            'elevationLevel': 'admin'
-                        }
-                    },
-                    'constraints': {
-                        'maxTaskRetryCount': 3,
-                    }
-                })
-
-        # submit jobs to batch
-        for first_task in range(0, len(all_tasks), 100):  # 100 jobs per json
-
-            # get task ceiling
-            last_task = first_task + min(first_task + 100, len(all_tasks))
-
-            # create json
-            with open(json_fname, 'w') as file:
-                json.dump(all_tasks[first_task: last_task], file)
-
-            # create batch task
-            sh.az(
-                'batch',
-                'task',
-                'create',
-                '--job-id',
-                'render',
-                '--json-file',
-                json_fname,
-            )
-
-    # clean-up
-    finally:
-        if isfile(json_fname):
-            remove(json_fname)
+    # submit jobs
+    _submit(args, local=local)
 
 
 # render videos
