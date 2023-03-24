@@ -23,7 +23,6 @@ animations: dict[str, int] = {
     '60-Sec Opening': 660,
     '60-Sec Subvert': 540,
     '60-Sec Temples': 780,
-    'Card Flip': 150,
     'Constructed Anim': 1600,
     'Empire Anim': 8600,
     'No-Wait Anim': 1680,
