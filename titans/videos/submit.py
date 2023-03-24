@@ -14,46 +14,44 @@ from typer import Option
 from titans.sql import connect
 
 
-# blender file parameters
-animations: dict[str, int] = {
-    '60-Sec Classic': 540,
-    '60-Sec Constructed': 540,
-    '60-Sec Haunt': 480,
-    '60-Sec No Wait': 720,
-    '60-Sec Opening': 660,
-    '60-Sec Subvert': 540,
-    '60-Sec Temples': 780,
-    'Constructed Anim': 1600,
-    'Empire Anim': 8600,
-    'No-Wait Anim': 1680,
-}
-
-# cli help
-frames_per_job_help: str = """
-    Number of frames for each batch job. Fewer frames render faster, but have a
-    higher marginal cost.
-"""
-local_help: str = """
-    run locally (instead of on batch). For debugging.
-"""
-blender_fname_help: str = """
-    if provided, only render this blender file (instead of all files)
-"""
-frame_help: str = """
-    if provided, only render this frame (for debugging). If you provide this,
-    we strongly recommend you also provide blender_fname.
-"""
+# create cli
+app = typer.Typer()
 
 
-# cli function
+# animate videos
+@app.command()
 def animate(
-    frames_per_job: int = Option(10, help=frames_per_job_help),
+    frames_per_job: int = Option(10, help="""
+        Number of frames for each batch job. Fewer frames render faster, but
+        have a higher marginal cost.
+    """),
     *,
-    blender_fname: str = Option(None, help=blender_fname_help),
-    local: bool = Option(False, help=local_help),
-    frame: int = Option(None, help=frame_help),
+    blender_fname: str = Option(None, help="""
+        if provided, only render this blender file (instead of all files)
+    """),
+    local: bool = Option(False, help="""
+        run locally (instead of on batch). For debugging.
+    """),
+    frame: int = Option(None, help="""
+        if provided, only render this frame (for debugging). If you provide
+        this, we strongly recommend you also provide blender_fname.
+    """),
 ):
     """Animate frames on azure batch"""
+
+    # blender file parameters
+    animations: dict[str, int] = {
+        '60-Sec Classic': 540,
+        '60-Sec Constructed': 540,
+        '60-Sec Haunt': 480,
+        '60-Sec No Wait': 720,
+        '60-Sec Opening': 660,
+        '60-Sec Subvert': 540,
+        '60-Sec Temples': 780,
+        'Constructed Anim': 1600,
+        'Empire Anim': 8600,
+        'No-Wait Anim': 1680,
+    }
 
     # pull creds from db
     creds = {
@@ -166,6 +164,12 @@ def animate(
             remove(json_fname)
 
 
+# render videos
+@app.command()
+def render():
+    pass
+
+
 # cli
 if __name__ == "__main__":
-    typer.run(animate)
+    app()
