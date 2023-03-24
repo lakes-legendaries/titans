@@ -74,6 +74,41 @@ def animate(fname: str, first_frame: int, final_frame: int):
     ])
 
 
+@app.command()
+def render(fname: str):
+    """Render blender videos
+
+    Parameters
+    ----------
+    fname : str
+        Blender file to render
+    """
+
+    # download files
+    _download_containers("assets", "blend", "rendered")
+
+    # run blender
+    odir = "rendered"
+    Path(odir).mkdir(exist_ok=True)
+    sh.Command('/blender/blender')([
+        '-b',
+        f'blend/{fname}.blend',
+        '--render-output',
+        f'{fname}.mkv',
+        '-a',
+    ])
+
+    # upload result
+    sh.az.storage.blob([
+        'upload-batch',
+        '-s',
+        odir,
+        '-d',
+        odir,
+        '--overwrite',
+    ])
+
+
 # cli
 if __name__ == '__main__':
 
