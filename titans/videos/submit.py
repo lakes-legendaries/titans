@@ -23,6 +23,7 @@ animations: dict[str, int] = {
     '60-Sec Opening': 660,
     '60-Sec Subvert': 540,
     '60-Sec Temples': 780,
+    'Card Flip': 150,
     'Constructed Anim': 1600,
     'Empire Anim': 8600,
     'No-Wait Anim': 1680,
@@ -47,7 +48,7 @@ frame_help: str = """
 
 # cli function
 def animate(
-    frames_per_job: int = Option(4, help=frames_per_job_help),
+    frames_per_job: int = Option(10, help=frames_per_job_help),
     *,
     blender_fname: str = Option(None, help=blender_fname_help),
     local: bool = Option(False, help=local_help),
