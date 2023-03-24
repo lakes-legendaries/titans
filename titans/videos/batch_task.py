@@ -1,40 +1,24 @@
-"""CLI for rendering videos
+"""CLI for running blender in the built docker container"""
 
-This is run in the docker contain to do the actual rendering
-"""
-
-from argparse import ArgumentParser
 import os
 from pathlib import Path
 
 import sh
+import typer
 
 
-# cli
-if __name__ == '__main__':
+# create cli
+app = typer.Typer()
 
-    # parse cli
-    parser = ArgumentParser(description='render videos')
-    parser.add_argument('--fname', help='File to render')
-    parser.add_argument(
-        '--first_frame',
-        type=int,
-        help='First frame to render',
-    )
-    parser.add_argument(
-        '--final_frame',
-        type=int,
-        help='Last frame to render (inclusive)',
-    )
-    args = parser.parse_args()
 
-    # check env
-    conn_key = 'AZURE_STORAGE_CONNECTION_STRING'
-    if conn_key not in os.environ:
-        raise OSError(f'env var {conn_key} missing: cannot connect to azure')
+def _download_containers(*containers: str):
+    """Download containers from azure storage
 
-    # load in assets
-    containers = ['assets', 'blend']
+    Parameters
+    ----------
+    *containers : str
+        containers to download
+    """
     for container in containers:
         Path(container).mkdir(exist_ok=True)
         sh.az.storage.blob([
@@ -46,20 +30,36 @@ if __name__ == '__main__':
             '--overwrite',
         ])
 
-    # hard-coded parameters
-    odir = 'rendered'
+
+@app.command()
+def animate(fname: str, first_frame: int, final_frame: int):
+    """Animate blender file
+
+    Parameters
+    ----------
+    fname : str
+        Blender file to render
+    first_frame : int
+        First frame to render
+    final_frame : int
+        Last frame to render (inclusive)
+    """
+
+    # download assets and blender files
+    _download_containers("assets", "blend")
 
     # run blender
+    odir = "rendered"
     Path(odir).mkdir(exist_ok=True)
     sh.Command('/blender/blender')([
         '-b',
-        f'blend/{args.fname}.blend',
+        f'blend/{fname}.blend',
         '--render-output',
-        f'{odir}/{args.fname}',
+        f'{odir}/{fname}',
         '-s',
-        f'{args.first_frame}',
+        f'{first_frame}',
         '-e',
-        f'{args.final_frame}',
+        f'{final_frame}',
         '-a',
     ])
 
@@ -72,3 +72,15 @@ if __name__ == '__main__':
         odir,
         '--overwrite',
     ])
+
+
+# cli
+if __name__ == '__main__':
+
+    # check env
+    conn_key = 'AZURE_STORAGE_CONNECTION_STRING'
+    if conn_key not in os.environ:
+        raise OSError(f'env var {conn_key} missing: cannot connect to azure')
+
+    # run app
+    app()
