@@ -192,7 +192,34 @@ def animate(
 # render videos
 @app.command()
 def render():
-    pass
+
+    # videos to render
+    videos = [
+        "Card Flip.blend",
+        "Storm Title.blend",
+        "Fire Title.blend",
+        "Ice Title.blend",
+        "Stone Title.blend",
+        "Stone Title.blend",
+        "Title.blend",
+        "Title Video.blend",
+        "Landing Video.blend",
+        "Empire Video.blend",
+        "No-Wait Video.blend",
+        "Constructed Video.blend",
+    ]
+# ; do
+
+#     # get output fname
+#     IFNAME=$(basename "$FILE")
+#     OFNAME="$RENDER_DIR/${IFNAME%.*}"
+#     if [ ! -z "$(echo $FILE | grep Video)" ]; then
+#         OFNAME="${OFNAME}.mkv"
+#     fi 
+
+#     # render video
+#     $BLENDER -b "$VIDEO_DIR/$FILE" --render-output "$OFNAME" -a
+# done
 
 
 # cli
