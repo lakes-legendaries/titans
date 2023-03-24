@@ -18,7 +18,7 @@ from titans.sql import connect
 app = typer.Typer()
 
 
-def _submit(args: list[str], /, *, local: bool = False):
+def _submit_jobs(args: list[str], /, *, local: bool = False):
     """Submit jobs to azure batch
 
     Parameters
@@ -124,20 +124,20 @@ def _submit(args: list[str], /, *, local: bool = False):
 
 @app.command()
 def animate(
-    fname: str = Option(None, help="""
-        if provided, only render this blender file (instead of all files). This
-        should NOT contain the file extension.
-    """),
-    frame: int = Option(None, help="""
-        if provided, only render this frame (for debugging). If you provide
-        this, we strongly recommend you also provide fname.
-    """),
     frames_per_job: int = Option(10, help="""
         Number of frames for each batch job. Fewer frames render faster, but
         have a higher marginal cost.
     """),
+    *,
+    blender_fname: str = Option(None, help="""
+        if provided, only render this blender file (instead of all files)
+    """),
     local: bool = Option(False, help="""
         run locally (instead of on batch). For debugging.
+    """),
+    frame: int = Option(None, help="""
+        if provided, only render this frame (for debugging). If you provide
+        this, we strongly recommend you also provide blender_fname.
     """),
 ):
     """Animate frames on azure batch"""
@@ -159,13 +159,13 @@ def animate(
     # process args
     render_dict = (
         animations
-        if not blender_fname
-        else {blender_fname: animations[blender_fname]}
+        if not fname
+        else {fname: animations[fname]}
     )
 
     # build argsets
     args = []
-    for blender_fname, num_frames in render_dict.items():
+    for fname, num_frames in render_dict.items():
         for first_frame in (
             range(0, num_frames, frames_per_job)
             if frame is None
@@ -180,13 +180,14 @@ def animate(
 
             # save argset
             args.append(f"""
-                --fname "{blender_fname}"
+                animate
+                --fname "{fname}"
                 --first_frame {first_frame}
                 --final_frame {final_frame}
             """)
 
     # submit jobs
-    _submit(args, local=local)
+    _submit_jobs(args, local=local)
 
 
 # render videos
