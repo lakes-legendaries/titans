@@ -18,7 +18,7 @@ from titans.sql import connect
 app = typer.Typer()
 
 
-def _submit_jobs(args: list[str], /, *, local: bool = False):
+def _submit(args: list[str], /, *, local: bool = False):
     """Submit jobs to azure batch
 
     Parameters
@@ -159,13 +159,13 @@ def animate(
     # process args
     render_dict = (
         animations
-        if not fname
-        else {fname: animations[fname]}
+        if not blender_fname
+        else {blender_fname: animations[blender_fname]}
     )
 
     # build argsets
     args = []
-    for fname, num_frames in render_dict.items():
+    for blender_fname, num_frames in render_dict.items():
         for first_frame in (
             range(0, num_frames, frames_per_job)
             if frame is None
@@ -180,48 +180,52 @@ def animate(
 
             # save argset
             args.append(f"""
-                animate
-                --fname "{fname}"
+                --fname "{blender_fname}"
                 --first_frame {first_frame}
                 --final_frame {final_frame}
             """)
 
     # submit jobs
-    _submit_jobs(args, local=local)
+    _submit(args, local=local)
 
 
 # render videos
 @app.command()
 def render():
+def render(
+    fname: str = Option(None, help="""
+        if provided, only render this blender file (instead of all files). This
+        should NOT contain the file extension.
+    """),
+    local: bool = Option(False, help="""
+        run locally (instead of on batch). For debugging.
+    """),
+):
 
+    # blender files
+    video_fnames = [
+        "Card Flip",
+        "Storm Title",
+        "Fire Title",
+        "Ice Title",
+        "Stone Title",
+        "Stone Title",
+        "Title",
+        "Title Video",
+        "Landing Video",
+        "Empire Video",
+        "No-Wait Video",
+        "Constructed Video",
+    ] if fname is None else [fname]
     # videos to render
-    videos = [
-        "Card Flip.blend",
-        "Storm Title.blend",
-        "Fire Title.blend",
-        "Ice Title.blend",
-        "Stone Title.blend",
-        "Stone Title.blend",
-        "Title.blend",
-        "Title Video.blend",
-        "Landing Video.blend",
-        "Empire Video.blend",
-        "No-Wait Video.blend",
-        "Constructed Video.blend",
-    ]
+    # build argsets
+    args = [
+        f'render --fname "{fname}"'
+        for fname in video_fnames
 # ; do
-
-#     # get output fname
-#     IFNAME=$(basename "$FILE")
-#     OFNAME="$RENDER_DIR/${IFNAME%.*}"
-#     if [ ! -z "$(echo $FILE | grep Video)" ]; then
-#         OFNAME="${OFNAME}.mkv"
-#     fi 
-
 #     # render video
-#     $BLENDER -b "$VIDEO_DIR/$FILE" --render-output "$OFNAME" -a
-# done
-
+    # submit jobs
+    _submit_jobs(args, local=local)
 
 # cli
 if __name__ == "__main__":
