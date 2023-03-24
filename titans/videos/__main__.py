@@ -124,6 +124,7 @@ def _submit_jobs(args: list[str], /, *, local: bool = False):
 
 @app.command()
 def animate(
+    *,
     fname: str = Option(None, help="""
         if provided, only render this blender file (instead of all files). This
         should NOT contain the file extension.
@@ -193,6 +194,10 @@ def animate(
 # render videos
 @app.command()
 def render(
+    round: int = Option(None, help="""
+        which round of videos to run. If None, you must supply fname.
+    """),
+    *,
     fname: str = Option(None, help="""
         if provided, only render this blender file (instead of all files). This
         should NOT contain the file extension.
@@ -201,22 +206,44 @@ def render(
         run locally (instead of on batch). For debugging.
     """),
 ):
+    """Render videos on azure batch
+
+    Some videos depend on each other. If you want to render all videos, you
+    should run round 0, then round 1, then round 2, then round 3.
+    """
+
+    # check args
+    if round is None and fname is None:
+        raise ValueError("You must provide either round or fname.")
 
     # blender files
-    video_fnames = [
-        "Card Flip",
-        "Storm Title",
-        "Fire Title",
-        "Ice Title",
-        "Stone Title",
-        "Stone Title",
-        "Title",
-        "Title Video",
-        "Landing Video",
-        "Empire Video",
-        "No-Wait Video",
-        "Constructed Video",
-    ] if fname is None else [fname]
+    rounds = [
+        [
+            "Card Flip",
+            "Storm Title",
+            "Fire Title",
+            "Ice Title",
+            "Stone Title",
+            "Stone Title",
+        ],
+        [
+            "Title",
+        ],
+        [
+            "Title Video",
+        ],
+        [
+            "Landing Video",
+            "Empire Video",
+            "No-Wait Video",
+            "Constructed Video",
+        ],
+    ]
+    video_fnames = (
+        rounds[round]
+        if rounds is not None
+        else [fname]
+    )
 
     # build argsets
     args = [
