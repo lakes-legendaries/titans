@@ -84,8 +84,12 @@ def render(
 
     Parameters
     ----------
-    fname : str
+    fname: str
         Blender file to render
+    containers: list[str]
+        containers to download for task
+    mkv: bool
+        whether to render as mkv (instead of png)
     """
 
     # download files
