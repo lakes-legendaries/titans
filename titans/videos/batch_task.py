@@ -38,18 +38,18 @@ def animate(fname: str, first_frame: int, final_frame: int):
     Parameters
     ----------
     fname : str
-        Blender file to render
+        Blender file to animate
     first_frame : int
-        First frame to render
+        First frame to animate
     final_frame : int
-        Last frame to render (inclusive)
+        Last frame to animate (inclusive)
     """
 
     # download assets and blender files
     _download_containers("assets", "blend")
 
     # run blender
-    odir = "rendered"
+    odir = "animated"
     Path(odir).mkdir(exist_ok=True)
     sh.Command('/blender/blender')([
         '-b',
@@ -75,7 +75,11 @@ def animate(fname: str, first_frame: int, final_frame: int):
 
 
 @app.command()
-def render(fname: str):
+def render(
+    fname: str,
+    containers: list[str],
+    mkv: bool,
+):
     """Render blender videos
 
     Parameters
@@ -85,7 +89,7 @@ def render(fname: str):
     """
 
     # download files
-    _download_containers("assets", "blend", "rendered")
+    _download_containers(*containers)
 
     # run blender
     odir = "rendered"
@@ -94,7 +98,7 @@ def render(fname: str):
         '-b',
         f'blend/{fname}.blend',
         '--render-output',
-        f'{fname}.mkv',
+        fname + (".mkv" if mkv else ""),
         '-a',
     ])
 
