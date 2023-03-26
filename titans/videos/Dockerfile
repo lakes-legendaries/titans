@@ -36,11 +36,11 @@ RUN mv $BLENDER_FNAME /blender
 
 # setup python
 RUN pip install --upgrade pip
-RUN pip install sh
+RUN pip install sh typer
 
 # set working directory
 WORKDIR /code
 
-# run render.py as entrypoint
-COPY render.py .
-ENTRYPOINT ["python", "render.py"]
+# run batch_task.py as entrypoint
+COPY batch_task.py .
+ENTRYPOINT ["python", "batch_task.py"]
