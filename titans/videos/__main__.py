@@ -200,18 +200,15 @@ def animate(
     _submit_jobs(args, local=local)
 
 
-# render videos
-@app.command()
-def render(
-    fname: str = Option(None, help="""
-        if provided, only render this blender file (instead of all files). This
-        should NOT contain the file extension.
-    """),
-    local: bool = Option(False, help="""
-        run locally (instead of on batch). For debugging.
-    """),
+def _render(
+        fname: str = None,
+        local: bool = False,
 ):
-    """Render videos on azure batch"""
+    """Render videos on azure batch
+
+    This function is called by render(), and provides an easy debugging
+    interface (for when needed)
+    """
 
     # render settings
     render_config: dict[str, dict[str, Union[list[str], bool]]] = {
@@ -303,13 +300,34 @@ def render(
     ]
 
     # extract dependencies
-    dependencies = [
+    render_names = list(render_config.keys())
+    dependency_names = [
         config["dependencies"]
         for config in render_config.values()
     ]
+    dependency_nums = [
+        [
+            render_names.index(name)
+            for name in dep_list
+        ]
+        for dep_list in dependency_names
+    ]
 
     # submit jobs
-    _submit_jobs(args, local=local, dependencies=dependencies)
+    _submit_jobs(args, local=local, dependencies=dependency_nums)
+
+
+@app.command()
+def render(
+    fname: str = Option(None, help="""
+        if provided, only render this blender file (instead of all files). This
+        should NOT contain the file extension.
+    """),
+    local: bool = Option(False, help="""
+        run locally (instead of on batch). For debugging.
+    """),
+):
+    _render(fname=fname, local=local)
 
 
 # cli
