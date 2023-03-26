@@ -6,8 +6,9 @@ import os
 from os import remove
 from os.path import isfile, join
 import re
-import sh
+from typing import Union
 
+import sh
 import typer
 from typer import Option
 
@@ -18,13 +19,21 @@ from titans.sql import connect
 app = typer.Typer()
 
 
-def _submit_jobs(args: list[str], /, *, local: bool = False):
+def _submit_jobs(
+        args: list[str],
+        /,
+        *,
+        dependencies: Union[list[str], None] = None,
+        local: bool = False,
+):
     """Submit jobs to azure batch
 
     Parameters
     ----------
     args : list[str]
         command line arguments to pass to docker run command
+    dependencies : list[str] | None, optional, default=None
+        list of job names that must complete before this job can run
     local: bool, optional, default=False
         if True, run locally instead of submitting to azure batch
     """
@@ -194,10 +203,6 @@ def animate(
 # render videos
 @app.command()
 def render(
-    round: int = Option(None, help="""
-        which round of videos to run. If None, you must supply fname.
-    """),
-    *,
     fname: str = Option(None, help="""
         if provided, only render this blender file (instead of all files). This
         should NOT contain the file extension.
@@ -206,53 +211,105 @@ def render(
         run locally (instead of on batch). For debugging.
     """),
 ):
-    """Render videos on azure batch
+    """Render videos on azure batch"""
 
-    Some videos depend on each other. If you want to render all videos, you
-    should run round 0, then round 1, then round 2, then round 3.
-    """
+    # render settings
+    render_config: dict[str, dict[str, Union[list[str], bool]]] = {
+        "Card Flip": {
+            "containers": [
+                "assets",
+                "blend",
+            ],
+            "dependencies": [],
+            "mkv": True,
+        },
+        **{
+            f"{element} Title": {
+                "containers": [
+                    "blend",
+                    "overlays",
+                ],
+                "dependencies": [],
+                "mkv": False,
+            }
+            for element in [
+                "Storm",
+                "Fire",
+                "Ice",
+                "Rock",
+            ]
+        },
+        "Title": {
+            "containers": [
+                "blend",
+                "overlays",
+                "rendered",
+            ],
+            "dependencies": [
+                "Storm Title",
+                "Fire Title",
+                "Ice Title",
+                "Rock Title",
+            ],
+            "mkv": True,
+        },
+        "Title Video": {
+            "containers": [
+                "blend",
+                "rendered",
+            ],
+            "dependencies": ["Title"],
+            "mkv": True,
+        },
+        **{
+            f"{name} Video": {
+                "containers": [
+                    "animated",
+                    "blend",
+                    "overlays",
+                    "rendered",
+                ],
+                "dependencies": ["Title Video"],
+                "mkv": True,
+            }
+            for name in [
+                "Landing",
+                "Empire",
+                "No-Wait",
+                "Constructed",
+            ]
+        },
+    }
 
-    # check args
-    if round is None and fname is None:
-        raise ValueError("You must provide either round or fname.")
-
-    # blender files
-    rounds = [
-        [
-            "Card Flip",
-            "Storm Title",
-            "Fire Title",
-            "Ice Title",
-            "Stone Title",
-            "Stone Title",
-        ],
-        [
-            "Title",
-        ],
-        [
-            "Title Video",
-        ],
-        [
-            "Landing Video",
-            "Empire Video",
-            "No-Wait Video",
-            "Constructed Video",
-        ],
-    ]
-    video_fnames = (
-        rounds[round]
-        if rounds is not None
-        else [fname]
-    )
+    # only do one file
+    if fname is not None:
+        render_config = {fname: render_config[fname]}
+        render_config[fname]["dependencies"] = []
 
     # build argsets
     args = [
-        f'render --fname "{fname}"'
-        for fname in video_fnames
+        f"""
+            render
+            --fname "{fname}"
+            {"--mkv" if config["mkv"] else "--no-mkv"}
+            {
+                " ".join([
+                    f"--container {container}"
+                    for container in config["containers"]
+                ])
+            }
+        """
+        for fname, config in render_config.items()
+    ]
+
+    # extract dependencies
+    dependencies = [
+        config["dependencies"]
+        for config in render_config.values()
     ]
 
     # submit jobs
-    _submit_jobs(args, local=local)
+    _submit_jobs(args, local=local, dependencies=dependencies)
 
 
 # cli
