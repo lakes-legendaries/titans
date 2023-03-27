@@ -6,7 +6,6 @@ import os
 from os import remove
 from os.path import isfile, join
 import re
-from typing import Union
 
 import sh
 import typer
@@ -23,7 +22,7 @@ def _submit_jobs(
         args: list[str],
         /,
         *,
-        dependencies: Union[list[str], None] = None,
+        dependencies: list[list[int]] | None = None,
         local: bool = False,
 ):
     """Submit jobs to azure batch
@@ -55,10 +54,14 @@ def _submit_jobs(
     }.items():
         os.environ[key] = value
 
+    # function to name tasks
+    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
+    def task_name(n: int, /) -> str:  # noqa
+        return f"render-{submission_time}-{n}"
+
     # build tasks json
     all_tasks: list[dict] = []
-    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
-    for argset in args:
+    for a, argset in enumerate(args):
 
         # create command
         az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
@@ -74,19 +77,23 @@ def _submit_jobs(
 
         # create batch json
         all_tasks.append({
-            'id': (
-                f"render-{submission_time}-"
-                + re.sub(r"[^a-zA-Z0-9]+", "_", argset)
-            ),
+            'id': task_name(a),
             'commandLine': f"/bin/bash -c '{bash_cmd}'",
             'userIdentity': {
                 'autoUser': {
-                    'elevationLevel': 'admin'
-                }
+                    'elevationLevel': 'admin',
+                },
             },
             'constraints': {
                 'maxTaskRetryCount': 3,
-            }
+            },
+            'dependsOn': {
+                'taskIds': (
+                    []
+                    if dependencies is None
+                    else [task_name(dep_num) for dep_num in dependencies[a]]
+                ),
+            },
         })
 
     # run locally
@@ -211,7 +218,7 @@ def _render(
     """
 
     # render settings
-    render_config: dict[str, dict[str, Union[list[str], bool]]] = {
+    render_config: dict[str, dict[str, list[str] | bool]] = {
         "Card Flip": {
             "containers": [
                 "assets",
