@@ -51,10 +51,10 @@ sudo /usr/bin/certbot certonly \
 
 # upgrade python
 sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt-get install -y python3.9 python3.9-dev python3.9-venv
+sudo apt-get install -y python3.11 python3.11-dev python3.11-venv
 
 # set up basic aliases and environmental variables
-echo "alias python=python3.9" > ~/.bash_aliases
+echo "alias python=python3.11" > ~/.bash_aliases
 echo "alias venv=\"source .venv/bin/activate\"" >> ~/.bash_aliases
 echo "export PYTHONPATH=\".:/home/mike/titans\"" >> ~/.bash_aliases
 echo "export SECRETS_DIR=\"/home/mike/secrets\"" >> ~/.bash_aliases
