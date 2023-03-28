@@ -32,7 +32,11 @@ def _download_containers(*containers: str):
 
 
 @app.command()
-def animate(fname: str, first_frame: int, final_frame: int):
+def animate(
+    fname: str = typer.Option(...),
+    first_frame: int = typer.Option(...),
+    final_frame: int = typer.Option(...),
+):
     """Animate blender file
 
     Parameters
@@ -76,9 +80,9 @@ def animate(fname: str, first_frame: int, final_frame: int):
 
 @app.command()
 def render(
-    fname: str,
-    containers: list[str],
-    mkv: bool,
+    fname: str = typer.Option(...),
+    containers: list[str] = typer.Option(...),
+    mkv: bool = typer.Option(...),
 ):
     """Render blender videos
 

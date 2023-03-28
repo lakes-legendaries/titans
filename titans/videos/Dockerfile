@@ -37,6 +37,7 @@ RUN mv $BLENDER_FNAME /blender
 # setup python
 RUN pip install --upgrade pip
 RUN pip install sh typer
+ENV SQLALCHEMY_SILENCE_UBER_WARNING=1
 
 # set working directory
 WORKDIR /code

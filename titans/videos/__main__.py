@@ -298,7 +298,7 @@ def _render(
             {"--mkv" if config["mkv"] else "--no-mkv"}
             {
                 " ".join([
-                    f"--container {container}"
+                    f"--containers {container}"
                     for container in config["containers"]
                 ])
             }
@@ -334,6 +334,7 @@ def render(
         run locally (instead of on batch). For debugging.
     """),
 ):
+    """Render videos on azure batch"""
     _render(fname=fname, local=local)
 
 
