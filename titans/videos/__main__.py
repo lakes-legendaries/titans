@@ -43,7 +43,7 @@ def _submit_jobs(
             SELECT Value from creds
             Where Name = '{key}'
         """).fetchone()[0]
-        for key in ['azurecr', 'batch', 'prod_conn']
+        for key in ['azurecr', 'batch', 'prod_sas']
     }
 
     # set env vars that let us submit jobs to azure batch
@@ -64,16 +64,20 @@ def _submit_jobs(
     for a, argset in enumerate(args):
 
         # create command
-        az_env_var = 'AZURE_STORAGE_CONNECTION_STRING'
         bash_cmd = re.sub(r'\s+', r' ', f"""
             docker login titansofeden.azurecr.io
                 --username titansofeden
                 --password "{creds['azurecr']}"
             && docker run
-                --env {az_env_var}="{creds['prod_conn']}"
+                --env AZCOPY_SAS="{creds['prod_sas']}"
                 titansofeden.azurecr.io/titans:videos
                 {argset}
         """).strip()
+
+        # run task locally
+        if local:
+            sh.bash("-c", bash_cmd.replace("docker", "sudo docker"))
+            continue
 
         # create batch json
         all_tasks.append({
@@ -96,15 +100,8 @@ def _submit_jobs(
             },
         })
 
-    # run locally
+    # skip submitting tasks (if running locally)
     if local:
-        for task in all_tasks:
-            bash_cmd = (
-                task['commandLine']
-                .replace('/bin/bash -c ', '')
-                .replace('docker', 'sudo docker')
-            )
-            sh.bash('-c', bash_cmd)
         return
 
     # submit tasks

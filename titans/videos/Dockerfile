@@ -26,6 +26,13 @@ RUN apt-get install -y \
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
+# install azcopy
+RUN wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar
+RUN mkdir azcopy
+RUN tar xvf azcopy.tar -C azcopy --strip-components=1
+RUN mv azcopy/azcopy /usr/bin/azcopy
+RUN rm -rfd azcopy.tar azcopy
+
 # install blender
 ENV BLENDER_URL https://download.blender.org/release/Blender2.90
 ENV BLENDER_FNAME blender-2.90.0-linux64

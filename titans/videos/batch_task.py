@@ -1,6 +1,7 @@
 """CLI for running blender in the built docker container"""
 
 import os
+from os.path import join
 from pathlib import Path
 
 import sh
@@ -21,13 +22,13 @@ def _download_containers(*containers: str):
     """
     for container in containers:
         Path(container).mkdir(exist_ok=True)
-        sh.az.storage.blob([
-            'download-batch',
-            '--source',
-            container,
-            '--destination',
-            container,
-            '--overwrite',
+        sh.azcopy.copy([
+            (
+                "https://titansfileserver.blob.core.windows.net/"
+                + f"{container}/*{os.environ['AZCOPY_SAS']}"
+            ),
+            f"{container}",
+            "--recursive",
         ])
 
 
@@ -106,18 +107,18 @@ def render(
         '-b',
         f'blend/{fname}.blend',
         '--render-output',
-        fname + (".mkv" if mkv else ""),
+        join(odir, fname) + (".mkv" if mkv else ""),
         '-a',
     ])
 
     # upload result
-    sh.az.storage.blob([
-        'upload-batch',
-        '-s',
-        odir,
-        '-d',
-        odir,
-        '--overwrite',
+    sh.azcopy.copy([
+        f"{odir}/*",
+        (
+            "https://titansfileserver.blob.core.windows.net/"
+            + f"{odir}/{os.environ['AZCOPY_SAS']}"
+        ),
+        "--recursive",
     ])
 
 
@@ -125,7 +126,7 @@ def render(
 if __name__ == '__main__':
 
     # check env
-    conn_key = 'AZURE_STORAGE_CONNECTION_STRING'
+    conn_key = "AZCOPY_SAS"
     if conn_key not in os.environ:
         raise OSError(f'env var {conn_key} missing: cannot connect to azure')
 
