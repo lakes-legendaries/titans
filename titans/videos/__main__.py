@@ -21,6 +21,7 @@ app = typer.Typer()
 def _submit_jobs(
         args: list[str],
         /,
+        job: str,
         *,
         dependencies: list[list[int]] | None = None,
         local: bool = False,
@@ -29,9 +30,12 @@ def _submit_jobs(
 
     Parameters
     ----------
-    args : list[str]
-        command line arguments to pass to docker run command
-    dependencies : list[str] | None, optional, default=None
+    args: list[str]
+        command line arguments to pass to docker run command. each entry in the
+        list is its own job.
+    job: str
+        name of the azure batch job to submit job to
+    dependencies: list[str] | None, optional, default=None
         list of job names that must complete before this job can run
     local: bool, optional, default=False
         if True, run locally instead of submitting to azure batch
@@ -124,7 +128,7 @@ def _submit_jobs(
                 'task',
                 'create',
                 '--job-id',
-                'render',
+                job,
                 '--json-file',
                 json_fname,
             )
@@ -201,7 +205,11 @@ def animate(
             """)
 
     # submit jobs
-    _submit_jobs(args, local=local)
+    _submit_jobs(
+        args,
+        job="animate",
+        local=local,
+    )
 
 
 def _render(
@@ -318,7 +326,12 @@ def _render(
     ]
 
     # submit jobs
-    _submit_jobs(args, local=local, dependencies=dependency_nums)
+    _submit_jobs(
+        args,
+        job="render",
+        dependencies=dependency_nums,
+        local=local,
+    )
 
 
 @app.command()
