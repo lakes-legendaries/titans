@@ -94,6 +94,7 @@ def _submit_jobs(
             },
             'constraints': {
                 'maxTaskRetryCount': 3,
+                'retentionTime': 'PT1S',
             },
             'dependsOn': {
                 'taskIds': (
