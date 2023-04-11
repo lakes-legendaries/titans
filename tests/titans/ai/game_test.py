@@ -53,6 +53,13 @@ def test_play_age():
         assert player.discard_zone[0].name == Name.NIKOLAI_THE_CURSED
 
 
+def test_play_game():
+    game = Game()
+    winner = game.play_game()
+    assert game.players[winner].temples > 0
+    assert game.players[winner].opponent.temples == 0
+
+
 def test_play_turn():
 
     # set strategies
