@@ -117,8 +117,8 @@ class Player:
         """
         # It's important that hand immediately follows deck: This is used in
         # constructed public knowledge in state(). This order is also
-        # hard-coded into the test test_get_state(); that should be updated at
-        # some point.
+        # hard-coded into several tests: Only change if you have a really good
+        # reason to!
         return [
             self.discard_zone,
             self.play_zone,
