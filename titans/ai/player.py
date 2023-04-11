@@ -19,7 +19,7 @@ class Player:
         player's identity
     cards: list[Card]
         cards used in this game
-    strategies: list[np.ndarray | None]
+    strategies: list[np.ndarray | None] | None
         strategies for performing actions. If None, random choices will be used
     random_state: int | None, optional, default=None
         player's random seed
@@ -49,13 +49,17 @@ class Player:
         identity: Identity,
         /,
         cards: list[Card],
-        strategies: list[np.ndarray | None] = [None for _ in Network],
+        strategies: list[np.ndarray | None] = None,
         *,
         random_state: int = None,
     ):
         # save identity and strategies
         self.identity: Identity = identity
-        self.strategies: list[np.ndarray] = strategies
+        self.strategies: list[np.ndarray] = (
+            strategies
+            if strategies is not None
+            else [None for _ in Network]
+        )
 
         # initialize zones
         self.deck_zone: list[Card] = []
