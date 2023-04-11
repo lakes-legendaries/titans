@@ -7,7 +7,30 @@ from titans.ai.enum import Identity, Name
 
 
 class Player:
-    """Player class"""
+    """Player class
+
+    This class performs all of the core operations of each player.
+
+    Parameters
+    ----------
+    identity: Identity
+        player's identity
+    cards: list[Card]
+        cards used in this game
+
+    Attributes
+    ----------
+    deck_zone: list[Card]
+        cards in player's deck
+    discard_zone: list[Card]
+        cards in player's discard
+    hand_zone: list[Card]
+        cards in player's hand
+    identity: Identity
+        player's identity
+    play_zone: list[Card]
+        cards the player has in play
+    """
     def __init__(
         self,
         identity: Identity,
@@ -15,13 +38,13 @@ class Player:
         cards: list[Card],
     ):
         # save identity
-        self.identity = identity
+        self.identity: Identity = identity
 
         # initialize zones
-        self.deck: list[Card] = []
-        self.discard: list[Card] = []
-        self.hand: list[Card] = []
-        self.play: list[Card] = []
+        self.deck_zone: list[Card] = []
+        self.discard_zone: list[Card] = []
+        self.hand_zone: list[Card] = []
+        self.play_zone: list[Card] = []
 
         # create deck
         for c, card in enumerate(cards):
@@ -35,9 +58,29 @@ class Player:
                 continue
 
             # save card
-            self.deck.append(card)
+            self.deck_zone.append(card)
 
-    def draw(self, count: int = 1, /):
+    @property
+    def _zones(self) -> list[list[Card]]:
+        """Get zones, in order this class iterates through them
+
+        Having this as a function is useful for testing
+
+        Returns
+        -------
+        list[list[Card]]
+            zones, with their card contents
+        """
+        # It's important that hand immediately follows deck: This is used in
+        # constructed public knowledge in state()
+        return [
+            self.discard_zone,
+            self.play_zone,
+            self.deck_zone,
+            self.hand_zone,
+        ]
+
+    def draw_cards(self, count: int = 1, /):
         """Draw cards
 
         Parameters
@@ -46,18 +89,11 @@ class Player:
             number of cards to draw
         """
         for _ in range(count):
-            if not self.deck:
+            if not self.deck_zone:
                 return
-            self.hand.append(self.deck.pop())
+            self.hand_zone.append(self.deck_zone.pop())
 
-    def shuffle(self):
-        """Shuffle all cards together"""
-        self.deck += self.discard + self.hand + self.play
-        self.discard.clear()
-        self.hand.clear()
-        self.play.clear()
-
-    def state(self, public: bool) -> np.ndarray:
+    def get_state(self, public: bool) -> np.ndarray:
         """Get player state
 
         This is the numeric state that is fed into the ML model as the training
@@ -77,17 +113,15 @@ class Player:
         # initialzie state
         state = np.zeros(0)
 
-        # get cards in each zone. It's important that hand immediately follows
-        # deck (for reasons outlined below).
-        zones = [self.discard, self.play, self.deck, self.hand]
-        for zone in zones:
+        # get cards in each zone
+        for zone in self._zones:
 
             # initialize counts. For the private state, we zero-out the counts
             # and save the counts every time. For the public state, we combine
             # deck and hand, and so we slectively choose when to zero-out and
             # save the state.
-            zero_state = not public or zone != self.hand
-            save_state = not public or zone != self.deck
+            zero_state = not public or zone != self.hand_zone
+            save_state = not public or zone != self.deck_zone
             if zero_state:
                 counts = np.zeros(len(Name))
 
@@ -101,7 +135,7 @@ class Player:
 
         # get overall card counts for each zone. This helps with
         # publicly-available knowledge.
-        state = np.concatenate((state, [len(zone) for zone in zones]))
+        state = np.concatenate((state, [len(zone) for zone in self._zones]))
 
         # return
         return state
