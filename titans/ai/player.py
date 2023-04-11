@@ -19,6 +19,7 @@ class Player:
         self.deck: list[Card] = []
         self.discard: list[Card] = []
         self.hand: list[Card] = []
+        self.play: list[Card] = []
 
         # create deck
         for c, card in enumerate(cards):
@@ -46,6 +47,13 @@ class Player:
             if not self.deck:
                 return
             self.hand.append(self.deck.pop())
+
+    def shuffle(self):
+        """Shuffle all cards together"""
+        self.deck += self.discard + self.hand + self.play
+        self.discard.clear()
+        self.hand.clear()
+        self.play.clear()
 
     def shuffle(self):
         """Shuffle all cards together"""
