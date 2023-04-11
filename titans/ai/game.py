@@ -16,13 +16,20 @@ class Game:
         These dictionaries are unpacked to initialize the players. If one arg
         is provided, then this is used to initialize both players. If two are
         provided, then one is used for each player.
+
+    Attributes
+    ----------
+    cards: list[Card]
+        cards in the game
+    players: list[Players]
+        players playing the game
     """
     def __init__(
         self,
         *args: dict[str, Any] | list[dict[str, Any]],
     ):
         # construct cards
-        self.cards = []
+        self.cards: list[Card] = []
         for name in Name:
             count = 4
             match name:
@@ -35,7 +42,7 @@ class Game:
             self.cards.extend([Card(name) for _ in range(count)])
 
         # construct players
-        self.players = [
+        self.players: list[Player] = [
             Player(
                 identity,
                 cards=self.cards,
