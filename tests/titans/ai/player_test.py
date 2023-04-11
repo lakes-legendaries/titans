@@ -1,7 +1,7 @@
 from titans.ai import Card, Identity, Name, Player
 
 
-def test_deck_creation():
+def test___init__():
 
     # create sample cards
     cards = []
@@ -60,3 +60,37 @@ def test_shuffle():
     player.shuffle()
     assert len(player.deck) == 12
     assert len(player.hand) == 0
+
+
+def test_state():
+
+    # initialize
+    player = Player(Identity.MIKE, [])
+    player.discard.extend([Card(Name.MONK) for _ in range(2)])
+    player.play.append(Card(Name.AURORA_DRACO))
+    player.deck.extend([Card(Name.FINAL_JUDGMENT), Card(Name.GHOST)])
+    player.hand.append(Card(Name.GHOST))
+
+    # check private state
+    private_state = player.state(public=False)
+    assert private_state[Name.MONK] == 2
+    assert private_state[len(Name) + Name.AURORA_DRACO] == 1
+    assert private_state[2 * len(Name) + Name.FINAL_JUDGMENT] == 1
+    assert private_state[2 * len(Name) + Name.GHOST] == 1
+    assert private_state[3 * len(Name) + Name.GHOST] == 1
+    assert private_state[-4] == 2
+    assert private_state[-3] == 1
+    assert private_state[-2] == 2
+    assert private_state[-1] == 1
+
+    # check public state
+    public_state = player.state(public=True)
+    assert public_state[Name.MONK] == 2
+    assert public_state[len(Name) + Name.AURORA_DRACO] == 1
+    assert public_state[2 * len(Name) + Name.FINAL_JUDGMENT] == 1
+    assert public_state[2 * len(Name) + Name.GHOST] == 2
+    assert public_state[-4] == 2
+    assert public_state[-3] == 1
+    assert public_state[-2] == 2
+    assert public_state[-1] == 1
+    assert len(public_state) + len(Name) == len(private_state)
