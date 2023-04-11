@@ -218,6 +218,19 @@ class Player:
             energy += card.abilities.get(Ability.ENERGY, 0)
         return energy
 
+    def get_power(self) -> int:
+        """Get total power from all cards in play
+
+        Returns
+        -------
+        int
+            total power
+        """
+        power = 0
+        for card in self.play_zone:
+            power += card.power
+        return power
+
     def get_state(self, public: bool) -> np.ndarray:
         """Get player state
 

@@ -155,6 +155,19 @@ def test_get_energy():
     assert player.get_energy() == 3
 
 
+def test_get_power():
+    player = Player(Identity.MIKE, [])
+    assert player.get_power() == 0
+    player.play_zone.append(Card(Name.MONK))
+    assert player.get_power() == 0
+    player.play_zone.append(Card(Name.TRAVELER))
+    assert player.get_power() == 1
+    player.play_zone.append(Card(Name.WIZARD))
+    assert player.get_power() == 2
+    player.play_zone.append(Card(Name.WIZARD))
+    assert player.get_power() == 3
+
+
 def test_get_state():
 
     # initialize
