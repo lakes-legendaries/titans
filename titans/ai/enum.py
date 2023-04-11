@@ -79,6 +79,12 @@ class Name(IntEnum):
     WHAT_LIES_BELOW = auto()
 
 
+class Network(IntEnum):
+    """Neural networks"""
+    AWAKEN = 0
+    PLAY = auto()
+
+
 class Species(IntEnum):
     """Card Species"""
     DWELLER = 0
