@@ -43,7 +43,10 @@ def test___init__():
 def test__get_global_state():
 
     # initialize
-    players = [Player(identity, []) for identity in Identity]
+    players = [
+        Player(identity, [], random_state=random_state)
+        for identity, random_state in zip(Identity, [42, 271828])
+    ]
     for player in players:
         player.deck_zone.extend([Card(name) for name in Name])
         player.shuffle_cards()
