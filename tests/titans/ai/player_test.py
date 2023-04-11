@@ -33,8 +33,17 @@ def test_deck_creation():
 
 
 def test_draw():
+
+    # initialize
     cards = [Card(Name.MONK) for _ in range(24)]
     player = Player(Identity.MIKE, cards)
+
+    # draw 4 cards
     player.draw(4)
     assert len(player.deck) == 8
     assert len(player.hand) == 4
+
+    # draw all cards (w/ overdraw)
+    player.draw(30)
+    assert len(player.deck) == 0
+    assert len(player.hand) == 12
