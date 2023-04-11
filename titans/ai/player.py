@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Identity, Name
+from titans.ai.enum import Identity, Name, Network
 
 
 class Player:
@@ -47,7 +47,7 @@ class Player:
         identity: Identity,
         /,
         cards: list[Card],
-        strategies: list[np.ndarray | None],
+        strategies: list[np.ndarray | None] = [None for _ in Network],
         *,
         random_state: int = None,
     ):
