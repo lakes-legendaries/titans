@@ -188,8 +188,8 @@ class Player:
             # and save the counts every time. For the public state, we combine
             # deck and hand, and so we slectively choose when to zero-out and
             # save the state.
-            zero_state = not public or zone != self.hand_zone
-            save_state = not public or zone != self.deck_zone
+            zero_state = not public or zone is not self.hand_zone
+            save_state = not public or zone is not self.deck_zone
             if zero_state:
                 counts = np.zeros(len(Name))
 
