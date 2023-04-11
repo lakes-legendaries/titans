@@ -47,3 +47,8 @@ class Player:
                 return
             self.hand.append(self.deck.pop())
 
+    def shuffle(self):
+        """Shuffle all cards together"""
+        self.deck += self.discard + self.hand
+        self.discard.clear()
+        self.hand.clear()

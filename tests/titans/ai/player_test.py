@@ -47,3 +47,16 @@ def test_draw():
     player.draw(30)
     assert len(player.deck) == 0
     assert len(player.hand) == 12
+
+
+def test_shuffle():
+
+    # initialize
+    cards = [Card(Name.WIZARD) for _ in range(24)]
+    player = Player(Identity.MIKE, cards)
+
+    # draw, then shuffle
+    player.draw(4)
+    player.shuffle()
+    assert len(player.deck) == 12
+    assert len(player.hand) == 0
