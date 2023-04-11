@@ -1,4 +1,4 @@
-"""Players"""
+"""Player module"""
 
 from __future__ import annotations
 
@@ -19,6 +19,8 @@ class Player:
         player's identity
     cards: list[Card]
         cards used in this game
+    strategies: list[np.ndarray | None]
+        strategies for performing actions. If None, random choices will be used
     random_state: int | None, optional, default=None
         player's random seed
 
@@ -34,37 +36,45 @@ class Player:
         player's identity
     play_zone: list[Card]
         cards the player has in play
+    ritual_piles: list[Card]
+        cards in the shared ritual piles. This is harmonized between players in
+        Player.handshake()
+    strategies: list[np.ndarray | None]
+        strategies for performing actions
     """
     def __init__(
         self,
         identity: Identity,
         /,
         cards: list[Card],
+        strategies: list[np.ndarray | None],
         *,
         random_state: int = None,
     ):
-        # save identity
+        # save identity and strategies
         self.identity: Identity = identity
+        self.strategies: list[np.ndarray] = strategies
 
         # initialize zones
         self.deck_zone: list[Card] = []
         self.discard_zone: list[Card] = []
         self.hand_zone: list[Card] = []
         self.play_zone: list[Card] = []
+        self.ritual_piles: list[Card] = []
 
-        # create deck
+        # create deck and ritual piles
         for c, card in enumerate(cards):
 
-            # only deal out starting cards
-            if card.name not in [Name.MONK, Name.WIZARD]:
-                continue
+            # make starting deck
+            if card.name in [Name.MONK, Name.WIZARD]:
 
-            # this player only gets every other starting card
-            if c % len(Identity) != self.identity:
-                continue
+                # this player gets every other starting card
+                if c % len(Identity) == self.identity:
+                    self.deck_zone.append(card)
 
-            # save card
-            self.deck_zone.append(card)
+            # add card to ritual piles
+            else:
+                self.ritual_piles.append(card)
 
         # initialize opponent
         self.opponent: Player | None = None
@@ -114,18 +124,40 @@ class Player:
             self.hand_zone,
         ]
 
-    def draw_cards(self, count: int = 1, /):
+    def awaken_card(self, /):
+        """Awaken a card from the ritual piles
+
+        The awakened card is added to your deck. You can always choose to not
+        awaken.
+        """
+
+    def draw_cards(self, count: int = 1, /) -> list[Card]:
         """Draw cards
 
         Parameters
         ----------
         count: int
             number of cards to draw
+
+        Returns
+        -------
+        list[Card]
+            the cards drawn. These are added to self.hand_zone, but are also
+            returned for easy debugging / logging.
         """
+        drawn = []
         for _ in range(count):
+
+            # if we run out of cards to draw, then stop early
             if not self.deck_zone:
-                return
-            self.hand_zone.append(self.deck_zone.pop())
+                return drawn
+
+            # draw card, add to hand
+            drawn.append(self.deck_zone.pop())
+            self.hand_zone.append(drawn[-1])
+
+        # return list of drawn cards
+        return drawn
 
     def get_state(self, public: bool) -> np.ndarray:
         """Get player state
@@ -189,12 +221,35 @@ class Player:
         """
         self.opponent = opponent
         opponent.opponent = self
+        opponent.ritual_piles = self.ritual_piles
 
+    def play_cards(self, count: int = 1, /):
+        """Play one or more cards
+
+        Parameters
+        ----------
+        count: int, optional, default=1
+            how many cards to play
+        """
+
+        # play multiple
+        if count > 1:
+            for _ in range(count):
+                self.play()
+            return
+
+        # choose card to play
+        probabilities = self._game_state() * self.play_strategy
+        for choice in np.argsort(probabilities):
+            if choice in self.hand_zone:
+                self.play_zone.append(
+                    self.hand_zone.pop(
+                        self.hand_zone.index(choice)
+                    )
+                )
 
     def shuffle_cards(self):
         """Shuffle all cards together"""
-        opponent.ritual_piles = self.ritual_piles
-
 
         # move all cards to the deck
         self.deck_zone += self.discard_zone + self.hand_zone + self.play_zone
