@@ -50,3 +50,19 @@ class Game:
             for identity in Identity
         ]
         self.players[0].handshake(self.players[1])
+
+    def play_age(self):
+        """Execute an age"""
+
+        # freeze states
+        for player in self.players:
+            player.freeze_state()
+
+        # play and awaken cards
+        for player in self.players:
+            player.play_cards()
+            player.awaken_card()
+
+        # unfreeze states
+        for player in self.players:
+            player.unfreeze_state()
