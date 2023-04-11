@@ -34,7 +34,7 @@ class Game:
                     count = 8
                 case Name.GHOST:
                     count = 12
-            self.cards.extend([Card(name) for _ in count])
+            self.cards.extend([Card(name) for _ in range(count)])
 
         # construct players
         self.players = [
