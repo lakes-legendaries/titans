@@ -290,3 +290,9 @@ def test_shuffle_cards():
     player.shuffle_cards()
     assert len(player.deck_zone) == 12
     assert len(player.hand_zone) == 0
+
+    # show cards in discard go to deck
+    player.discard_zone.append(Card(Name.GHOST))
+    player.shuffle_cards()
+    assert len(player.deck_zone) == 13
+    assert sum([card.name == Name.GHOST for card in player.deck_zone]) == 1
