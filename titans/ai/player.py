@@ -155,7 +155,7 @@ class Player:
             self.hand_zone,
         ]
 
-    def awaken_card(self, /) -> Card | None:
+    def awaken_card(self, /) -> tuple[Card | None, int]:
         """Awaken a card from the ritual piles
 
         The awakened card is added to your discard pile. You can always choose
@@ -167,6 +167,9 @@ class Player:
             awakened card. This is automatically added to self.discard_zone,
             but is returned here for easy debugging / logging. None is returned
             if we choose to not awaken.
+        int
+            decision made. This is the index of the decision matrix that was
+            ultimately chosen.
         """
 
         # get decision matrix
@@ -185,7 +188,7 @@ class Player:
 
             # choose to not awaken
             if choice == len(Name):
-                return None
+                return None, choice
 
             # check if card is in ritual piles
             if (matches := np.argwhere(name_list == choice)).any():
@@ -201,7 +204,7 @@ class Player:
                 # awaken card
                 self.ritual_piles.pop(ritual_piles_idx)
                 self.discard_zone.append(card)
-                return card
+                return card, choice
 
         # error
         raise RuntimeError("Code error in awakening card")
@@ -370,7 +373,7 @@ class Player:
         opponent.opponent = self
         opponent.ritual_piles = self.ritual_piles
 
-    def play_cards(self, count: int = 1, /) -> list[Card]:
+    def play_cards(self, count: int = 1, /) -> list[tuple[Card, int]]:
         """Play one or more cards
 
         Parameters
@@ -380,9 +383,11 @@ class Player:
 
         Returns
         -------
-        list[Card]
-            cards played. These are automatically added to self.play_zone, but
-            are also returned for easy debugging / logging
+        list[tuple[Card, int]]
+            cards played and decisions made (i.e. the index of the decision
+            matrix that was executed). The played card is automatically added
+            to self.play_zone, but is also returned here for easy debugging /
+            logging
         """
 
         # initialize list of cards played
@@ -419,8 +424,8 @@ class Player:
                 self.play_zone.append(card)
                 break
 
-        # return card played
-        return played
+        # return card played and choice made
+        return played, choice
 
     def shuffle_cards(self):
         """Shuffle all cards together"""

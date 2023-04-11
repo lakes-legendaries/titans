@@ -102,7 +102,6 @@ def test__play_turn():
 
 
 def test_play():
-    game = Game()
-    winner = game.play()
-    assert game.players[winner].temples > 0
-    assert game.players[winner].opponent.temples == 0
+    game = Game().play()
+    assert game.players[game.winner].temples > 0
+    assert game.players[game.winner].opponent.temples == 0

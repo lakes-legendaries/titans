@@ -1,9 +1,11 @@
 """Game Module"""
 
+from __future__ import annotations
+
 from typing import Any
 
 from titans.ai.card import Card
-from titans.ai.enum import Name, Identity
+from titans.ai.enum import Name, Network, Identity
 from titans.ai.player import Player
 
 
@@ -25,6 +27,10 @@ class Game:
         cards in the game
     players: list[Players]
         players playing the game
+    states: list[list[dict[bytes, list[int | list[int]]]]]
+        mapping from global state -> choice for each player, for each strategy
+    winner: Identity | None
+        winner of game
     """
     def __init__(
         self,
@@ -64,6 +70,16 @@ class Game:
         ]
         self.players[0].handshake(self.players[1])
 
+        # initialize states
+        self.states: list[list[dict[bytes, list[int, list[int]]]]] = [
+            [
+                {}
+                for _ in Network
+            ]
+            for _ in Identity
+        ]
+        self.winner: Identity | None = None
+
     def _play_age(self):
         """Execute an age"""
 
@@ -71,10 +87,20 @@ class Game:
         for player in self.players:
             player.freeze_state()
 
-        # play and awaken cards
-        for player in self.players:
-            player.play_cards()
-            player.awaken_card()
+        # play and awaken cards, saving states
+        for player, states in zip(self.players, self.states):
+            frozen_state = player._frozen_state.tobytes()
+            for method, network in [
+                (Player.play_cards, Network.PLAY),
+                (Player.awaken_card, Network.AWAKEN),
+            ]:
+                # choose card
+                _, choice = method(player)
+                (
+                    states[network]
+                    .setdefault(frozen_state, [])
+                    .append(choice)
+                )
 
         # unfreeze states
         for player in self.players:
@@ -95,19 +121,21 @@ class Game:
         # battle
         self.players[0].battle_opponent()
 
-    def play(self) -> Identity | None:
+    def play(self) -> Game:
         """Play game
 
         Returns
         -------
-        Identity
-            winner of game
+        Game
+            calling instance
         """
         for _ in range(self._turn_limit):
             self._play_turn()
             for player in self.players:
                 if player.temples <= 0:
-                    return player.opponent.identity
+                    self.winner = player.opponent.identity
+                    return self
 
         # draw
-        return None
+        self.winner = None
+        return self
