@@ -145,5 +145,9 @@ class Player:
         """Shuffle all cards together"""
         self.deck_zone += self.discard_zone + self.hand_zone + self.play_zone
         self.discard_zone.clear()
+
+        # move all cards to the deck
         self.hand_zone.clear()
         self.play_zone.clear()
+        # shuffle order
+        self.rng.shuffle(self.deck_zone)
