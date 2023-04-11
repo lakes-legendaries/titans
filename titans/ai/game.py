@@ -27,8 +27,15 @@ class Game:
         cards in the game
     players: list[Players]
         players playing the game
-    states: list[list[dict[bytes, list[int | list[int]]]]]
-        mapping from global state -> choice for each player, for each strategy
+    states: dict[Identity, dict[Network, dict[bytes, list[int]]]]
+        mapping from global state -> choice for each player, for each strategy.
+        This contains three nested dictionaries:
+
+        1. The top-level dictionary is indexed by each player
+        2. The mid-level dictionary is indexed by each strategy (e.g. awaken,
+           play)
+        3. The bottom-level dictionary maps from game state to the choices made
+
     winner: Identity | None
         winner of game
     """
@@ -70,14 +77,14 @@ class Game:
         ]
         self.players[0].handshake(self.players[1])
 
-        # initialize states
-        self.states: list[list[dict[bytes, list[int, list[int]]]]] = [
-            [
-                {}
-                for _ in Network
-            ]
-            for _ in Identity
-        ]
+        # initialize states and winner
+        self.states: dict[Identity, dict[Network, dict[bytes, list[int]]]] = {
+            identity: {
+                network: {}
+                for network in Network
+            }
+            for identity in Identity
+        }
         self.winner: Identity | None = None
 
     def _play_age(self):
@@ -88,19 +95,21 @@ class Game:
             player.freeze_state()
 
         # play and awaken cards, saving states
-        for player, states in zip(self.players, self.states):
+        for player in self.players:
             frozen_state = player._frozen_state.tobytes()
             for method, network in [
                 (Player.play_cards, Network.PLAY),
                 (Player.awaken_card, Network.AWAKEN),
             ]:
-                # choose card
                 _, choice = method(player)
-                (
-                    states[network]
+                state_dict = (
+                    self.states[player.identity][network]
                     .setdefault(frozen_state, [])
-                    .append(choice)
                 )
+                if type(choice) is list:
+                    state_dict.extend(choice)
+                else:
+                    state_dict.append(choice)
 
         # unfreeze states
         for player in self.players:
