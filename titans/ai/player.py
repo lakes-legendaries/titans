@@ -41,6 +41,8 @@ class Player:
         Player.handshake()
     strategies: list[np.ndarray | None]
         strategies for performing actions
+    temples: int
+        number of temples under player's control
     """
     def __init__(
         self,
@@ -78,6 +80,9 @@ class Player:
 
         # initialize opponent
         self.opponent: Player | None = None
+
+        # initialize temples
+        self.temples = 3
 
         # initialize rng
         self.rng = np.random.default_rng(random_state)
@@ -176,6 +181,43 @@ class Player:
 
         # error
         raise RuntimeError("Code error in awakening card")
+
+    def battle(self) -> Identity | None:
+        """Battle opponent
+
+        This should NOT be called for each player, but only once
+
+        Returns
+        -------
+        Identity | None
+            winner of the battle
+        """
+
+        # make sure opponent is initialized
+        if self.opponent is None:
+            raise AttributeError(
+                "No opponent set!"
+                " You must run Player.handshake() before playing!"
+            )
+
+        # get power difference
+        power_delta = self.get_power() - self.opponent.get_power()
+
+        # battle is fought to a draw
+        if abs(power_delta) < 2:
+            return None
+
+        # find winner and loser
+        winner = self if power_delta > 0 else self.opponent
+        loser = self.opponent if power_delta > 0 else self
+
+        # update temple count
+        loser.temples -= 1
+        if winner.temples < 2:
+            winner.temples += 1
+
+        # return winner
+        return winner.identity
 
     def draw_cards(self, count: int = 1, /) -> list[Card]:
         """Draw cards
