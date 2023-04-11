@@ -64,7 +64,7 @@ class Game:
         ]
         self.players[0].handshake(self.players[1])
 
-    def play_age(self):
+    def _play_age(self):
         """Execute an age"""
 
         # freeze states
@@ -80,24 +80,7 @@ class Game:
         for player in self.players:
             player.unfreeze_state()
 
-    def play_game(self) -> Identity | None:
-        """Play game
-
-        Returns
-        -------
-        Identity
-            winner of game
-        """
-        for _ in range(self._turn_limit):
-            self.play_turn()
-            for player in self.players:
-                if player.temples <= 0:
-                    return player.opponent.identity
-
-        # draw
-        return None
-
-    def play_turn(self):
+    def _play_turn(self):
         """Execute a complete turn"""
 
         # shuffle step (we do this first)
@@ -107,7 +90,24 @@ class Game:
 
         # play ages
         for _ in range(3):
-            self.play_age()
+            self._play_age()
 
         # battle
         self.players[0].battle_opponent()
+
+    def play(self) -> Identity | None:
+        """Play game
+
+        Returns
+        -------
+        Identity
+            winner of game
+        """
+        for _ in range(self._turn_limit):
+            self._play_turn()
+            for player in self.players:
+                if player.temples <= 0:
+                    return player.opponent.identity
+
+        # draw
+        return None

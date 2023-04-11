@@ -28,7 +28,7 @@ def test___init__():
     assert (game.players[1].strategies[0] == dummy_strategy).all()
 
 
-def test_play_age():
+def test__play_age():
 
     # set strategy to always choose to play Monk, and alway awaken Nikolai
     strategies = [
@@ -45,7 +45,7 @@ def test_play_age():
     game = Game({"strategies": strategies})
     for player in game.players:
         player.draw_cards(6)
-    game.play_age()
+    game._play_age()
 
     # ensure correct cards played and awakened
     for player in game.players:
@@ -53,14 +53,7 @@ def test_play_age():
         assert player.discard_zone[0].name == Name.NIKOLAI_THE_CURSED
 
 
-def test_play_game():
-    game = Game()
-    winner = game.play_game()
-    assert game.players[winner].temples > 0
-    assert game.players[winner].opponent.temples == 0
-
-
-def test_play_turn():
+def test__play_turn():
 
     # set strategies
     strategies = [
@@ -81,7 +74,7 @@ def test_play_turn():
         {"strategies": strategies, "random_state": 271828},
         {"random_state": 42},
     )
-    game.play_turn()
+    game._play_turn()
 
     # ensure correct cards played and awakened
     assert all([
@@ -100,9 +93,16 @@ def test_play_turn():
     ])
 
     # play two more turns, check temple count
-    game.play_turn()
-    game.play_turn()
+    game._play_turn()
+    game._play_turn()
     assert (
         (game.players[0].temples < 3)
         or (game.players[1].temples < 3)
     )
+
+
+def test_play():
+    game = Game()
+    winner = game.play()
+    assert game.players[winner].temples > 0
+    assert game.players[winner].opponent.temples == 0
