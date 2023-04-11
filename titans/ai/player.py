@@ -139,3 +139,11 @@ class Player:
 
         # return
         return state
+
+
+    def shuffle_cards(self):
+        """Shuffle all cards together"""
+        self.deck_zone += self.discard_zone + self.hand_zone + self.play_zone
+        self.discard_zone.clear()
+        self.hand_zone.clear()
+        self.play_zone.clear()
