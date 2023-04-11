@@ -180,6 +180,16 @@ def test_draw_cards():
     assert len(player.hand_zone) == 12
 
 
+def test_freeze_state():
+    players = [Player(identity, []) for identity in Identity]
+    players[0].handshake(players[1])
+    players[0].freeze_state()
+    players[0].discard_zone.append(Card(Name.GHOST))
+    assert (players[0]._get_global_state() == 0).all()
+    players[0].unfreeze_state()
+    assert players[0]._get_global_state()[Name.GHOST] == 1
+
+
 def test_get_energy():
     player = Player(Identity.MIKE, [])
     assert player.get_energy() == 0

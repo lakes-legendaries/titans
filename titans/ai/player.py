@@ -49,7 +49,7 @@ class Player:
         identity: Identity,
         /,
         cards: list[Card],
-        strategies: list[np.ndarray | None] = None,
+        strategies: list[np.ndarray | None] | None = None,
         *,
         random_state: int = None,
     ):
@@ -86,10 +86,13 @@ class Player:
         self.opponent: Player | None = None
 
         # initialize temples
-        self.temples = 3
+        self.temples: int = 3
 
         # initialize rng
-        self.rng = np.random.default_rng(random_state)
+        self.rng: np.random.Generator = np.random.default_rng(random_state)
+
+        # initialize frozen state
+        self._frozen_state: np.ndarray | None = None
 
     def _get_global_state(self) -> np.ndarray:
         """Get your private state + opponent's public state
@@ -106,6 +109,10 @@ class Player:
                 "No opponent set!"
                 " You must run Player.handshake() before playing!"
             )
+
+        # return frozen state
+        if self._frozen_state is not None:
+            return self._frozen_state
 
         # return state
         return np.concatenate((
@@ -250,6 +257,15 @@ class Player:
 
         # return list of drawn cards
         return drawn
+
+    def freeze_state(self):
+        """Freeze global state (for simultaneous actions)
+
+        This causes self._get_global_state() to return what the state is when
+        you call self.freeze_state(). This will persist until you call
+        self.unfreeze_state().
+        """
+        self._frozen_state = self._get_global_state()
 
     def get_energy(self) -> int:
         """Get total energy from all cards in play
@@ -404,3 +420,11 @@ class Player:
 
         # shuffle order
         self.rng.shuffle(self.deck_zone)
+
+    def unfreeze_state(self):
+        """Unfreeze global state
+
+        This ends the hold put on the global state initiated by
+        self.freeze_state()
+        """
+        self._frozen_state = None
