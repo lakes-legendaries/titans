@@ -182,7 +182,7 @@ class Player:
         # error
         raise RuntimeError("Code error in awakening card")
 
-    def battle(self) -> Identity | None:
+    def battle_opponent(self) -> Identity | None:
         """Battle opponent
 
         This should NOT be called for each player, but only once

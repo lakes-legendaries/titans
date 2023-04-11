@@ -129,36 +129,36 @@ def test_awaken_card():
     assert len(players[0].discard_zone) == 3
 
 
-def test_battle():
+def test_battle_opponent():
 
     # initialize
     players = [Player(identity, []) for identity in Identity]
     players[0].handshake(players[1])
 
     # battle: tied power
-    assert players[0].battle() is None
+    assert players[0].battle_opponent() is None
     assert players[0].temples == players[1].temples == 3
 
     # battle: power off by one
     players[0].play_zone.append(Card(Name.WIZARD))
-    assert players[0].battle() is None
+    assert players[0].battle_opponent() is None
     assert players[0].temples == players[1].temples == 3
 
     # battle: power off by two
     players[0].play_zone.append(Card(Name.WIZARD))
-    assert players[0].battle() == players[0].identity
+    assert players[0].battle_opponent() == players[0].identity
     assert players[0].temples == 3
     assert players[1].temples == 2
 
     # battle: power off by three
     players[0].play_zone.append(Card(Name.WIZARD))
-    assert players[0].battle() == players[0].identity
+    assert players[0].battle_opponent() == players[0].identity
     assert players[0].temples == 3
     assert players[1].temples == 1
 
     # battle: comeback
     players[1].play_zone.extend([Card(Name.WIZARD) for _ in range(5)])
-    assert players[0].battle() == players[1].identity
+    assert players[0].battle_opponent() == players[1].identity
     assert players[0].temples == 2
     assert players[1].temples == 2
 
