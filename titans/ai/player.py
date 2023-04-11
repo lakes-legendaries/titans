@@ -34,9 +34,6 @@ class Player:
         player's identity
     play_zone: list[Card]
         cards the player has in play
-    ritual_piles: list[Card]
-        cards in the shared ritual piles. This is harmonized between players in
-        Player.handshake()
     """
     def __init__(
         self,
@@ -54,21 +51,20 @@ class Player:
         self.discard_zone: list[Card] = []
         self.hand_zone: list[Card] = []
         self.play_zone: list[Card] = []
-        self.ritual_piles: list[Card] = []
 
-        # create deck and ritual piles
+        # create deck
         for c, card in enumerate(cards):
 
-            # make starting deck
-            if card.name in [Name.MONK, Name.WIZARD]:
+            # only deal out starting cards
+            if card.name not in [Name.MONK, Name.WIZARD]:
+                continue
 
-                # this player gets every other starting card
-                if c % len(Identity) == self.identity:
-                    self.deck_zone.append(card)
+            # this player only gets every other starting card
+            if c % len(Identity) != self.identity:
+                continue
 
-            # add card to ritual piles
-            else:
-                self.ritual_piles.append(card)
+            # save card
+            self.deck_zone.append(card)
 
         # initialize opponent
         self.opponent: Player | None = None
@@ -197,6 +193,8 @@ class Player:
 
     def shuffle_cards(self):
         """Shuffle all cards together"""
+        opponent.ritual_piles = self.ritual_piles
+
 
         # move all cards to the deck
         self.deck_zone += self.discard_zone + self.hand_zone + self.play_zone
