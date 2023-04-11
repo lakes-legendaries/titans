@@ -37,6 +37,12 @@ class Element(IntEnum):
     ROCK = auto()
 
 
+class Identity(IntEnum):
+    """Player names"""
+    MIKE = 0
+    BRYAN = auto()
+
+
 class Name(IntEnum):
     """Card Names"""
 
@@ -71,12 +77,6 @@ class Name(IntEnum):
     SPINE_SPLITTER = auto()
     CAVERNS_DEFENDER = auto()
     WHAT_LIES_BELOW = auto()
-
-
-class Identity(IntEnum):
-    """Player names"""
-    MIKE = 0
-    BRYAN = auto()
 
 
 class Species(IntEnum):
