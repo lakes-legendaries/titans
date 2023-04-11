@@ -33,3 +33,17 @@ class Player:
 
             # save card
             self.deck.append(card)
+
+    def draw(self, count: int = 1, /):
+        """Draw cards
+
+        Parameters
+        ----------
+        count: int
+            number of cards to draw
+        """
+        for _ in range(count):
+            if not self.deck:
+                return
+            self.hand.append(self.deck.pop())
+

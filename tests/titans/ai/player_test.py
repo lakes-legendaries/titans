@@ -30,3 +30,11 @@ def test_deck_creation():
     for card0 in players[0].deck:
         for card1 in players[1].deck:
             assert not (card0 is card1)
+
+
+def test_draw():
+    cards = [Card(Name.MONK) for _ in range(24)]
+    player = Player(Identity.MIKE, cards)
+    player.draw(4)
+    assert len(player.deck) == 8
+    assert len(player.hand) == 4
