@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Identity, Name, Network
+from titans.ai.enum import Ability, Identity, Name, Network
 
 
 class Player:

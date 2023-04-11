@@ -100,6 +100,15 @@ def test_draw_cards():
     assert len(player.hand_zone) == 12
 
 
+def test_get_energy():
+    player = Player(Identity.MIKE, [])
+    assert player.get_energy() == 0
+    player.play_zone.append(Card(Name.MONK))
+    assert player.get_energy() == 1
+    player.play_zone.append(Card(Name.TRAVELER))
+    assert player.get_energy() == 3
+
+
 def test_get_state():
 
     # initialize
