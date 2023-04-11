@@ -373,7 +373,7 @@ class Player:
         opponent.opponent = self
         opponent.ritual_piles = self.ritual_piles
 
-    def play_cards(self, count: int = 1, /) -> list[tuple[Card, int]]:
+    def play_cards(self, count: int = 1, /) -> tuple[list[Card], list[int]]:
         """Play one or more cards
 
         Parameters
@@ -383,21 +383,26 @@ class Player:
 
         Returns
         -------
-        list[tuple[Card, int]]
-            cards played and decisions made (i.e. the index of the decision
-            matrix that was executed). The played card is automatically added
-            to self.play_zone, but is also returned here for easy debugging /
+        list[Card]
+            cards played. The played card is automatically added to
+            self.play_zone, but is also returned here for easy debugging /
             logging
+        list[int]
+            decisions made (i.e. the indices of the decision matrix that were
+            executed)
         """
 
         # initialize list of cards played
         played = []
+        choices = []
 
         # play multiple
         if count > 1:
             for _ in range(count):
-                played.extend(self.play_cards())
-            return played
+                rez = self.play_cards()
+                played.extend(rez[0])
+                choices.extend(rez[0])
+            return played, choices
 
         # get decision matrix
         decision_matrix = (
@@ -415,6 +420,7 @@ class Player:
                 card = self.deck_zone.pop()
                 played.append(card)
                 self.play_zone.append(card)
+                choices.append(choice)
                 break
 
             # play card from hand
@@ -422,10 +428,11 @@ class Player:
                 card = self.hand_zone.pop(matches[0][0])
                 played.append(card)
                 self.play_zone.append(card)
+                choices.append(choice)
                 break
 
         # return card played and choice made
-        return played, choice
+        return played, choices
 
     def shuffle_cards(self):
         """Shuffle all cards together"""
