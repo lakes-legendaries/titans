@@ -116,7 +116,9 @@ class Player:
             zones, with their card contents
         """
         # It's important that hand immediately follows deck: This is used in
-        # constructed public knowledge in state()
+        # constructed public knowledge in state(). This order is also
+        # hard-coded into the test test_get_state(); that should be updated at
+        # some point.
         return [
             self.discard_zone,
             self.play_zone,
