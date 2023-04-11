@@ -13,6 +13,7 @@ def test___init__():
 
     # create players
     players = [Player(identity, cards) for identity in Identity]
+    players[0].handshake(players[1])
 
     # check each starting deck has the right cards
     assert len(players[0].deck_zone) == len(players[1].deck_zone) == 15
@@ -32,6 +33,11 @@ def test___init__():
     for card0 in players[0].deck_zone:
         for card1 in players[1].deck_zone:
             assert not (card0 is card1)
+
+    # check ritual piles have the right cards
+    assert players[0].ritual_piles is players[1].ritual_piles
+    assert len(players[0].ritual_piles) == 100
+    assert all([card.name == Name.GHOST for card in players[0].ritual_piles])
 
 
 def test__get_global_state():
