@@ -51,3 +51,51 @@ def test_play_age():
     for player in game.players:
         assert player.play_zone[0].name == Name.MONK
         assert player.discard_zone[0].name == Name.NIKOLAI_THE_CURSED
+
+
+def test_play_turn():
+
+    # set strategies
+    strategies = [
+        np.zeros((
+            Player._get_global_state_size(),
+            len(Name) + 1,
+        ))
+        for _ in Network
+    ]
+    strategies[Network.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
+    strategies[Network.AWAKEN][:, Name.WINDS_HOWL] = 2
+    strategies[Network.AWAKEN][:, Name.FROSTBREATH] = 3
+    strategies[Network.PLAY][:, Name.MONK] = 2
+    strategies[Network.PLAY][:, len(Name)] = 1
+
+    # draw cards, play age
+    game = Game(
+        {"strategies": strategies, "random_state": 271828},
+        {"random_state": 42},
+    )
+    game.play_turn()
+
+    # ensure correct cards played and awakened
+    assert all([
+        card.name == Name.MONK
+        for card in game.players[0].play_zone
+    ])
+    assert game.players[0].discard_zone[0].name == Name.NIKOLAI_THE_CURSED
+    assert game.players[0].discard_zone[1].name == Name.WINDS_HOWL
+    assert game.players[0].discard_zone[2].name == Name.FROSTBREATH
+    assert not all([
+        c0.name == c1.name
+        for c0, c1 in zip(
+            game.players[0].discard_zone,
+            game.players[1].discard_zone,
+        )
+    ])
+
+    # play two more turns, check temple count
+    game.play_turn()
+    game.play_turn()
+    assert (
+        (game.players[0].temples < 3)
+        or (game.players[1].temples < 3)
+    )

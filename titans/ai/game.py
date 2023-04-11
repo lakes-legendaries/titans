@@ -73,3 +73,18 @@ class Game:
         # unfreeze states
         for player in self.players:
             player.unfreeze_state()
+
+    def play_turn(self):
+        """Execute a complete turn"""
+
+        # shuffle step (we do this first)
+        for player in self.players:
+            player.shuffle_cards()
+            player.draw_cards(6)
+
+        # play ages
+        for _ in range(3):
+            self.play_age()
+
+        # battle
+        self.players[0].battle_opponent()
