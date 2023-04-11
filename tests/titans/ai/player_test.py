@@ -1,3 +1,5 @@
+import numpy as np
+
 from titans.ai import Card, Identity, Name, Player
 
 
@@ -30,6 +32,46 @@ def test___init__():
     for card0 in players[0].deck_zone:
         for card1 in players[1].deck_zone:
             assert not (card0 is card1)
+
+
+def test__get_global_state():
+
+    # initialize
+    players = [Player(identity, []) for identity in Identity]
+    for player in players:
+        player.deck_zone.extend([Card(name) for name in Name])
+        player.shuffle_cards()
+        player.draw_cards(6)
+    players[0].handshake(players[1])
+
+    # ensure hands aren't equal (which is a check on shuffle_cards)
+    assert any([
+        c0.name != c1.name
+        for c0, c1 in zip(players[0].hand_zone, players[1].hand_zone)
+    ])
+
+    # toss out a few cards from the deck, so that public states don't match
+    for player in players:
+        for _ in range(5):
+            player.deck_zone.pop()
+
+    # get states
+    public_states = [player.get_state(public=True) for player in players]
+    private_states = [player.get_state(public=False) for player in players]
+
+    # check states don't match
+    assert (public_states[0] != public_states[1]).any()
+    assert (private_states[0] != private_states[1]).any()
+
+    # check global states
+    assert (players[0]._get_global_state() == np.concatenate((
+        private_states[0],
+        public_states[1],
+    ))).all()
+    assert (players[1]._get_global_state() == np.concatenate((
+        private_states[1],
+        public_states[0],
+    ))).all()
 
 
 def test_draw_cards():

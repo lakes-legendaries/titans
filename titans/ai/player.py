@@ -1,5 +1,7 @@
 """Players"""
 
+from __future__ import annotations
+
 import numpy as np
 
 from titans.ai.card import Card
@@ -17,6 +19,8 @@ class Player:
         player's identity
     cards: list[Card]
         cards used in this game
+    random_state: int | None, optional, default=None
+        player's random seed
 
     Attributes
     ----------
@@ -36,6 +40,8 @@ class Player:
         identity: Identity,
         /,
         cards: list[Card],
+        *,
+        random_state: int = None,
     ):
         # save identity
         self.identity: Identity = identity
@@ -59,6 +65,34 @@ class Player:
 
             # save card
             self.deck_zone.append(card)
+
+        # initialize opponent
+        self.opponent: Player | None = None
+
+        # initialize rng
+        self.rng = np.random.default_rng(random_state)
+
+    def _get_global_state(self) -> np.ndarray:
+        """Get your private state + opponent's public state
+
+        Returns
+        -------
+        np.ndarray
+            global state, from this instance's point-of-view
+        """
+
+        # make sure opponent is initialized
+        if self.opponent is None:
+            raise AttributeError(
+                "No opponent set!"
+                " You must run Player.handshake() before playing!"
+            )
+
+        # return state
+        return np.concatenate((
+            self.get_state(public=False),
+            self.opponent.get_state(public=True),
+        ))
 
     @property
     def _zones(self) -> list[list[Card]]:
@@ -139,6 +173,22 @@ class Player:
 
         # return
         return state
+
+    def handshake(self, opponent: Player, /):
+        """Set this player's opponent (and vice-versa)
+
+        This sets self.opponent, which is used when getting the global game
+        state
+
+        You always must handshake before starting a game.
+
+        Parameters
+        ----------
+        opponent: Player
+            this instance's competitor for the game
+        """
+        self.opponent = opponent
+        opponent.opponent = self
 
 
     def shuffle_cards(self):
