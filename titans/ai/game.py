@@ -1,6 +1,6 @@
 """Game Module"""
 
-import numpy as np
+from typing import Any
 
 from titans.ai.card import Card
 from titans.ai.enum import Name, Identity
@@ -12,17 +12,15 @@ class Game:
 
     Parameters
     ----------
-    strategies: list[None | list[np.ndarray | None]] | None, optional, default=None
-        players' strategies
-    """  # noqa
+    *args: dict[str, Any] | list[dict[str, Any]]
+        These dictionaries are unpacked to initialize the players. If one arg
+        is provided, then this is used to initialize both players. If two are
+        provided, then one is used for each player.
+    """
     def __init__(
         self,
-        strategies: list[None | list[np.ndarray | None]] | None = None,
+        *args: dict[str, Any] | list[dict[str, Any]],
     ):
-        # default strategies to random
-        if strategies is None:
-            strategies = [None for _ in Identity]
-
         # construct cards
         self.cards = []
         for name in Name:
@@ -41,8 +39,14 @@ class Game:
             Player(
                 identity,
                 cards=self.cards,
-                strategies=strategy,
+                **(
+                    {}
+                    if len(args) == 0
+                    else args[0]
+                    if len(args) == 1
+                    else args[identity]
+                ),
             )
-            for identity, strategy in zip(Identity, strategies)
+            for identity in Identity
         ]
         self.players[0].handshake(self.players[1])
