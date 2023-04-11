@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Card, Identity, Name, Player
+from titans.ai import Card, Identity, Name, Network, Player
 
 
 def test___init__():
@@ -132,6 +132,39 @@ def test_get_state():
     assert public_state[-2] == 2
     assert public_state[-1] == 1
     assert len(public_state) + len(Name) == len(private_state)
+
+
+def test_play_cards():
+
+    # initialize
+    cards = []
+    cards.extend([Card(Name.MONK) for _ in range(16)])
+    cards.extend([Card(Name.WIZARD) for _ in range(8)])
+    players = [
+        Player(identity, cards, random_state=random_state)
+        for identity, random_state in zip(Identity, [42, 271828])
+    ]
+    players[0].handshake(players[1])
+    players[0].shuffle_cards()
+    players[0].draw_cards(6)
+    players[0].hand_zone.append(Card(Name.AURORA_DRACO))
+
+    # set strategy to always choose aurora draco
+    players[0].strategies[Network.PLAY] = np.zeros((
+        len(players[0]._get_global_state()),
+        len(Name) + 1,
+    ))
+    players[0].strategies[Network.PLAY][:, Name.AURORA_DRACO] = 1
+
+    # play card, check aurora draco was played
+    players[0].play_cards()
+    assert players[0].play_zone[0].name == Name.AURORA_DRACO
+
+    # change strategy to play top card of the deck
+    players[0].strategies[Network.PLAY][:, Name.AURORA_DRACO] = 0
+    players[0].strategies[Network.PLAY][:, -1] = 0
+    players[0].play_cards()
+    assert len(players[0].deck_zone) == 5
 
 
 def test_shuffle_cards():

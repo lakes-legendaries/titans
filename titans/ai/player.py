@@ -225,30 +225,57 @@ class Player:
         opponent.opponent = self
         opponent.ritual_piles = self.ritual_piles
 
-    def play_cards(self, count: int = 1, /):
+    def play_cards(self, count: int = 1, /) -> list[Card]:
         """Play one or more cards
 
         Parameters
         ----------
         count: int, optional, default=1
             how many cards to play
+
+        Returns
+        -------
+        list[Card]
+            cards played. These are automatically added to self.play_zone, but
+            are also returned for easy debugging / logging
         """
+
+        # initialize list of cards played
+        played = []
 
         # play multiple
         if count > 1:
             for _ in range(count):
-                self.play()
-            return
+                played.extend(self.play_cards())
+            return played
 
-        # choose card to play
-        probabilities = self._game_state() * self.play_strategy
-        for choice in np.argsort(probabilities):
-            if choice in self.hand_zone:
-                self.play_zone.append(
-                    self.hand_zone.pop(
-                        self.hand_zone.index(choice)
-                    )
-                )
+        # get decision matrix
+        decision_matrix = (
+            self._get_global_state() @ self.strategies[Network.PLAY]
+            if self.strategies[Network.PLAY] is not None
+            else self.rng.random(len(Name) + 1)
+        )
+
+        # play highest-valued card that we can play
+        name_list = np.array([card.name for card in self.hand_zone])
+        for choice in np.argsort(decision_matrix)[::-1]:
+
+            # play top card of deck
+            if choice == len(Name) and len(self.deck_zone) > 0:
+                card = self.deck_zone.pop()
+                played.append(card)
+                self.play_zone.append(card)
+                break
+
+            # play card from hand
+            if (matches := np.argwhere(name_list == choice)).any():
+                card = self.hand_zone.pop(matches[0][0])
+                played.append(card)
+                self.play_zone.append(card)
+                break
+
+        # return card played
+        return played
 
     def shuffle_cards(self):
         """Shuffle all cards together"""
