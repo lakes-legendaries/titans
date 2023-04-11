@@ -83,6 +83,52 @@ def test__get_global_state():
     ))).all()
 
 
+def test_awaken_card():
+
+    # initialize
+    cards = []
+    cards.extend([Card(Name.GHOST) for _ in range(12)])
+    cards.append(Card(Name.AURORA_DRACO))
+    players = [Player(identity, cards) for identity in Identity]
+    players[0].handshake(players[1])
+
+    # try to awaken with zero energy
+    players[0].awaken_card()
+    assert len(players[0].discard_zone) == 0
+
+    # set strategy to choose aurora draco 1st, ghosts 2nd
+    players[0].strategies[Network.AWAKEN] = np.zeros((
+        len(players[0]._get_global_state()),
+        len(Name) + 1,
+    ))
+    players[0].strategies[Network.AWAKEN][:, Name.GHOST] = 1
+    players[0].strategies[Network.AWAKEN][:, Name.AURORA_DRACO] = 2
+
+    # add energy, check we buy what we can
+    players[0].play_zone.append(Card(Name.MONK))
+    players[0].awaken_card()
+    assert len(players[0].discard_zone) == 1
+    assert players[0].discard_zone[0].name == Name.GHOST
+
+    # add energy, see how this changes, check we buy what we can
+    players[0].play_zone.append(Card(Name.TRAVELER))
+    players[0].awaken_card()
+    assert len(players[0].discard_zone) == 2
+    assert players[0].discard_zone[-1].name == Name.AURORA_DRACO
+
+    # change strategy to buy ghost
+    players[0].strategies[Network.AWAKEN][:, Name.GHOST] = 2
+    players[0].strategies[Network.AWAKEN][:, Name.AURORA_DRACO] = 1
+    players[0].awaken_card()
+    assert len(players[0].discard_zone) == 3
+    assert players[0].discard_zone[-1].name == Name.GHOST
+
+    # change strategy to not buy
+    players[0].strategies[Network.AWAKEN][:, len(Name)] = 3
+    players[0].awaken_card()
+    assert len(players[0].discard_zone) == 3
+
+
 def test_draw_cards():
 
     # initialize

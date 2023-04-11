@@ -126,12 +126,56 @@ class Player:
             self.hand_zone,
         ]
 
-    def awaken_card(self, /):
+    def awaken_card(self, /) -> Card | None:
         """Awaken a card from the ritual piles
 
-        The awakened card is added to your deck. You can always choose to not
-        awaken.
+        The awakened card is added to your discard pile. You can always choose
+        to not awaken.
+
+        Returns
+        -------
+        Card | None
+            awakened card. This is automatically added to self.discard_zone,
+            but is returned here for easy debugging / logging. None is returned
+            if we choose to not awaken.
         """
+
+        # get decision matrix
+        decision_matrix = (
+            self._get_global_state() @ self.strategies[Network.AWAKEN]
+            if self.strategies[Network.AWAKEN] is not None
+            else self.rng.random(len(Name) + 1)
+        )
+
+        # get our current energy
+        energy = self.get_energy()
+
+        # awaken highest-valued accessible card we can afford
+        name_list = np.array([card.name for card in self.ritual_piles])
+        for choice in np.argsort(decision_matrix)[::-1]:
+
+            # choose to not awaken
+            if choice == len(Name):
+                return None
+
+            # check if card is in ritual piles
+            if (matches := np.argwhere(name_list == choice)).any():
+
+                # get chosen card
+                ritual_piles_idx = matches[0][0]
+                card = self.ritual_piles[ritual_piles_idx]
+
+                # check if we have enough energy to awaken
+                if energy < card.cost:
+                    continue
+
+                # awaken card
+                self.ritual_piles.pop(ritual_piles_idx)
+                self.discard_zone.append(card)
+                return card
+
+        # error
+        raise RuntimeError("Code error in awakening card")
 
     def draw_cards(self, count: int = 1, /) -> list[Card]:
         """Draw cards
@@ -160,6 +204,19 @@ class Player:
 
         # return list of drawn cards
         return drawn
+
+    def get_energy(self) -> int:
+        """Get total energy from all cards in play
+
+        Returns
+        -------
+        int
+            available energy
+        """
+        energy = 0
+        for card in self.play_zone:
+            energy += card.abilities.get(Ability.ENERGY, 0)
+        return energy
 
     def get_state(self, public: bool) -> np.ndarray:
         """Get player state
