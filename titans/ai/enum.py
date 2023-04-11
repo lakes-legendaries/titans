@@ -73,6 +73,12 @@ class Name(IntEnum):
     WHAT_LIES_BELOW = auto()
 
 
+class Identity(IntEnum):
+    """Player names"""
+    MIKE = 0
+    BRYAN = auto()
+
+
 class Species(IntEnum):
     """Card Species"""
     DWELLER = 0
