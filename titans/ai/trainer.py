@@ -148,8 +148,8 @@ class Trainer:
         """
         return Game.play()
 
-    def _save_states(self, game: Game):
-        """Extract and save states from the most recently-played game
+    def _save_history(self, game: Game):
+        """Extract and save history from the most recently-played game
 
         Parameters
         ----------
@@ -185,7 +185,7 @@ class Trainer:
         # play games, save states
         for _ in range(num_games):
             game = self._play_game()
-            self._save_states(game)
+            self._save_history(game)
 
 
 class POCTrainer(Trainer):

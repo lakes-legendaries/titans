@@ -3,12 +3,12 @@ import numpy as np
 from titans.ai import Game, Name, Network, Player, Trainer
 
 
-def test__save_states():
+def test__save_history():
 
     # initialize
     trainer = Trainer()
     game = Game({"random_state": 271828}).play()
-    trainer._save_states(game)
+    trainer._save_history(game)
 
     # check histories match
     for is_winner in [True, False]:
