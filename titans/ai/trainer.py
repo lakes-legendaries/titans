@@ -79,8 +79,10 @@ class Trainer:
         self.networks: dict[Network, keras.Model] = {}
         for network in Network:
             input_layer = layers.Input(shape=(Player._get_global_state_size()))
-            x = layers.Dense(100)(input_layer)
-            output_layer = layers.Dense(len(Name) + 1)(x)
+            output_layer = layers.Dense(
+                len(Name) + 1,
+                use_bias=False,
+            )(input_layer)
             model = keras.Model(input_layer, output_layer)
             model.compile(
                 loss=Trainer._nanmse_loss,
