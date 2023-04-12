@@ -26,19 +26,31 @@ class Trainer:
 
     Attributes
     ----------
-    states: dict[Network, dict[bool, dict[bytes, np.ndarray]]]
-        This dictionary lets you see each choice that was made in each game,
-        and whether it led to winning or losing the game. It contains three
-        nested dictionaries:
+    history: dict[bool, dict[Network, dict[bytes, np.ndarray]]]
+        here, the history of winning and losing players is recorded. This
+        variable maps every global state to every choice made given that state,
+        recording whether the player that made that choice ultimately won or
+        lost the game.
 
-        1. The top-level dictionary is indexed by the network (e.g. play,
-           awaken).
-        2. The mid-level dictionary shows whether the state came from the
+        This variable contains three nested dictionaries:
+
+        2. The top-level dictionary shows whether the state came from the
            winning or losing player. (Please note that states can exist in both
            the winning and losing dictionaries, and you have to compare these
            to get the win percentage for any given move.)
-        3. The bottom-level dictionary maps from the state to the number of
-           times each choice was made.
+        2. The mid-level dictionary is indexed by each strategy (e.g. awaken,
+           play)
+        3. The bottom-level dictionary maps from game state to the number of
+           times each choice was made
+
+        There are two differences between Trainer.history and Game.history:
+
+        1. Game.history lists the choices of each player, while Trainer.history
+           combines across winning and losing players.
+        2. While the bottom-level dictionary of Game.history contains a
+           list[int] that shows each choice that was made, the equivalent
+           Trainer.history dictionary contains an np.ndarray that shows the
+           number of times each choice was made.
     """
     def __init__(
         self,
@@ -50,13 +62,13 @@ class Trainer:
         self._err_bound_low = err_bound_low
         self._err_bound_high = err_bound_high
 
-        # initialize states dictionary
-        self.states: dict[Network, dict[bool, dict[bytes, np.ndarray]]] = {
-            network: {
-                is_winner: {}
-                for is_winner in [True, False]
+        # initialize history dictionary
+        self.history: dict[bool, dict[Network, dict[bytes, np.ndarray]]] = {
+            is_winner: {
+                network: {}
+                for network in Network
             }
-            for network in Network
+            for is_winner in [True, False]
         }
 
     def _get_Xy(self) -> dict[Network, tuple[np.ndarray, np.ndarray]]:
@@ -79,11 +91,11 @@ class Trainer:
 
         # do for each strategy
         Xy = {}
-        for network, network_states in self.states.items():
+        for network, network_history in self.history.items():
 
             # get list of states
-            states = np.concatenate([
-                list(network_states[is_winner].keys())
+            all_states = np.concatenate([
+                list(network_history[is_winner].keys())
                 for is_winner in [True, False]
             ])
 
@@ -92,11 +104,12 @@ class Trainer:
             y = []
 
             # process each state
-            for state in states:
+            for state in all_states:
 
                 # get wins and counts
-                wins = network_states[True].get(state, default_zeros)
-                counts = wins + network_states[False].get(state, default_zeros)
+                wins = network_history[True].get(state, default_zeros)
+                losses = network_history[False].get(state, default_zeros)
+                counts = wins + losses
 
                 # get means and std err
                 means = wins / counts
@@ -136,22 +149,29 @@ class Trainer:
         return Game.play()
 
     def _save_states(self, game: Game):
-        default_zeros = np.ndarray(len(Name) + 1)
-        for identity, player_states in game.states.items():
-            is_winner = identity == game.winner
-            for network, network_states in player_states.items():
-                for state, choices in network_states.items():
+        """Extract and save states from the most recently-played game
 
-                    # add key to overall dict
+        Parameters
+        ----------
+        game: Game
+            most recently-played game
+        """
+        default_zeros = np.zeros(len(Name) + 1)
+        for identity, player_history in game.history.items():
+            is_winner = identity == game.winner
+            for network, network_history in player_history.items():
+                for state, choices in network_history.items():
+
+                    # add default zeros to dictionary
                     (
                         self
-                        .states[network][is_winner]
+                        .history[is_winner][network]
                         .setdefault(state, default_zeros.copy())
                     )
 
                     # increment choices
                     for choice in choices:
-                        self.states[network][is_winner][state][choice] += 1
+                        self.history[is_winner][network][state][choice] += 1
 
     def play_random(self, num_games: int = 100):
         """Play a game with random strategies
@@ -167,12 +187,12 @@ class Trainer:
             game = self._play_game()
             self._save_states(game)
 
-        # # create Xy data
-        Xy = self._get_Xy()
 
+class POCTrainer(Trainer):
+    """Simple proof-of-concept trainer that demonstrates learning
 
-class AwakenTrainer(Trainer):
-    """This trainer uses ability-less cards for a simple POC"""
+    This trainer removes all non-Energy abilities from the cards before playing
+    """
     def _play_game(self) -> Game:
         game = Game()
         for card in game.cards:
@@ -182,6 +202,3 @@ class AwakenTrainer(Trainer):
                 if ability == Ability.ENERGY
             }
         return game.play()
-
-
-AwakenTrainer().play_random(100)
