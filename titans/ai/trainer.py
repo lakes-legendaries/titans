@@ -11,18 +11,20 @@ class Trainer:
 
     Parameters
     ----------
-    err_bound_low: float, optional, default=0.4
+    clip_exclusion_zone: float, optional, default=0.2
         when computing the win percentage for any given choice, we bring it in
         towards 0.5 by the standard error. (E.g. if, for a given state, we make
         a choice 4 times, and we win all 4 times, then the y-label for that
         instance will be 1.0 - 1/sqrt(4)). Values less than 0.5 are raised, and
-        values greater than 0.5 are lowered. However, we'll only lower so much
-        (because we don't want, say, something with a win percentage of 0.55 to
-        be brought to the other side of 0.50). This value is the upper bound to
-        which we'll raise any observable to when applying the standard error.
-    err_bound_high: float, optional, default=0.6
-        same as err_bound_low, but this is the lower bound we'll lower any
-        value to.
+        values greater than 0.5 are lowered. However, we'll only bring in by so
+        much (because we don't want, say, something with a win percentage of
+        0.55 to be brought to the other side of 0.50).
+
+        The clip_exclusion_zone is the window surrounding 0.5 that values won't
+        be brought beyond. E.g. if clip_exclusion_zone=0.2, then values won't
+        be raised above 0.4 and lowered beneath 0.6.
+
+        If you set this to None, then no clipping will occur.
 
     Attributes
     ----------
@@ -55,12 +57,10 @@ class Trainer:
     def __init__(
         self,
         *,
-        err_bound_low: float = 0.4,
-        err_bound_high: float = 0.6,
+        clip_exclusion_zone: float = 0.2,
     ):
         # save passed
-        self._err_bound_low = err_bound_low
-        self._err_bound_high = err_bound_high
+        self._clip_exclusion_zone = clip_exclusion_zone
 
         # initialize history dictionary
         self.history: dict[bool, dict[Network, dict[bytes, np.ndarray]]] = {
@@ -70,73 +70,6 @@ class Trainer:
             }
             for is_winner in [True, False]
         }
-
-    def _get_Xy(self) -> dict[Network, tuple[np.ndarray, np.ndarray]]:
-        """Transform self.states -> (X, y) data
-
-        Expect lots of np.NaN values in y! Additionally, y data will be brought
-        in by the std error.
-
-        Returns
-        -------
-        dict[Network, tuple[np.ndarray, np.ndarray]]
-            dictionary mapping from strategy (network) -> (X, y) data
-        """
-
-        # enable divide-by-zero without warning
-        np.seterr(divide="ignore", invalid="ignore")
-
-        # default counts for value-missing
-        default_zeros = np.ndarray(len(Name) + 1)
-
-        # do for each strategy
-        Xy = {}
-        for network, network_history in self.history.items():
-
-            # get list of states
-            all_states = np.concatenate([
-                list(network_history[is_winner].keys())
-                for is_winner in [True, False]
-            ])
-
-            # initialize X, y data
-            X = []
-            y = []
-
-            # process each state
-            for state in all_states:
-
-                # get wins and counts
-                wins = network_history[True].get(state, default_zeros)
-                losses = network_history[False].get(state, default_zeros)
-                counts = wins + losses
-
-                # get means and std err
-                means = wins / counts
-                std_err = 1 / counts
-
-                # clip scores
-                bring_up = means < self._err_bound_low
-                bring_down = means > self._err_bound_high
-                scores = means.copy()
-                scores[bring_up] = np.minimum(
-                    scores[bring_up] + std_err[bring_up],
-                    self._err_bound_low,
-                )
-                scores[bring_down] = np.maximum(
-                    scores[bring_down] - std_err[bring_down],
-                    self._err_bound_high,
-                )
-
-                # save results
-                X.append(np.frombuffer(state))
-                y.append(scores)
-
-            # save as arrays
-            Xy[network] = (np.array(X), np.array(y))
-
-        # return
-        return Xy
 
     def _play_game(self) -> Game:
         """Play game
@@ -172,6 +105,84 @@ class Trainer:
                     # increment choices
                     for choice in choices:
                         self.history[is_winner][network][state][choice] += 1
+
+    def get_Xy(self) -> dict[Network, tuple[np.ndarray, np.ndarray]]:
+        """Transform self.history -> (X, y) data
+
+        Expect lots of np.NaN values in y! Additionally, y data will be brought
+        in by the std error (see err_bound_low and err_bound_high in
+        __init__()).
+
+        Returns
+        -------
+        dict[Network, tuple[np.ndarray, np.ndarray]]
+            dictionary mapping from strategy (network) -> (X, y) data
+        """
+
+        # enable divide-by-zero without warning
+        np.seterr(divide="ignore", invalid="ignore")
+
+        # default counts for value-missing
+        default_zeros = np.ndarray(len(Name) + 1)
+
+        # do for each strategy
+        Xy = {}
+        for network in Network:
+
+            # get list of all states
+            all_states = np.unique(np.concatenate([
+                list(self.history[is_winner][network].keys())
+                for is_winner in [True, False]
+            ]))
+
+            # initialize X, y data
+            X = []
+            y = []
+
+            # process each state
+            for state in all_states:
+
+                # get wins and counts
+                wins = self.history[True][network].get(state, default_zeros)
+                losses = self.history[False][network].get(state, default_zeros)
+                counts = wins + losses
+
+                # get means and std err
+                means = wins / counts
+                std_err = 1 / counts
+
+                # clip scores
+                margin = self._clip_exclusion_zone / 2
+                scores = means.copy()
+                for raise_values in [False, True]:
+                    bound = (
+                        (np.subtract if raise_values else np.add)
+                        (0.5, margin)
+                    )
+                    mod_idx = (
+                        (np.less if raise_values else np.greater)
+                        (means, bound)
+                    )
+                    scores[mod_idx] = (
+                        (np.minimum if raise_values else np.maximum)
+                        (
+                            (
+                                (np.add if raise_values else np.subtract)
+                                (scores[mod_idx], std_err[mod_idx])
+                            ),
+                            bound,
+                        )
+                    )
+
+                # save results
+                X.append(np.frombuffer(state))
+                y.append(scores)
+
+            # save as arrays
+            Xy[network] = (np.array(X), np.array(y))
+
+        # return
+        return Xy
 
     def play_random(self, num_games: int = 100):
         """Play a game with random strategies
