@@ -1,9 +1,13 @@
 """Trainer module"""
 
+import keras
+from keras import layers, optimizers
 import numpy as np
+import tensorflow as tf
 
 from titans.ai.enum import Ability, Name, Network
 from titans.ai.game import Game
+from titans.ai.player import Player
 
 
 class Trainer:
@@ -70,6 +74,25 @@ class Trainer:
             }
             for is_winner in [True, False]
         }
+
+        # initialize neural networks
+        self.networks: dict[Network, keras.Model] = {}
+        for network in Network:
+            input_layer = layers.Input(shape=(Player._get_global_state_size()))
+            x = layers.Dense(100)(input_layer)
+            output_layer = layers.Dense(len(Name) + 1)(x)
+            model = keras.Model(input_layer, output_layer)
+            model.compile(
+                loss=Trainer._nanmse_loss,
+                optimizer=optimizers.Adam(),
+            )
+            self.networks[network] = model
+
+    @staticmethod
+    def _nanmse_loss(y_true, y_pred):
+        """MSE that ignores NaN entries"""
+        mask = ~tf.math.is_nan(y_true)
+        return tf.reduce_mean(tf.square(y_true[mask] - y_pred[mask]))
 
     def _play_game(self) -> Game:
         """Play game
