@@ -27,9 +27,10 @@ class Game:
         cards in the game
     players: list[Players]
         players playing the game
-    states: dict[Identity, dict[Network, dict[bytes, list[int]]]]
-        mapping from global state -> choice for each player, for each strategy.
-        This contains three nested dictionaries:
+    history: dict[Identity, dict[Network, dict[bytes, list[int]]]]
+        here, the history of each player's global state, and the choices they
+        made given that global state, is recorded. This variable contains three
+        nested dictionaries:
 
         1. The top-level dictionary is indexed by each player
         2. The mid-level dictionary is indexed by each strategy (e.g. awaken,
@@ -77,8 +78,8 @@ class Game:
         ]
         self.players[0].handshake(self.players[1])
 
-        # initialize states and winner
-        self.states: dict[Identity, dict[Network, dict[bytes, list[int]]]] = {
+        # initialize history tracking
+        self.history: dict[Identity, dict[Network, dict[bytes, list[int]]]] = {
             identity: {
                 network: {}
                 for network in Network
@@ -103,7 +104,7 @@ class Game:
             ]:
                 _, choice = method(player)
                 state_dict = (
-                    self.states[player.identity][network]
+                    self.history[player.identity][network]
                     .setdefault(frozen_state, [])
                 )
                 if type(choice) is list:

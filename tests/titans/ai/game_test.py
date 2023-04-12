@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Game, Name, Network, Player
+from titans.ai import Game, Identity, Name, Network, Player
 
 
 def test___init__():
@@ -99,6 +99,15 @@ def test__play_turn():
         (game.players[0].temples < 3)
         or (game.players[1].temples < 3)
     )
+
+    # check history
+    choices = list(game.history[Identity.MIKE][Network.AWAKEN].values())
+    assert len(choices[0]) == 1
+    assert choices[0][0] == Name.NIKOLAI_THE_CURSED
+    assert len(choices[1]) == 1
+    assert choices[1][0] == Name.WINDS_HOWL
+    assert len(choices[2]) == 1
+    assert choices[2][0] == Name.FROSTBREATH
 
 
 def test_play():
