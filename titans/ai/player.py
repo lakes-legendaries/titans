@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Ability, Action, Identity, Name
+from titans.ai.enum import Ability, Action, Identity, Name, NUM_CHOICES
 
 
 class Player:
@@ -176,7 +176,7 @@ class Player:
         decision_matrix = (
             self._get_global_state() @ self.strategies[Action.AWAKEN]
             if self.strategies[Action.AWAKEN] is not None
-            else self.rng.random(len(Name) + 1)
+            else self.rng.random(NUM_CHOICES)
         )
 
         # get our current energy
@@ -408,7 +408,7 @@ class Player:
         decision_matrix = (
             self._get_global_state() @ self.strategies[Action.PLAY]
             if self.strategies[Action.PLAY] is not None
-            else self.rng.random(len(Name) + 1)
+            else self.rng.random(NUM_CHOICES)
         )
 
         # play highest-valued card that we can play

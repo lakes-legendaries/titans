@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Action, Card, Identity, Name, Player
+from titans.ai import Action, Card, Identity, Name, NUM_CHOICES, Player
 
 
 def test___init__():
@@ -99,7 +99,7 @@ def test_awaken_card():
     # set strategy to choose aurora draco 1st, ghosts 2nd
     players[0].strategies[Action.AWAKEN] = np.zeros((
         len(players[0]._get_global_state()),
-        len(Name) + 1,
+        NUM_CHOICES,
     ))
     players[0].strategies[Action.AWAKEN][:, Name.GHOST] = 1
     players[0].strategies[Action.AWAKEN][:, Name.AURORA_DRACO] = 2
@@ -264,7 +264,7 @@ def test_play_cards():
     # set strategy to always choose aurora draco
     players[0].strategies[Action.PLAY] = np.zeros((
         len(players[0]._get_global_state()),
-        len(Name) + 1,
+        NUM_CHOICES,
     ))
     players[0].strategies[Action.PLAY][:, Name.AURORA_DRACO] = 1
 

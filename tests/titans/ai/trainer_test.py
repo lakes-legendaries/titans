@@ -1,6 +1,13 @@
 import numpy as np
 
-from titans.ai import Action, Game, Identity, Name, Player, Trainer
+from titans.ai import (
+    Action,
+    Game,
+    Identity,
+    NUM_CHOICES,
+    Player,
+    Trainer,
+)
 
 
 def test__save_history__check_match():
@@ -24,7 +31,7 @@ def test__save_history__check_match():
             for state, choices in game.history[identity][action].items():
 
                 # convert choices from index rep
-                counts = np.zeros(len(Name) + 1)
+                counts = np.zeros(NUM_CHOICES)
                 for choice in choices:
                     counts[choice] += 1
 
@@ -68,7 +75,7 @@ def test__save_history__check_values():
 def test_get_Xy():
 
     # initialize
-    default_count = 2 * np.ones(len(Name) + 1)
+    default_count = 2 * np.ones(NUM_CHOICES)
     trainer = Trainer()
     trainer.history = {
         is_winner: {
@@ -95,7 +102,7 @@ def test_get_Xy():
     assert (Xy[1][1][0] == 0.25).all()
     assert (Xy[1][1][1] == 0.75).all()
     assert Xy[0][0].shape == (2, 2)
-    assert Xy[0][1].shape == (2, len(Name) + 1)
+    assert Xy[0][1].shape == (2, NUM_CHOICES)
 
 
 def test_play():

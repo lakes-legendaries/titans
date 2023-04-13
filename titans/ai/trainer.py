@@ -5,7 +5,7 @@ from keras import layers, optimizers
 import numpy as np
 import tensorflow as tf
 
-from titans.ai.enum import Ability, Action, Identity, Name
+from titans.ai.enum import Ability, Action, Identity, NUM_CHOICES
 from titans.ai.game import Game
 from titans.ai.player import Player
 
@@ -74,7 +74,7 @@ class Trainer:
         for action in Action:
             input_layer = layers.Input(shape=(Player._get_global_state_size()))
             output_layer = layers.Dense(
-                len(Name) + 1,
+                NUM_CHOICES,
                 use_bias=False,
             )(input_layer)
             model = keras.Model(input_layer, output_layer)
@@ -123,7 +123,7 @@ class Trainer:
         game: Game
             most recently-played game
         """
-        default_zeros = np.zeros(len(Name) + 1)
+        default_zeros = np.zeros(NUM_CHOICES)
         for identity, player_history in game.history.items():
             is_winner = identity == game.winner
             for action, network_history in player_history.items():
@@ -170,7 +170,7 @@ class Trainer:
         np.seterr(divide="ignore", invalid="ignore")
 
         # default counts for value-missing
-        default_zeros = np.ndarray(len(Name) + 1)
+        default_zeros = np.ndarray(NUM_CHOICES)
 
         # do for each strategy
         Xy = {}

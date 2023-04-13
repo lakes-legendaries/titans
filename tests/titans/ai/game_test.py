@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Action, Game, Identity, Name, Player
+from titans.ai import Action, Game, Identity, Name, NUM_CHOICES, Player
 
 
 def test___init__():
@@ -34,7 +34,7 @@ def test__play_age():
     strategies = [
         np.zeros((
             Player._get_global_state_size(),
-            len(Name) + 1,
+            NUM_CHOICES,
         ))
         for _ in Action
     ]
@@ -59,7 +59,7 @@ def test__play_turn():
     strategies = [
         np.zeros((
             Player._get_global_state_size(),
-            len(Name) + 1,
+            NUM_CHOICES,
         ))
         for _ in Action
     ]
