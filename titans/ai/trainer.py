@@ -5,8 +5,7 @@ import numpy as np
 from titans.ai.constants import NUM_CHOICES
 from titans.ai.enum import Ability, Action, Identity
 from titans.ai.game import Game
-from titans.ai.player import PlayerStrategyDict
-from titans.ai.strategy import Strategy
+from titans.ai.strategy import RandomStrategy, StandardStrategy, Strategy
 
 
 class Trainer:
@@ -69,7 +68,7 @@ class Trainer:
 
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
-            action: Strategy()
+            action: StandardStrategy()
             for action in Action
         }
 

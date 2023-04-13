@@ -17,23 +17,6 @@ def test___init__():
     assert len(game.players) == 2
     assert len(game.players[0].ritual_piles) == 4 * 4 * 4 + 12 + 8
 
-    # test passing one arg
-    dummy_strategy = np.zeros(7)  # won't actually work for playing
-    game = Game({"strategies": [None, dummy_strategy]})
-    assert (game.players[0].strategies[1] == dummy_strategy).all()
-    assert (game.players[1].strategies[1] == dummy_strategy).all()
-
-    # test passing two args
-    dummy_strategy = np.zeros(7)  # won't actually work for playing
-    game = Game(
-        {"strategies": [None, dummy_strategy]},
-        {"strategies": [dummy_strategy, None]},
-    )
-    assert game.players[0].strategies[0] is None
-    assert game.players[1].strategies[1] is None
-    assert (game.players[0].strategies[1] == dummy_strategy).all()
-    assert (game.players[1].strategies[0] == dummy_strategy).all()
-
 
 def test__play_age():
 

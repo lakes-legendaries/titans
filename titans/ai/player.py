@@ -5,13 +5,8 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.constants import NUM_CHOICES
 from titans.ai.enum import Ability, Action, Identity, Name
-from titans.ai.strategy import Strategy
-
-
-PlayerStrategyDict = dict[Action, Strategy | None]
-"""Type hint for a player's strategies dictionary"""
+from titans.ai.strategy import RandomStrategy, Strategy
 
 
 class Player:
@@ -25,7 +20,7 @@ class Player:
         player's identity
     cards: list[Card]
         cards used in this game
-    strategies: PlayerStrategyDict | None, optional, default=None
+    strategies: dict[Action, Strategy] | None, optional, default=None
         strategies for performing actions. If None, random choices will be used
     random_state: int | None, optional, default=None
         player's random seed
@@ -45,7 +40,7 @@ class Player:
     ritual_piles: list[Card]
         cards in the shared ritual piles. This is harmonized between players in
         Player.handshake()
-    strategies: PlayerStrategyDict
+    strategies: dict[Action, Strategy]
         strategies for performing actions
     temples: int
         number of temples under player's control
@@ -55,16 +50,16 @@ class Player:
         identity: Identity,
         /,
         cards: list[Card],
-        strategies: PlayerStrategyDict | None = None,
+        strategies: dict[Action, Strategy] | None = None,
         *,
         random_state: int = None,
     ):
         # save identity and strategies
         self.identity: Identity = identity
-        self.strategies: PlayerStrategyDict = (
+        self.strategies: dict[Action, Strategy] = (
             strategies
             if strategies is not None
-            else [None for _ in Action]
+            else [RandomStrategy() for _ in Action]
         )
 
         # initialize zones and temples
@@ -178,8 +173,6 @@ class Player:
         # get decision matrix
         decision_matrix = (
             self.strategies[Action.AWAKEN].predict(self._get_global_state())
-            if self.strategies[Action.AWAKEN] is not None
-            else self.rng.random(NUM_CHOICES)
         ) if self._precomputed_decision_matrices is None else (
             self._precomputed_decision_matrices[Action.AWAKEN]
         )
@@ -412,8 +405,6 @@ class Player:
         # get decision matrix
         decision_matrix = (
             self.strategies[Action.PLAY].predict(self._get_global_state())
-            if self.strategies[Action.PLAY] is not None
-            else self.rng.random(NUM_CHOICES)
         ) if self._precomputed_decision_matrices is None else (
             self._precomputed_decision_matrices[Action.PLAY]
         )

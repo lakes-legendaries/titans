@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+
 import keras
 from keras import callbacks, layers, optimizers
 import numpy as np
@@ -11,8 +13,53 @@ import tensorflow as tf
 from titans.ai.constants import NUM_CHOICES
 
 
-class Strategy:
-    """Strategy for making decisions
+class Strategy(ABC):
+    """Strategy abstract base class"""
+
+    def fit(self, X: np.ndarray, y: np.ndarray, /) -> Strategy:
+        """Fit model
+
+        Parameters
+        ----------
+        X: np.ndarray
+            data to use for fitting
+        y: np.ndarray
+            labels
+
+        Returns
+        -------
+        Strategy
+            calling instance
+        """
+
+    @abstractmethod
+    def predict(self, X: np.ndarray, /) -> np.ndarray:
+        """Predict best course of action
+
+        Parameters
+        ----------
+        X: np.ndarray
+            data to predict for
+
+        Returns
+        -------
+        np.ndarray
+            predictions, returned as the predicted probability of winning given
+            each possible choice
+        """
+
+
+class RandomStrategy(Strategy):
+    """Strategy for making random decisions"""
+    def predict(self, X: np.ndarray, /) -> np.ndarray:
+        return np.array([
+            np.random.sample(NUM_CHOICES)
+            for _ in range(X.shape[0])
+        ]) if len(X.shape) > 1 else np.random.sample(NUM_CHOICES)
+
+
+class StandardStrategy(RandomStrategy):
+    """Standard strategy for making decisions
 
     This class conforms to the sklearn API. You can substitute for it any class
     that provides a fit and predict method.
@@ -107,27 +154,21 @@ class Strategy:
             each possible choice
         """
 
+        # use random if untrained
+        if not self._model_fitted:
+            return RandomStrategy.predict(self, X)
+
         # make 2D
         is_one_dimensional = len(X.shape) == 1
         if is_one_dimensional:
             X = np.array([X])
 
-        # use random if untrained
-        if not self._model_fitted:
-            pred = np.array([
-                np.random.sample(NUM_CHOICES)
-                for _ in range(X.shape[0])
-            ])
+        # scale data
+        if self._scaler is not None:
+            X = self._scaler.transform(X)
 
         # make predictions
-        else:
-
-            # scale data
-            if self._scaler is not None:
-                X = self._scaler.transform(X)
-
-            # make predictions
-            pred = self._model(X).numpy()
+        pred = self._model(X).numpy()
 
         # return (matching input shape)
         return (

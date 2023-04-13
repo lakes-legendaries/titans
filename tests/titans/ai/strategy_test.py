@@ -3,16 +3,16 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from titans.ai import NUM_CHOICES, Player, Strategy
+from titans.ai import NUM_CHOICES, Player, StandardStrategy
 
 
 def test__nanmse_loss():
     y_true = tf.convert_to_tensor([0, np.NaN, 2])
     y_pred = tf.convert_to_tensor([1, 1, 4.])
-    assert Strategy._nanmse_loss(y_true, y_pred) == 2.5
+    assert StandardStrategy._nanmse_loss(y_true, y_pred) == 2.5
 
 
-def test_strategy():
+def test_standard_strategy():
 
     # parameters
     num_samples = 100
@@ -29,7 +29,7 @@ def test_strategy():
     # fit model
     random.seed(271828)
     tf.random.set_seed(271827)
-    strategy = Strategy().fit(X, y)
+    strategy = StandardStrategy().fit(X, y)
 
     # test model
     pred = strategy.predict(X)
