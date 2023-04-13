@@ -44,6 +44,7 @@ class Strategy:
             optimizer=optimizers.Adam(),
         )
         self._model = model
+        self._model_fitted = False
 
     @staticmethod
     def _nanmse_loss(y_true, y_pred):
@@ -71,6 +72,7 @@ class Strategy:
         if self._scaler is not None:
             if not self._scaler_fitted:
                 self._scaler.fit(X)
+                self._scaler_fitted = True
             X = self._scaler.transform(X)
 
         # train model
@@ -85,6 +87,7 @@ class Strategy:
             validation_split=0.25,
             verbose=False,
         )
+        self._model_fitted = True
 
         # return
         return self
@@ -103,6 +106,14 @@ class Strategy:
             predictions, returned as the predicted probability of winning given
             each possible choice
         """
+
+        # return random if untrained
+        if not self._model_fitted:
+            return np.random.sample(NUM_CHOICES)
+
+        # scale data
         if self._scaler is not None:
             X = self._scaler.transform(X)
+
+        # make predictions
         return self._model.predict(X, verbose=False)

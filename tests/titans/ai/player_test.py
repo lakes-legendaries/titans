@@ -1,6 +1,14 @@
 import numpy as np
 
-from titans.ai import Action, Card, Identity, Name, NUM_CHOICES, Player
+from titans.ai import (
+    Action,
+    Card,
+    Identity,
+    Name,
+    NUM_CHOICES,
+    Player,
+    Strategy,
+)
 
 
 def test___init__():
@@ -97,12 +105,13 @@ def test_awaken_card():
     assert len(players[0].discard_zone) == 0
 
     # set strategy to choose aurora draco 1st, ghosts 2nd
-    players[0].strategies[Action.AWAKEN] = np.zeros((
-        len(players[0]._get_global_state()),
-        NUM_CHOICES,
-    ))
-    players[0].strategies[Action.AWAKEN][:, Name.GHOST] = 1
-    players[0].strategies[Action.AWAKEN][:, Name.AURORA_DRACO] = 2
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.AURORA_DRACO] = 2
+            pred[Name.GHOST] = 1
+            return pred
+    players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
 
     # add energy, check we buy what we can
     players[0].play_zone.append(Card(Name.MONK))
@@ -117,14 +126,24 @@ def test_awaken_card():
     assert players[0].discard_zone[-1].name == Name.AURORA_DRACO
 
     # change strategy to buy ghost
-    players[0].strategies[Action.AWAKEN][:, Name.GHOST] = 2
-    players[0].strategies[Action.AWAKEN][:, Name.AURORA_DRACO] = 1
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.GHOST] = 2
+            pred[Name.AURORA_DRACO] = 1
+            return pred
+    players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
     players[0].awaken_card()
     assert len(players[0].discard_zone) == 3
     assert players[0].discard_zone[-1].name == Name.GHOST
 
     # change strategy to not buy
-    players[0].strategies[Action.AWAKEN][:, len(Name)] = 3
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[-1] = 1
+            return pred
+    players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
     players[0].awaken_card()
     assert len(players[0].discard_zone) == 3
 
@@ -262,19 +281,24 @@ def test_play_cards():
     players[0].hand_zone.append(Card(Name.AURORA_DRACO))
 
     # set strategy to always choose aurora draco
-    players[0].strategies[Action.PLAY] = np.zeros((
-        len(players[0]._get_global_state()),
-        NUM_CHOICES,
-    ))
-    players[0].strategies[Action.PLAY][:, Name.AURORA_DRACO] = 1
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.AURORA_DRACO] = 1
+            return pred
+    players[0].strategies[Action.PLAY] = ModifiedStrategy()
 
     # play card, check aurora draco was played
     players[0].play_cards()
     assert players[0].play_zone[0].name == Name.AURORA_DRACO
 
     # change strategy to play top card of the deck
-    players[0].strategies[Action.PLAY][:, Name.AURORA_DRACO] = 0
-    players[0].strategies[Action.PLAY][:, -1] = 0
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[-1] = 1
+            return pred
+    players[0].strategies[Action.PLAY] = ModifiedStrategy()
     players[0].play_cards()
     assert len(players[0].deck_zone) == 5
 

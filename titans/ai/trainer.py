@@ -1,14 +1,12 @@
 """Trainer module"""
 
-import keras
-from keras import layers, optimizers
 import numpy as np
-import tensorflow as tf
 
 from titans.ai.constants import NUM_CHOICES
 from titans.ai.enum import Ability, Action, Identity
 from titans.ai.game import Game
-from titans.ai.player import Player
+from titans.ai.player import PlayerStrategyDict
+from titans.ai.strategy import Strategy
 
 
 class Trainer:
@@ -45,8 +43,7 @@ class Trainer:
            winning or losing player. (Please note that states can exist in both
            the winning and losing dictionaries, and you have to compare these
            to get the win percentage for any given move.)
-        2. The mid-level dictionary is indexed by each strategy (e.g. awaken,
-           play)
+        2. The mid-level dictionary is indexed by each action
         3. The bottom-level dictionary maps from game state to the number of
            times each choice was made
 
@@ -71,19 +68,10 @@ class Trainer:
         self._clear_history()
 
         # initialize strategies
-        self.strategies: dict[Action, keras.Model] = {}
-        for action in Action:
-            input_layer = layers.Input(shape=(Player._get_global_state_size()))
-            output_layer = layers.Dense(
-                NUM_CHOICES,
-                use_bias=False,
-            )(input_layer)
-            model = keras.Model(input_layer, output_layer)
-            model.compile(
-                loss=Trainer._nanmse_loss,
-                optimizer=optimizers.Adam(),
-            )
-            self.strategies[action] = model
+        self.strategies: dict[Action, Strategy] = {
+            action: Strategy()
+            for action in Action
+        }
 
     def _clear_history(self):
         """Reset `self.history`"""
@@ -94,12 +82,6 @@ class Trainer:
             }
             for is_winner in [True, False]
         }
-
-    @staticmethod
-    def _nanmse_loss(y_true, y_pred):
-        """MSE that ignores NaN entries"""
-        mask = ~tf.math.is_nan(y_true)
-        return tf.reduce_mean(tf.square(y_true[mask] - y_pred[mask]))
 
     def _play_game(self, *args) -> Game:
         """Play game
@@ -141,19 +123,6 @@ class Trainer:
                     for choice in choices:
                         self.history[is_winner][action][state][choice] += 1
 
-    def get_weights(self) -> dict[Action, np.ndarray]:
-        """Get weights from neural networks
-
-        Returns
-        ----------
-        dict[Action, np.ndarray]
-            neural network weights for each strategy
-        """
-        return {
-            action: self.strategies[0].trainable_variables[0].numpy()
-            for action in Action
-        }
-
     def get_Xy(self) -> dict[Action, tuple[np.ndarray, np.ndarray]]:
         """Transform self.history -> (X, y) data
 
@@ -164,7 +133,7 @@ class Trainer:
         Returns
         -------
         dict[Action, tuple[np.ndarray, np.ndarray]]
-            dictionary mapping from strategy (network) -> (X, y) data
+            dictionary mapping from action -> (X, y) data
         """
 
         # enable divide-by-zero without warning
@@ -173,7 +142,7 @@ class Trainer:
         # default counts for value-missing
         default_zeros = np.ndarray(NUM_CHOICES)
 
-        # do for each strategy
+        # do for each action
         Xy = {}
         for action in Action:
 
@@ -240,7 +209,7 @@ class Trainer:
         save_history: bool = True,
         totally_random: bool = False,
         use_random: bool = False,
-        use_strategy: dict[Action, np.ndarray] | None = None,
+        use_strategy: PlayerStrategyDict | None = None,
     ) -> float:
         """Play a game with random strategies
 
@@ -259,7 +228,7 @@ class Trainer:
         use_random: bool, optional, default=False
             if True, instead of using `self.strategies` as player 1's strategy,
             use random choices.
-        use_strategy: dict[Action, np.ndarray] | None, optional, default=None
+        use_strategy: PlayerStrategyDict | None, optional, default=None
             if provided, instead of using `self.strategies` as player 1's
             strategy, use the provided strategy here.
 
@@ -267,7 +236,7 @@ class Trainer:
         -------
         float
             fraction of games won by player 0
-        """
+        """  # noqa
 
         # check args
         if use_random + (use_strategy is not None) + totally_random > 1:
@@ -280,18 +249,18 @@ class Trainer:
             )
 
         # get strategies
-        strategies = [
+        strategies: list[dict[str, PlayerStrategyDict]] = [
             {"strategies": (
                 None
                 if totally_random
-                else self.get_weights()
+                else self.strategies
             )},
             {"strategies": (
                 None
                 if use_random or totally_random
                 else use_strategy
                 if use_strategy is not None
-                else self.get_weights()
+                else self.strategies
             )},
         ]
 

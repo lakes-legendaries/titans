@@ -33,8 +33,7 @@ class Game:
         nested dictionaries:
 
         1. The top-level dictionary is indexed by each player
-        2. The mid-level dictionary is indexed by each strategy (e.g. awaken,
-           play)
+        2. The mid-level dictionary is indexed by each action
         3. The bottom-level dictionary maps from game state to the choices made
 
     winner: Identity | None

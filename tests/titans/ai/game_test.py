@@ -1,6 +1,13 @@
 import numpy as np
 
-from titans.ai import Action, Game, Identity, Name, NUM_CHOICES, Player
+from titans.ai import (
+    Action,
+    Game,
+    Identity,
+    Name,
+    NUM_CHOICES,
+    Strategy,
+)
 
 
 def test___init__():
@@ -31,15 +38,20 @@ def test___init__():
 def test__play_age():
 
     # set strategy to always choose to play Monk, and alway awaken Nikolai
-    strategies = [
-        np.zeros((
-            Player._get_global_state_size(),
-            NUM_CHOICES,
-        ))
-        for _ in Action
-    ]
-    strategies[Action.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
-    strategies[Action.PLAY][:, Name.MONK] = 1
+    class ModifiedPlayStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.MONK] = 1
+            return pred
+    class ModifiedAwakenStrategy(Strategy):  # noqa
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.NIKOLAI_THE_CURSED] = 1
+            return pred
+    strategies = {
+        Action.PLAY: ModifiedPlayStrategy(),
+        Action.AWAKEN: ModifiedAwakenStrategy(),
+    }
 
     # draw cards, play age
     game = Game({"strategies": strategies})
@@ -56,18 +68,23 @@ def test__play_age():
 def test__play_turn():
 
     # set strategies
-    strategies = [
-        np.zeros((
-            Player._get_global_state_size(),
-            NUM_CHOICES,
-        ))
-        for _ in Action
-    ]
-    strategies[Action.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
-    strategies[Action.AWAKEN][:, Name.WINDS_HOWL] = 2
-    strategies[Action.AWAKEN][:, Name.FROSTBREATH] = 3
-    strategies[Action.PLAY][:, Name.MONK] = 2
-    strategies[Action.PLAY][:, len(Name)] = 1
+    class ModifiedPlayStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.MONK] = 2
+            pred[-1] = 1
+            return pred
+    class ModifiedAwakenStrategy(Strategy):  # noqa
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            pred = np.zeros(NUM_CHOICES)
+            pred[Name.NIKOLAI_THE_CURSED] = 1
+            pred[Name.WINDS_HOWL] = 2
+            pred[Name.FROSTBREATH] = 3
+            return pred
+    strategies = {
+        Action.PLAY: ModifiedPlayStrategy(),
+        Action.AWAKEN: ModifiedAwakenStrategy(),
+    }
 
     # draw cards, play age
     game = Game(
