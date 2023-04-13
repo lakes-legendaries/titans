@@ -205,7 +205,7 @@ class Trainer:
         self,
         /,
         *,
-        num_games: int = 100,
+        num_games: int = 1000,
         save_history: bool = True,
         totally_random: bool = False,
         use_random: bool = False,
@@ -219,7 +219,7 @@ class Trainer:
 
         Parameters
         ----------
-        num_games: int, optional, default=100
+        num_games: int, optional, default=1000
             number of games to play each session
         save_history: bool, optional, default=True
             save state history from these games
@@ -277,7 +277,7 @@ class Trainer:
         """Train network"""
         Xy = self.get_Xy()
         for action in Action:
-            self.strategies[action].fit(*Xy[action], verbose=False)
+            self.strategies[action].fit(*Xy[action])
         self._clear_history()
 
 

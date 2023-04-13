@@ -107,13 +107,31 @@ class Strategy:
             each possible choice
         """
 
-        # return random if untrained
-        if not self._model_fitted:
-            return np.random.sample(NUM_CHOICES)
+        # make 2D
+        is_one_dimensional = len(X.shape) == 1
+        if is_one_dimensional:
+            X = np.array([X])
 
-        # scale data
-        if self._scaler is not None:
-            X = self._scaler.transform(X)
+        # use random if untrained
+        if not self._model_fitted:
+            pred = np.array([
+                np.random.sample(NUM_CHOICES)
+                for _ in range(X.shape[0])
+            ])
 
         # make predictions
-        return self._model.predict(X, verbose=False)
+        else:
+
+            # scale data
+            if self._scaler is not None:
+                X = self._scaler.transform(X)
+
+            # make predictions
+            pred = self._model.predict(X, verbose=False)
+
+        # return (matching input shape)
+        return (
+            pred
+            if not is_one_dimensional
+            else pred[0]
+        )
