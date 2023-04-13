@@ -67,13 +67,7 @@ class Trainer:
         self._clip_exclusion_zone = clip_exclusion_zone
 
         # initialize history dictionary
-        self.history: dict[bool, dict[Network, dict[bytes, np.ndarray]]] = {
-            is_winner: {
-                network: {}
-                for network in Network
-            }
-            for is_winner in [True, False]
-        }
+        self._clear_history()
 
         # initialize neural networks
         self.networks: dict[Network, keras.Model] = {}
@@ -89,6 +83,16 @@ class Trainer:
                 optimizer=optimizers.Adam(),
             )
             self.networks[network] = model
+
+    def _clear_history(self):
+        """Reset `self.history`"""
+        self.history: dict[bool, dict[Network, dict[bytes, np.ndarray]]] = {
+            is_winner: {
+                network: {}
+                for network in Network
+            }
+            for is_winner in [True, False]
+        }
 
     @staticmethod
     def _nanmse_loss(y_true, y_pred):
@@ -304,6 +308,7 @@ class Trainer:
         Xy = self.get_Xy()
         for network in Network:
             self.networks[network].fit(*Xy[network])
+        self._clear_history()
 
 
 class POCTrainer(Trainer):
