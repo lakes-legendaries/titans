@@ -127,7 +127,7 @@ class Strategy:
                 X = self._scaler.transform(X)
 
             # make predictions
-            pred = self._model.predict(X, verbose=False)
+            pred = self._model(X).numpy()
 
         # return (matching input shape)
         return (
