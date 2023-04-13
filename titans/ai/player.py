@@ -67,12 +67,13 @@ class Player:
             else [None for _ in Action]
         )
 
-        # initialize zones
+        # initialize zones and temples
         self.deck_zone: list[Card] = []
         self.discard_zone: list[Card] = []
         self.hand_zone: list[Card] = []
         self.play_zone: list[Card] = []
         self.ritual_piles: list[Card] = []
+        self.temples: int = 3
 
         # create deck and ritual piles
         for c, card in enumerate(cards):
@@ -88,17 +89,13 @@ class Player:
             else:
                 self.ritual_piles.append(card)
 
-        # initialize opponent
+        # initialize placeholders
         self.opponent: Player | None = None
-
-        # initialize temples
-        self.temples: int = 3
+        self._frozen_state: np.ndarray | None = None
+        self._precomputed_decision_matrices: np.ndarray | None = None
 
         # initialize rng
         self.rng: np.random.Generator = np.random.default_rng(random_state)
-
-        # initialize frozen state
-        self._frozen_state: np.ndarray | None = None
 
     def _get_global_state(self) -> np.ndarray:
         """Get your private state + opponent's public state
@@ -183,6 +180,8 @@ class Player:
             self.strategies[Action.AWAKEN].predict(self._get_global_state())
             if self.strategies[Action.AWAKEN] is not None
             else self.rng.random(NUM_CHOICES)
+        ) if self._precomputed_decision_matrices is None else (
+            self._precomputed_decision_matrices[Action.AWAKEN]
         )
 
         # get our current energy
@@ -415,6 +414,8 @@ class Player:
             self.strategies[Action.PLAY].predict(self._get_global_state())
             if self.strategies[Action.PLAY] is not None
             else self.rng.random(NUM_CHOICES)
+        ) if self._precomputed_decision_matrices is None else (
+            self._precomputed_decision_matrices[Action.PLAY]
         )
 
         # play highest-valued card that we can play
