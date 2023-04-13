@@ -85,7 +85,7 @@ class Strategy:
             )],
             epochs=100,
             validation_split=0.25,
-            verbose=False,
+            # verbose=False,
         )
         self._model_fitted = True
 
