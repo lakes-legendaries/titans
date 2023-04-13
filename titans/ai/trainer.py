@@ -5,7 +5,7 @@ from keras import layers, optimizers
 import numpy as np
 import tensorflow as tf
 
-from titans.ai.enum import Ability, Name, Network
+from titans.ai.enum import Ability, Identity, Name, Network
 from titans.ai.game import Game
 from titans.ai.player import Player
 
@@ -96,15 +96,20 @@ class Trainer:
         mask = ~tf.math.is_nan(y_true)
         return tf.reduce_mean(tf.square(y_true[mask] - y_pred[mask]))
 
-    def _play_game(self) -> Game:
+    def _play_game(self, *args) -> Game:
         """Play game
+
+        Parameters
+        ----------
+        *args: Any
+            passed to `Game()` on `__init__()`
 
         Returns
         -------
         Game
             game, already played
         """
-        return Game.play()
+        return Game(*args).play()
 
     def _save_history(self, game: Game):
         """Extract and save history from the most recently-played game
@@ -130,6 +135,19 @@ class Trainer:
                     # increment choices
                     for choice in choices:
                         self.history[is_winner][network][state][choice] += 1
+
+    def get_weights(self) -> dict[Network, np.ndarray]:
+        """Get weights from neural networks
+
+        Returns
+        ----------
+        dict[Network, np.ndarray]
+            neural network weights for each strategy
+        """
+        return {
+            network: self.networks[0].trainable_variables[0].numpy()
+            for network in Network
+        }
 
     def get_Xy(self) -> dict[Network, tuple[np.ndarray, np.ndarray]]:
         """Transform self.history -> (X, y) data
@@ -209,19 +227,68 @@ class Trainer:
         # return
         return Xy
 
-    def play_random(self, num_games: int = 100):
+    def play(
+        self,
+        /,
+        *,
+        num_games: int = 100,
+        save_history: bool = True,
+        use_random: bool = False,
+        use_strategy: dict[Network, np.ndarray] | None = None,
+    ) -> float:
         """Play a game with random strategies
+
+        Player 0 will always use the strategies in self.networks. Player 1 will
+        default to using the same strategies, but this can be overridden with
+        `use_random` or `use_strategy`.
 
         Parameters
         ----------
-        num_games: int
+        num_games: int, optional, default=100
             number of games to play each session
+        save_history: bool, optional, default=True
+            save state history from these games
+        use_random: bool, optional, default=False
+            if True, instead of using `self.networks` as player 1's strategy,
+            use random choices.
+        use_strategy: dict[Network, np.ndarray] | None, optional, default=None
+            if provided, instead of using `self.networks` as player 1's
+            strategy, use the provided strategy here.
+
+        Returns
+        -------
+        float
+            fraction of games won by player 0
         """
 
-        # play games, save states
+        # check args
+        if use_random and use_strategy is not None:
+            raise ValueError(
+                "Conflicting strategies provided."
+                " To fix: set use_random=True; or use_strategy=strategy; or "
+                " leave both as default."
+            )
+
+        # get strategies
+        strategies = [
+            {"strategies": self.get_weights()},
+            {"strategies": (
+                None
+                if use_random
+                else use_strategy
+                if use_strategy is not None
+                else self.get_weights()
+            )},
+        ]
+
+        # run game
+        wins = 0
         for _ in range(num_games):
-            game = self._play_game()
-            self._save_history(game)
+            game = self._play_game(*strategies)
+            wins += game.winner == Identity.MIKE
+            if save_history:
+                self._save_history(game)
+        return wins / num_games
 
 
 class POCTrainer(Trainer):

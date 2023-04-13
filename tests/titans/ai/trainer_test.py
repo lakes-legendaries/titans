@@ -96,3 +96,7 @@ def test_get_Xy():
     assert (Xy[1][1][1] == 0.75).all()
     assert Xy[0][0].shape == (2, 2)
     assert Xy[0][1].shape == (2, len(Name) + 1)
+
+
+def test_play():
+    Trainer().play()
