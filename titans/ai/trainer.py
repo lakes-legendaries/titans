@@ -307,7 +307,7 @@ class Trainer:
         """Train network"""
         Xy = self.get_Xy()
         for network in Network:
-            self.networks[network].fit(*Xy[network])
+            self.networks[network].fit(*Xy[network], verbose=False)
         self._clear_history()
 
 
