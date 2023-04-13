@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Game, Identity, Name, Network, Player
+from titans.ai import Action, Game, Identity, Name, Player
 
 
 def test___init__():
@@ -36,10 +36,10 @@ def test__play_age():
             Player._get_global_state_size(),
             len(Name) + 1,
         ))
-        for _ in Network
+        for _ in Action
     ]
-    strategies[Network.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
-    strategies[Network.PLAY][:, Name.MONK] = 1
+    strategies[Action.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
+    strategies[Action.PLAY][:, Name.MONK] = 1
 
     # draw cards, play age
     game = Game({"strategies": strategies})
@@ -61,13 +61,13 @@ def test__play_turn():
             Player._get_global_state_size(),
             len(Name) + 1,
         ))
-        for _ in Network
+        for _ in Action
     ]
-    strategies[Network.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
-    strategies[Network.AWAKEN][:, Name.WINDS_HOWL] = 2
-    strategies[Network.AWAKEN][:, Name.FROSTBREATH] = 3
-    strategies[Network.PLAY][:, Name.MONK] = 2
-    strategies[Network.PLAY][:, len(Name)] = 1
+    strategies[Action.AWAKEN][:, Name.NIKOLAI_THE_CURSED] = 1
+    strategies[Action.AWAKEN][:, Name.WINDS_HOWL] = 2
+    strategies[Action.AWAKEN][:, Name.FROSTBREATH] = 3
+    strategies[Action.PLAY][:, Name.MONK] = 2
+    strategies[Action.PLAY][:, len(Name)] = 1
 
     # draw cards, play age
     game = Game(
@@ -101,7 +101,7 @@ def test__play_turn():
     )
 
     # check history
-    choices = list(game.history[Identity.MIKE][Network.AWAKEN].values())
+    choices = list(game.history[Identity.MIKE][Action.AWAKEN].values())
     assert len(choices[0]) == 1
     assert choices[0][0] == Name.NIKOLAI_THE_CURSED
     assert len(choices[1]) == 1

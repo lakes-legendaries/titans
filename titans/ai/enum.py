@@ -27,6 +27,12 @@ class Ability(IntEnum):
     SUMMON = auto()
 
 
+class Action(IntEnum):
+    """Various actions (one for each strategy)"""
+    AWAKEN = 0
+    PLAY = auto()
+
+
 class Element(IntEnum):
     """Card Elements"""
     FOREST = 0
@@ -77,12 +83,6 @@ class Name(IntEnum):
     SPINE_SPLITTER = auto()
     CAVERNS_DEFENDER = auto()
     WHAT_LIES_BELOW = auto()
-
-
-class Network(IntEnum):
-    """Neural networks"""
-    AWAKEN = 0
-    PLAY = auto()
 
 
 class Species(IntEnum):

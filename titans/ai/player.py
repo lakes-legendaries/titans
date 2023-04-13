@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Ability, Identity, Name, Network
+from titans.ai.enum import Ability, Action, Identity, Name
 
 
 class Player:
@@ -58,7 +58,7 @@ class Player:
         self.strategies: list[np.ndarray] = (
             strategies
             if strategies is not None
-            else [None for _ in Network]
+            else [None for _ in Action]
         )
 
         # initialize zones
@@ -174,8 +174,8 @@ class Player:
 
         # get decision matrix
         decision_matrix = (
-            self._get_global_state() @ self.strategies[Network.AWAKEN]
-            if self.strategies[Network.AWAKEN] is not None
+            self._get_global_state() @ self.strategies[Action.AWAKEN]
+            if self.strategies[Action.AWAKEN] is not None
             else self.rng.random(len(Name) + 1)
         )
 
@@ -406,8 +406,8 @@ class Player:
 
         # get decision matrix
         decision_matrix = (
-            self._get_global_state() @ self.strategies[Network.PLAY]
-            if self.strategies[Network.PLAY] is not None
+            self._get_global_state() @ self.strategies[Action.PLAY]
+            if self.strategies[Action.PLAY] is not None
             else self.rng.random(len(Name) + 1)
         )
 

@@ -5,7 +5,7 @@ from keras import layers, optimizers
 import numpy as np
 import tensorflow as tf
 
-from titans.ai.enum import Ability, Identity, Name, Network
+from titans.ai.enum import Ability, Action, Identity, Name
 from titans.ai.game import Game
 from titans.ai.player import Player
 
@@ -32,7 +32,7 @@ class Trainer:
 
     Attributes
     ----------
-    history: dict[bool, dict[Network, dict[bytes, np.ndarray]]]
+    history: dict[bool, dict[Action, dict[bytes, np.ndarray]]]
         here, the history of winning and losing players is recorded. This
         variable maps every global state to every choice made given that state,
         recording whether the player that made that choice ultimately won or
@@ -69,9 +69,9 @@ class Trainer:
         # initialize history dictionary
         self._clear_history()
 
-        # initialize neural networks
-        self.networks: dict[Network, keras.Model] = {}
-        for network in Network:
+        # initialize strategies
+        self.strategies: dict[Action, keras.Model] = {}
+        for action in Action:
             input_layer = layers.Input(shape=(Player._get_global_state_size()))
             output_layer = layers.Dense(
                 len(Name) + 1,
@@ -82,14 +82,14 @@ class Trainer:
                 loss=Trainer._nanmse_loss,
                 optimizer=optimizers.Adam(),
             )
-            self.networks[network] = model
+            self.strategies[action] = model
 
     def _clear_history(self):
         """Reset `self.history`"""
-        self.history: dict[bool, dict[Network, dict[bytes, np.ndarray]]] = {
+        self.history: dict[bool, dict[Action, dict[bytes, np.ndarray]]] = {
             is_winner: {
-                network: {}
-                for network in Network
+                action: {}
+                for action in Action
             }
             for is_winner in [True, False]
         }
@@ -126,34 +126,34 @@ class Trainer:
         default_zeros = np.zeros(len(Name) + 1)
         for identity, player_history in game.history.items():
             is_winner = identity == game.winner
-            for network, network_history in player_history.items():
+            for action, network_history in player_history.items():
                 for state, choices in network_history.items():
 
                     # add default zeros to dictionary
                     (
                         self
-                        .history[is_winner][network]
+                        .history[is_winner][action]
                         .setdefault(state, default_zeros.copy())
                     )
 
                     # increment choices
                     for choice in choices:
-                        self.history[is_winner][network][state][choice] += 1
+                        self.history[is_winner][action][state][choice] += 1
 
-    def get_weights(self) -> dict[Network, np.ndarray]:
+    def get_weights(self) -> dict[Action, np.ndarray]:
         """Get weights from neural networks
 
         Returns
         ----------
-        dict[Network, np.ndarray]
+        dict[Action, np.ndarray]
             neural network weights for each strategy
         """
         return {
-            network: self.networks[0].trainable_variables[0].numpy()
-            for network in Network
+            action: self.strategies[0].trainable_variables[0].numpy()
+            for action in Action
         }
 
-    def get_Xy(self) -> dict[Network, tuple[np.ndarray, np.ndarray]]:
+    def get_Xy(self) -> dict[Action, tuple[np.ndarray, np.ndarray]]:
         """Transform self.history -> (X, y) data
 
         Expect lots of np.NaN values in y! Additionally, y data will be brought
@@ -162,7 +162,7 @@ class Trainer:
 
         Returns
         -------
-        dict[Network, tuple[np.ndarray, np.ndarray]]
+        dict[Action, tuple[np.ndarray, np.ndarray]]
             dictionary mapping from strategy (network) -> (X, y) data
         """
 
@@ -174,11 +174,11 @@ class Trainer:
 
         # do for each strategy
         Xy = {}
-        for network in Network:
+        for action in Action:
 
             # get list of all states
             all_states = np.unique(np.concatenate([
-                list(self.history[is_winner][network].keys())
+                list(self.history[is_winner][action].keys())
                 for is_winner in [True, False]
             ]))
 
@@ -190,8 +190,8 @@ class Trainer:
             for state in all_states:
 
                 # get wins and counts
-                wins = self.history[True][network].get(state, default_zeros)
-                losses = self.history[False][network].get(state, default_zeros)
+                wins = self.history[True][action].get(state, default_zeros)
+                losses = self.history[False][action].get(state, default_zeros)
                 counts = wins + losses
 
                 # get means and std err
@@ -226,7 +226,7 @@ class Trainer:
                 y.append(scores)
 
             # save as arrays
-            Xy[network] = (np.array(X), np.array(y))
+            Xy[action] = (np.array(X), np.array(y))
 
         # return
         return Xy
@@ -239,13 +239,13 @@ class Trainer:
         save_history: bool = True,
         totally_random: bool = False,
         use_random: bool = False,
-        use_strategy: dict[Network, np.ndarray] | None = None,
+        use_strategy: dict[Action, np.ndarray] | None = None,
     ) -> float:
         """Play a game with random strategies
 
-        Player 0 will always use the strategies in self.networks. Player 1 will
-        default to using the same strategies, but this can be overridden with
-        `use_random` or `use_strategy`.
+        Player 0 will always use the strategies in self.strategies. Player 1
+        will default to using the same strategies, but this can be overridden
+        with `use_random` or `use_strategy`.
 
         Parameters
         ----------
@@ -256,10 +256,10 @@ class Trainer:
         totally_random: bool, optional, default=False
             if True, then use random choices for both player 0 and player 1.
         use_random: bool, optional, default=False
-            if True, instead of using `self.networks` as player 1's strategy,
+            if True, instead of using `self.strategies` as player 1's strategy,
             use random choices.
-        use_strategy: dict[Network, np.ndarray] | None, optional, default=None
-            if provided, instead of using `self.networks` as player 1's
+        use_strategy: dict[Action, np.ndarray] | None, optional, default=None
+            if provided, instead of using `self.strategies` as player 1's
             strategy, use the provided strategy here.
 
         Returns
@@ -306,8 +306,8 @@ class Trainer:
     def train(self):
         """Train network"""
         Xy = self.get_Xy()
-        for network in Network:
-            self.networks[network].fit(*Xy[network], verbose=False)
+        for action in Action:
+            self.strategies[action].fit(*Xy[action], verbose=False)
         self._clear_history()
 
 

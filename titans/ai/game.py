@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from titans.ai.card import Card
-from titans.ai.enum import Name, Network, Identity
+from titans.ai.enum import Action, Name, Identity
 from titans.ai.player import Player
 
 
@@ -27,7 +27,7 @@ class Game:
         cards in the game
     players: list[Players]
         players playing the game
-    history: dict[Identity, dict[Network, dict[bytes, list[int]]]]
+    history: dict[Identity, dict[Action, dict[bytes, list[int]]]]
         here, the history of each player's global state, and the choices they
         made given that global state, is recorded. This variable contains three
         nested dictionaries:
@@ -79,10 +79,10 @@ class Game:
         self.players[0].handshake(self.players[1])
 
         # initialize history tracking
-        self.history: dict[Identity, dict[Network, dict[bytes, list[int]]]] = {
+        self.history: dict[Identity, dict[Action, dict[bytes, list[int]]]] = {
             identity: {
-                network: {}
-                for network in Network
+                action: {}
+                for action in Action
             }
             for identity in Identity
         }
@@ -98,13 +98,13 @@ class Game:
         # play and awaken cards, saving states
         for player in self.players:
             frozen_state = player._frozen_state.tobytes()
-            for method, network in [
-                (Player.play_cards, Network.PLAY),
-                (Player.awaken_card, Network.AWAKEN),
+            for method, action in [
+                (Player.play_cards, Action.PLAY),
+                (Player.awaken_card, Action.AWAKEN),
             ]:
                 _, choice = method(player)
                 state_dict = (
-                    self.history[player.identity][network]
+                    self.history[player.identity][action]
                     .setdefault(frozen_state, [])
                 )
                 if type(choice) is list:

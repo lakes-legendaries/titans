@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Card, Identity, Name, Network, Player
+from titans.ai import Action, Card, Identity, Name, Player
 
 
 def test___init__():
@@ -97,12 +97,12 @@ def test_awaken_card():
     assert len(players[0].discard_zone) == 0
 
     # set strategy to choose aurora draco 1st, ghosts 2nd
-    players[0].strategies[Network.AWAKEN] = np.zeros((
+    players[0].strategies[Action.AWAKEN] = np.zeros((
         len(players[0]._get_global_state()),
         len(Name) + 1,
     ))
-    players[0].strategies[Network.AWAKEN][:, Name.GHOST] = 1
-    players[0].strategies[Network.AWAKEN][:, Name.AURORA_DRACO] = 2
+    players[0].strategies[Action.AWAKEN][:, Name.GHOST] = 1
+    players[0].strategies[Action.AWAKEN][:, Name.AURORA_DRACO] = 2
 
     # add energy, check we buy what we can
     players[0].play_zone.append(Card(Name.MONK))
@@ -117,14 +117,14 @@ def test_awaken_card():
     assert players[0].discard_zone[-1].name == Name.AURORA_DRACO
 
     # change strategy to buy ghost
-    players[0].strategies[Network.AWAKEN][:, Name.GHOST] = 2
-    players[0].strategies[Network.AWAKEN][:, Name.AURORA_DRACO] = 1
+    players[0].strategies[Action.AWAKEN][:, Name.GHOST] = 2
+    players[0].strategies[Action.AWAKEN][:, Name.AURORA_DRACO] = 1
     players[0].awaken_card()
     assert len(players[0].discard_zone) == 3
     assert players[0].discard_zone[-1].name == Name.GHOST
 
     # change strategy to not buy
-    players[0].strategies[Network.AWAKEN][:, len(Name)] = 3
+    players[0].strategies[Action.AWAKEN][:, len(Name)] = 3
     players[0].awaken_card()
     assert len(players[0].discard_zone) == 3
 
@@ -262,19 +262,19 @@ def test_play_cards():
     players[0].hand_zone.append(Card(Name.AURORA_DRACO))
 
     # set strategy to always choose aurora draco
-    players[0].strategies[Network.PLAY] = np.zeros((
+    players[0].strategies[Action.PLAY] = np.zeros((
         len(players[0]._get_global_state()),
         len(Name) + 1,
     ))
-    players[0].strategies[Network.PLAY][:, Name.AURORA_DRACO] = 1
+    players[0].strategies[Action.PLAY][:, Name.AURORA_DRACO] = 1
 
     # play card, check aurora draco was played
     players[0].play_cards()
     assert players[0].play_zone[0].name == Name.AURORA_DRACO
 
     # change strategy to play top card of the deck
-    players[0].strategies[Network.PLAY][:, Name.AURORA_DRACO] = 0
-    players[0].strategies[Network.PLAY][:, -1] = 0
+    players[0].strategies[Action.PLAY][:, Name.AURORA_DRACO] = 0
+    players[0].strategies[Action.PLAY][:, -1] = 0
     players[0].play_cards()
     assert len(players[0].deck_zone) == 5
 

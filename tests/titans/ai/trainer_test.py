@@ -1,6 +1,6 @@
 import numpy as np
 
-from titans.ai import Game, Identity, Name, Network, Player, Trainer
+from titans.ai import Action, Game, Identity, Name, Player, Trainer
 
 
 def test__save_history__check_match():
@@ -20,8 +20,8 @@ def test__save_history__check_match():
         identity = player.identity
 
         # check histories match
-        for network in Network:
-            for state, choices in game.history[identity][network].items():
+        for action in Action:
+            for state, choices in game.history[identity][action].items():
 
                 # convert choices from index rep
                 counts = np.zeros(len(Name) + 1)
@@ -30,7 +30,7 @@ def test__save_history__check_match():
 
                 # make sure matches
                 assert (
-                    counts == trainer.history[is_winner][network][state]
+                    counts == trainer.history[is_winner][action][state]
                 ).all()
 
 
@@ -43,11 +43,11 @@ def test__save_history__check_values():
     state1 = np.array([0., 1.]).tobytes()
     game.history = {
         identity: {
-            network: {
+            action: {
                 state0: [0],
                 state1: [1, 3, 3],
             }
-            for network in Network
+            for action in Action
         }
         for identity in Identity
     }
@@ -56,8 +56,8 @@ def test__save_history__check_values():
 
     # check
     for is_winner in [True, False]:
-        for network in Network:
-            history = trainer.history[is_winner][network]
+        for action in Action:
+            history = trainer.history[is_winner][action]
             assert history[state0].sum() == 1
             assert history[state0][0] == 1
             assert history[state1].sum() == 3
@@ -72,13 +72,13 @@ def test_get_Xy():
     trainer = Trainer()
     trainer.history = {
         is_winner: {
-            network: {
+            action: {
                 np.array([0., 2.]).tobytes():
-                    (1 + network) * (not is_winner) * default_count,
+                    (1 + action) * (not is_winner) * default_count,
                 np.array([0., 1.]).tobytes():
-                    (1 + network) * is_winner * default_count,
+                    (1 + action) * is_winner * default_count,
             }
-            for network in Network
+            for action in Action
         }
         for is_winner in [True, False]
     }
@@ -87,9 +87,9 @@ def test_get_Xy():
     Xy = trainer.get_Xy()
 
     # check results
-    for network in Network:
-        assert (Xy[network][0][0] == [0, 2]).all()
-        assert (Xy[network][0][1] == [0, 1]).all()
+    for action in Action:
+        assert (Xy[action][0][0] == [0, 2]).all()
+        assert (Xy[action][0][1] == [0, 1]).all()
     assert (Xy[0][1][0] == 0.40).all()
     assert (Xy[0][1][1] == 0.60).all()
     assert (Xy[1][1][0] == 0.25).all()
