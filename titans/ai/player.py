@@ -5,7 +5,8 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Ability, Action, Identity, Name, NUM_CHOICES
+from titans.ai.constants import NUM_CHOICES
+from titans.ai.enum import Ability, Action, Identity, Name
 
 
 class Player:

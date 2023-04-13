@@ -5,7 +5,8 @@ from keras import layers, optimizers
 import numpy as np
 import tensorflow as tf
 
-from titans.ai.enum import Ability, Action, Identity, NUM_CHOICES
+from titans.ai.constants import NUM_CHOICES
+from titans.ai.enum import Ability, Action, Identity
 from titans.ai.game import Game
 from titans.ai.player import Player
 
