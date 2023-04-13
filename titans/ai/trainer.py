@@ -276,10 +276,14 @@ class Trainer:
 
         # get strategies
         strategies = [
-            {"strategies": self.get_weights()},
             {"strategies": (
                 None
-                if use_random
+                if totally_random
+                else self.get_weights()
+            )},
+            {"strategies": (
+                None
+                if use_random or totally_random
                 else use_strategy
                 if use_strategy is not None
                 else self.get_weights()
@@ -294,6 +298,12 @@ class Trainer:
             if save_history:
                 self._save_history(game)
         return wins / num_games
+
+    def train(self):
+        """Train network"""
+        Xy = self.get_Xy()
+        for network in Network:
+            self.networks[network].fit(*Xy[network])
 
 
 class POCTrainer(Trainer):
