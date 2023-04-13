@@ -1,7 +1,15 @@
+import random
+
 import numpy as np
 import tensorflow as tf
 
 from titans.ai import NUM_CHOICES, Player, Strategy
+
+
+def test__nanmse_loss():
+    y_true = tf.convert_to_tensor([0, np.NaN, 2])
+    y_pred = tf.convert_to_tensor([1, 1, 4.])
+    assert Strategy._nanmse_loss(y_true, y_pred) == 2.5
 
 
 def test_strategy():
@@ -19,6 +27,7 @@ def test_strategy():
             y[sample_num, choice_num] = X[sample_num, choice_num]
 
     # fit model
+    random.seed(271828)
     tf.random.set_seed(271827)
     strategy = Strategy().fit(X, y)
 
