@@ -233,6 +233,7 @@ class Trainer:
         *,
         num_games: int = 100,
         save_history: bool = True,
+        totally_random: bool = False,
         use_random: bool = False,
         use_strategy: dict[Network, np.ndarray] | None = None,
     ) -> float:
@@ -248,6 +249,8 @@ class Trainer:
             number of games to play each session
         save_history: bool, optional, default=True
             save state history from these games
+        totally_random: bool, optional, default=False
+            if True, then use random choices for both player 0 and player 1.
         use_random: bool, optional, default=False
             if True, instead of using `self.networks` as player 1's strategy,
             use random choices.
@@ -262,11 +265,13 @@ class Trainer:
         """
 
         # check args
-        if use_random and use_strategy is not None:
+        if use_random + (use_strategy is not None) + totally_random > 1:
             raise ValueError(
                 "Conflicting strategies provided."
-                " To fix: set use_random=True; or use_strategy=strategy; or "
-                " leave both as default."
+                " You can set no more than one of:"
+                " (1) totally_random;"
+                " (2) use_random; and/or"
+                " (3) use_strategy"
             )
 
         # get strategies
