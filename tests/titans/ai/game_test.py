@@ -71,10 +71,10 @@ def test__play_turn():
     }
 
     # draw cards, play age
-    game = Game(
-        {"strategies": strategies, "random_state": 271828},
-        {"random_state": 42},
-    )
+    game = Game({
+        Identity.MIKE: {"strategies": strategies, "random_state": 271828},
+        Identity.BRYAN: {"random_state": 42},
+    })
     tuple(game._play_turn())
 
     # ensure correct cards played and awakened
@@ -121,13 +121,13 @@ def test_parallel_play():
     # check initial states
     states = next(controller)
     assert len(states) == 2
-    assert states[0][-len(Zone) + Zone.HAND.value] == 6
-    assert states[0][-2] == 6
+    assert states[Identity.MIKE][-len(Zone) + Zone.HAND.value] == 6
+    assert states[Identity.MIKE][-len(Zone) + Zone.DECK.value] == 6
 
     # send choice to play monk
     decision_matrix = {action: np.zeros(NUM_CHOICES) for action in Action}
     decision_matrix[Action.PLAY][Name.MONK.value] = 1
-    controller.send([decision_matrix] * 2)
+    controller.send({identity: decision_matrix for identity in Identity})
 
     # check correct card played
     for player in game.players.values():

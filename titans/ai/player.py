@@ -84,7 +84,7 @@ class Player:
         # initialize placeholders
         self.opponent: Player | None = None
         self._frozen_state: np.ndarray | None = None
-        self._precomputed_decision_matrices: np.ndarray | None = None
+        self._decision_matrices: dict[Action, np.ndarray] | None = None
 
         # initialize rng
         self._rng: np.random.Generator = np.random.default_rng(random_state)
@@ -163,8 +163,8 @@ class Player:
         # get decision matrix
         decision_matrix = (
             self.strategies[Action.AWAKEN].predict(self.get_state())
-        ) if self._precomputed_decision_matrices is None else (
-            self._precomputed_decision_matrices[Action.AWAKEN]
+        ) if self._decision_matrices is None else (
+            self._decision_matrices[Action.AWAKEN]
         )
 
         # get our current energy
@@ -375,8 +375,8 @@ class Player:
         # get decision matrix
         decision_matrix = (
             self.strategies[Action.PLAY].predict(self.get_state())
-        ) if self._precomputed_decision_matrices is None else (
-            self._precomputed_decision_matrices[Action.PLAY]
+        ) if self._decision_matrices is None else (
+            self._decision_matrices[Action.PLAY]
         )
 
         # play highest-valued card that we can play

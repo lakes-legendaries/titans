@@ -107,3 +107,6 @@ def test_get_Xy():
 
 def test_play():
     Trainer().play()
+
+
+test_play()

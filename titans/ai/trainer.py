@@ -1,5 +1,7 @@
 """Trainer module"""
 
+from typing import Any
+
 import numpy as np
 
 from titans.ai.constants import NUM_CHOICES
@@ -82,7 +84,10 @@ class Trainer:
             for is_winner in [True, False]
         }
 
-    def _play_game(self, *args) -> Game:
+    def _play_game(
+        self,
+        player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]],
+    ) -> Game:
         """Play game
 
         Parameters
@@ -95,7 +100,7 @@ class Trainer:
         Game
             game, already played
         """
-        return Game(*args).play()
+        return Game(player_kwargs).play()
 
     def _save_history(self, game: Game):
         """Extract and save history from the most recently-played game
@@ -207,9 +212,9 @@ class Trainer:
         num_games: int = 1000,
         parallel: bool = False,
         save_history: bool = True,
-        totally_random: bool = False,
         use_random: bool = False,
-        use_strategy: dict[Action, Strategy] | None = None,
+        vs_random: bool = False,
+        vs_strategy: dict[Action, Strategy] | None = None,
     ) -> float:
         """Play a game with random strategies
 
@@ -225,12 +230,12 @@ class Trainer:
             play games in parallel (much faster)
         save_history: bool, optional, default=True
             save state history from these games
-        totally_random: bool, optional, default=False
-            if True, then use random choices for both player 0 and player 1.
         use_random: bool, optional, default=False
+            if True, then use random choices for both player 0 and player 1.
+        vs_random: bool, optional, default=False
             if True, instead of using `self.strategies` as player 1's strategy,
             use random choices.
-        use_strategy: dict[Action, Strategy] | None, optional, default=None
+        vs_strategy: dict[Action, Strategy] | None, optional, default=None
             if provided, instead of using `self.strategies` as player 1's
             strategy, use the provided strategy here.
 
@@ -241,13 +246,11 @@ class Trainer:
         """  # noqa
 
         # check args
-        if use_random + (use_strategy is not None) + totally_random > 1:
+        if vs_random and vs_strategy is not None:
             raise ValueError(
                 "Conflicting strategies provided."
-                " You can set no more than one of:"
-                " (1) totally_random;"
-                " (2) use_random; and/or"
-                " (3) use_strategy"
+                " You can set vs_random or vs_strategy,"
+                " but not both."
             )
 
         # get strategies
@@ -255,26 +258,30 @@ class Trainer:
             action: RandomStrategy()
             for action in Action
         }
-        strategies: list[dict[str, dict[Action, Strategy]]] = [
-            {"strategies": (
-                random_strategy_dict
-                if totally_random
-                else self.strategies
-            )},
-            {"strategies": (
-                random_strategy_dict
-                if use_random or totally_random
-                else use_strategy
-                if use_strategy is not None
-                else self.strategies
-            )},
-        ]
+        strategies: dict[Identity, dict[str, dict[Action, Strategy]]] = {
+            Identity.MIKE: {
+                "strategies": (
+                    random_strategy_dict
+                    if use_random
+                    else self.strategies
+                )
+            },
+            Identity.BRYAN: {
+                "strategies": (
+                    random_strategy_dict
+                    if vs_random
+                    else vs_strategy
+                    if vs_strategy is not None
+                    else self.strategies
+                ),
+            }
+        }
 
         # play games sequentially
         if not parallel:
             wins = 0
             for _ in range(num_games):
-                game = self._play_game(*strategies)
+                game = self._play_game(strategies)
                 wins += game.winner == Identity.MIKE
                 if save_history:
                     self._save_history(game)

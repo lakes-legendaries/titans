@@ -16,10 +16,12 @@ class Game:
 
     Parameters
     ----------
-    *args: dict[str, Any] | list[dict[str, Any]]
-        These dictionaries are unpacked to initialize the players. If one arg
-        is provided, then this is used to initialize both players. If two are
-        provided, then one is used for each player.
+    player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]]
+        These dictionaries are unpacked as kwargs to initialize the players. If
+        you provide a dictionary of strings, then the provided values will be
+        unpacked to initialize both players. If you provide a dictionary of
+        identities mapping to a dictionary of strings, then each player will be
+        initialized with the corresponding kwargs provided for that player.
     turn_limit: int, optional, default=1000
         max number of turns before a draw is declared
 
@@ -43,7 +45,9 @@ class Game:
     """
     def __init__(
         self,
-        *args: dict[str, Any] | list[dict[str, Any]],
+        player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]] = None,
+        /,
+        *,
         turn_limit: int = 1000,
     ):
         # save parameters
@@ -69,10 +73,10 @@ class Game:
                 cards=self.cards,
                 **(
                     {}
-                    if len(args) == 0
-                    else args[0]
-                    if len(args) == 1
-                    else args[identity.value]
+                    if player_kwargs is None
+                    else player_kwargs
+                    if identity not in player_kwargs
+                    else player_kwargs[identity]
                 ),
             )
             for identity in Identity
@@ -93,8 +97,8 @@ class Game:
         self,
         use_generators: bool = False,
     ) -> Generator[
-        list[np.array],
-        list[dict[Action, np.ndarray]],
+        dict[Identity, np.array],
+        dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
         """Execute an age
@@ -132,15 +136,12 @@ class Game:
         # yield player states, make decisions outside of this game
         if use_generators:
             decision_matrices = \
-                yield [
-                    player._frozen_state
-                    for player in self.players.values()
-                ]
-            for player, matrix in zip(
-                self.players.values(),
-                decision_matrices,
-            ):
-                player._precomputed_decision_matrices = matrix
+                yield {
+                    identity: player._frozen_state
+                    for identity, player in self.players.items()
+                }
+            for identity, matrix in decision_matrices.items():
+                self.players[identity]._decision_matrices = matrix
 
         # play and awaken cards, saving states
         for player in self.players.values():
@@ -166,7 +167,7 @@ class Game:
         # void out decision matrices
         if use_generators:
             for player in self.players.values():
-                player._precomputed_decision_matrices = None
+                player._decision_matrices = None
 
         # stop iteration
         yield from []
@@ -175,8 +176,8 @@ class Game:
         self,
         use_generators: bool = False,
     ) -> Generator[
-        list[np.array],
-        list[dict[Action, np.ndarray]],
+        dict[Identity, np.array],
+        dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
         """Execute a complete turn"""
@@ -197,8 +198,8 @@ class Game:
         self,
         use_generators: bool = False,
     ) -> Generator[
-        list[np.array],
-        list[dict[Action, np.ndarray]],
+        dict[Identity, np.array],
+        dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
         """Play game"""
@@ -216,8 +217,8 @@ class Game:
         return self
 
     def parallel_play(self) -> Generator[
-        list[np.array],
-        list[dict[Action, np.ndarray]],
+        dict[Identity, np.array],
+        dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
         """Play game, returning a generator that pauses at each decision point
