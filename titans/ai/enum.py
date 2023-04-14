@@ -92,3 +92,11 @@ class Species(Enum):
     BEAST = auto()
     DRAGON = auto()
     TITAN = auto()
+
+
+class Zone(Enum):
+    """Different zones a player's cards can be in"""
+    DECK = 0
+    DISCARD = 1
+    HAND = 2
+    PLAY = 3

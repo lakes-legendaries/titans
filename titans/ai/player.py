@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Ability, Action, Identity, Name
+from titans.ai.enum import Ability, Action, Identity, Name, Zone
 from titans.ai.strategy import RandomStrategy, Strategy
 
 
@@ -27,16 +27,10 @@ class Player:
 
     Attributes
     ----------
-    deck_zone: list[Card]
-        cards in player's deck
-    discard_zone: list[Card]
-        cards in player's discard
-    hand_zone: list[Card]
-        cards in player's hand
+    cards: dict[Zone, list[Card]]
+        player's cards, in each zone
     identity: Identity
         player's identity
-    play_zone: list[Card]
-        cards the player has in play
     ritual_piles: list[Card]
         cards in the shared ritual piles. This is harmonized between players in
         Player.handshake()
@@ -65,15 +59,15 @@ class Player:
             }
         )
 
-        # initialize zones and temples
-        self.deck_zone: list[Card] = []
-        self.discard_zone: list[Card] = []
-        self.hand_zone: list[Card] = []
-        self.play_zone: list[Card] = []
-        self.ritual_piles: list[Card] = []
+        # initialize player's card zones and temples
         self.temples: int = 3
+        self.cards: dict[Zone: list[card]] = {
+            zone: []
+            for zone in Zone
+        }
 
         # create deck and ritual piles
+        self.ritual_piles: list[Card] = []
         for c, card in enumerate(cards):
 
             # make starting deck
@@ -81,7 +75,7 @@ class Player:
 
                 # this player gets every other starting card
                 if c % len(Identity) == self.identity.value:
-                    self.deck_zone.append(card)
+                    self.cards[Zone.DECK].append(card)
 
             # add card to ritual piles
             else:
@@ -134,28 +128,6 @@ class Player:
         players[0].handshake(players[1])
         return len(players[0]._get_global_state())
 
-    @property
-    def _zones(self) -> list[list[Card]]:
-        """Get zones, in order this class iterates through them
-
-        Having this as a function is useful for testing
-
-        Returns
-        -------
-        list[list[Card]]
-            zones, with their card contents
-        """
-        # It's important that hand immediately follows deck: This is used in
-        # constructed public knowledge in state(). This order is also
-        # hard-coded into several tests: Only change if you have a really good
-        # reason to!
-        return [
-            self.discard_zone,
-            self.play_zone,
-            self.deck_zone,
-            self.hand_zone,
-        ]
-
     def awaken_card(self, /) -> tuple[Card | None, int]:
         """Awaken a card from the ritual piles
 
@@ -165,9 +137,9 @@ class Player:
         Returns
         -------
         Card | None
-            awakened card. This is automatically added to self.discard_zone,
-            but is returned here for easy debugging / logging. None is returned
-            if we choose to not awaken.
+            awakened card. This is automatically added to the discard zone but
+            is returned here for easy debugging / logging. None is returned if
+            we choose to not awaken.
         int
             decision made. This is the index of the decision matrix that was
             ultimately chosen.
@@ -204,7 +176,7 @@ class Player:
 
                 # awaken card
                 self.ritual_piles.pop(ritual_piles_idx)
-                self.discard_zone.append(card)
+                self.cards[Zone.DISCARD].append(card)
                 return card, choice
 
         # error
@@ -258,19 +230,19 @@ class Player:
         Returns
         -------
         list[Card]
-            the cards drawn. These are added to self.hand_zone, but are also
+            the cards drawn. These are added to the hand zone, but are also
             returned for easy debugging / logging.
         """
         drawn = []
         for _ in range(count):
 
             # if we run out of cards to draw, then stop early
-            if not self.deck_zone:
+            if not self.cards[Zone.DECK]:
                 return drawn
 
             # draw card, add to hand
-            drawn.append(self.deck_zone.pop())
-            self.hand_zone.append(drawn[-1])
+            drawn.append(self.cards[Zone.DECK].pop())
+            self.cards[Zone.HAND].append(drawn[-1])
 
         # return list of drawn cards
         return drawn
@@ -293,7 +265,7 @@ class Player:
             available energy
         """
         energy = 0
-        for card in self.play_zone:
+        for card in self.cards[Zone.PLAY]:
             energy += card.abilities.get(Ability.ENERGY, 0)
         return energy
 
@@ -306,7 +278,7 @@ class Player:
             total power
         """
         power = 0
-        for card in self.play_zone:
+        for card in self.cards[Zone.PLAY]:
             power += card.power
         return power
 
@@ -331,28 +303,34 @@ class Player:
         state = np.zeros(0)
 
         # get cards in each zone
-        for zone in self._zones:
+        for zone in Zone:
 
-            # initialize counts. For the private state, we zero-out the counts
-            # and save the counts every time. For the public state, we combine
-            # deck and hand, and so we slectively choose when to zero-out and
-            # save the state.
-            zero_state = not public or zone is not self.hand_zone
-            save_state = not public or zone is not self.deck_zone
-            if zero_state:
-                counts = np.zeros(len(Name))
+            # skip hand if public knowledge only
+            if public and zone == Zone.HAND:
+                continue
 
-            # get the counts of each card in the zone
-            for card in zone:
+            # get counts in zone
+            counts = np.zeros(len(Name))
+            for card in self.cards[zone]:
                 counts[card.name.value] += 1
 
-            # save the state
-            if save_state:
-                state = np.concatenate((state, counts))
+            # combine hand and deck for public knowledge only
+            if public and zone == Zone.DECK:
+                for card in self.cards[Zone.HAND]:
+                    counts[card.name.value] += 1
+
+            # append counts to state
+            state = np.concatenate((state, counts))
 
         # get overall card counts for each zone. This helps with
         # publicly-available knowledge.
-        state = np.concatenate((state, [len(zone) for zone in self._zones]))
+        state = np.concatenate((
+            state,
+            [
+                len(cards)
+                for cards in self.cards.values()
+            ],
+        ))
 
         # return
         return state
@@ -385,9 +363,8 @@ class Player:
         Returns
         -------
         list[Card]
-            cards played. The played card is automatically added to
-            self.play_zone, but is also returned here for easy debugging /
-            logging
+            cards played. The played card is automatically added to the play
+            zone, but is also returned here for easy debugging / logging
         list[int]
             decisions made (i.e. the indices of the decision matrix that were
             executed)
@@ -413,22 +390,25 @@ class Player:
         )
 
         # play highest-valued card that we can play
-        name_list = np.array([card.name.value for card in self.hand_zone])
+        name_list = np.array([
+            card.name.value
+            for card in self.cards[Zone.HAND]
+        ])
         for choice in np.argsort(decision_matrix)[::-1]:
 
             # play top card of deck
-            if choice == len(Name) and len(self.deck_zone) > 0:
-                card = self.deck_zone.pop()
+            if choice == len(Name) and len(self.cards[Zone.DECK]) > 0:
+                card = self.cards[Zone.DECK].pop()
                 played.append(card)
-                self.play_zone.append(card)
+                self.cards[Zone.PLAY].append(card)
                 choices.append(choice)
                 break
 
             # play card from hand
             if (matches := np.argwhere(name_list == choice)).any():
-                card = self.hand_zone.pop(matches[0][0])
+                card = self.cards[Zone.HAND].pop(matches[0][0])
                 played.append(card)
-                self.play_zone.append(card)
+                self.cards[Zone.PLAY].append(card)
                 choices.append(choice)
                 break
 
@@ -439,13 +419,19 @@ class Player:
         """Shuffle all cards together"""
 
         # move all cards to the deck
-        self.deck_zone += self.discard_zone + self.hand_zone + self.play_zone
-        self.discard_zone.clear()
-        self.hand_zone.clear()
-        self.play_zone.clear()
+        self.cards[Zone.DECK] += (
+            self.cards[Zone.DISCARD]
+            + self.cards[Zone.HAND]
+            + self.cards[Zone.PLAY]
+        )
+
+        # clear out other zones
+        for zone in Zone:
+            if zone != Zone.DECK:
+                self.cards[zone].clear()
 
         # shuffle order
-        self._rng.shuffle(self.deck_zone)
+        self._rng.shuffle(self.cards[Zone.DECK])
 
     def unfreeze_state(self):
         """Unfreeze global state

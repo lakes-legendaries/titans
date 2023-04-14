@@ -7,6 +7,7 @@ from titans.ai import (
     Name,
     NUM_CHOICES,
     Strategy,
+    Zone,
 )
 
 
@@ -44,8 +45,8 @@ def test__play_age():
 
     # ensure correct cards played and awakened
     for player in game.players.values():
-        assert player.play_zone[0].name == Name.MONK
-        assert player.discard_zone[0].name == Name.NIKOLAI_THE_CURSED
+        assert player.cards[Zone.PLAY][0].name == Name.MONK
+        assert player.cards[Zone.DISCARD][0].name == Name.NIKOLAI_THE_CURSED
 
 
 def test__play_turn():
@@ -79,16 +80,16 @@ def test__play_turn():
     # ensure correct cards played and awakened
     assert all([
         card.name == Name.MONK
-        for card in game.players[Identity.MIKE].play_zone
+        for card in game.players[Identity.MIKE].cards[Zone.PLAY]
     ])
-    discard_zone = game.players[Identity.MIKE].discard_zone
+    discard_zone = game.players[Identity.MIKE].cards[Zone.DISCARD]
     assert discard_zone[0].name == Name.NIKOLAI_THE_CURSED
     assert discard_zone[1].name == Name.WINDS_HOWL
     assert discard_zone[2].name == Name.FROSTBREATH
     assert not all([
         c0.name == c1.name
         for c0, c1 in zip(*[
-            game.players[identity].discard_zone
+            game.players[identity].cards[Zone.DISCARD]
             for identity in Identity
         ])
     ])
@@ -120,7 +121,7 @@ def test_parallel_play():
     # check initial states
     states = next(controller)
     assert len(states) == 2
-    assert states[0][-1] == 6
+    assert states[0][-len(Zone) + Zone.HAND.value] == 6
     assert states[0][-2] == 6
 
     # send choice to play monk
@@ -130,7 +131,7 @@ def test_parallel_play():
 
     # check correct card played
     for player in game.players.values():
-        assert player.play_zone[0].name == Name.MONK
+        assert player.cards[Zone.PLAY][0].name == Name.MONK
 
 
 def test_play():

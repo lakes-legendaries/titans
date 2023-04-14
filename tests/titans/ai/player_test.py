@@ -8,6 +8,7 @@ from titans.ai import (
     NUM_CHOICES,
     Player,
     Strategy,
+    Zone,
 )
 
 
@@ -24,22 +25,25 @@ def test___init__():
     players[0].handshake(players[1])
 
     # check each starting deck has the right cards
-    assert len(players[0].deck_zone) == len(players[1].deck_zone) == 15
+    assert (
+        len(players[0].cards[Zone.DECK])
+        == len(players[1].cards[Zone.DECK]) == 15
+    )
     for player in players:
         assert len([
             card
-            for card in player.deck_zone
+            for card in player.cards[Zone.DECK]
             if card.name == Name.MONK
         ]) == 10
         assert len([
             card
-            for card in player.deck_zone
+            for card in player.cards[Zone.DECK]
             if card.name == Name.WIZARD
         ]) == 5
 
     # ensure each card was only dealt to one player
-    for card0 in players[0].deck_zone:
-        for card1 in players[1].deck_zone:
+    for card0 in players[0].cards[Zone.DECK]:
+        for card1 in players[1].cards[Zone.DECK]:
             assert not (card0 is card1)
 
     # check ritual piles have the right cards
@@ -56,7 +60,7 @@ def test__get_global_state():
         for identity, random_state in zip(Identity, [42, 271828])
     ]
     for player in players:
-        player.deck_zone.extend([Card(name) for name in Name])
+        player.cards[Zone.DECK].extend([Card(name) for name in Name])
         player.shuffle_cards()
         player.draw_cards(6)
     players[0].handshake(players[1])
@@ -64,13 +68,16 @@ def test__get_global_state():
     # ensure hands aren't equal (which is a check on shuffle_cards)
     assert any([
         c0.name != c1.name
-        for c0, c1 in zip(players[0].hand_zone, players[1].hand_zone)
+        for c0, c1 in zip(
+            players[0].cards[Zone.HAND],
+            players[1].cards[Zone.HAND],
+        )
     ])
 
     # toss out a few cards from the deck, so that public states don't match
     for player in players:
         for _ in range(5):
-            player.deck_zone.pop()
+            player.cards[Zone.DECK].pop()
 
     # get states
     public_states = [player.get_state(public=True) for player in players]
@@ -102,7 +109,7 @@ def test_awaken_card():
 
     # try to awaken with zero energy
     players[0].awaken_card()
-    assert len(players[0].discard_zone) == 0
+    assert len(players[0].cards[Zone.DISCARD]) == 0
 
     # set strategy to choose aurora draco 1st, ghosts 2nd
     class ModifiedStrategy(Strategy):
@@ -114,16 +121,16 @@ def test_awaken_card():
     players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
 
     # add energy, check we buy what we can
-    players[0].play_zone.append(Card(Name.MONK))
+    players[0].cards[Zone.PLAY].append(Card(Name.MONK))
     players[0].awaken_card()
-    assert len(players[0].discard_zone) == 1
-    assert players[0].discard_zone[0].name == Name.GHOST
+    assert len(players[0].cards[Zone.DISCARD]) == 1
+    assert players[0].cards[Zone.DISCARD][0].name == Name.GHOST
 
     # add energy, see how this changes, check we buy what we can
-    players[0].play_zone.append(Card(Name.TRAVELER))
+    players[0].cards[Zone.PLAY].append(Card(Name.TRAVELER))
     players[0].awaken_card()
-    assert len(players[0].discard_zone) == 2
-    assert players[0].discard_zone[-1].name == Name.AURORA_DRACO
+    assert len(players[0].cards[Zone.DISCARD]) == 2
+    assert players[0].cards[Zone.DISCARD][-1].name == Name.AURORA_DRACO
 
     # change strategy to buy ghost
     class ModifiedStrategy(Strategy):
@@ -134,8 +141,8 @@ def test_awaken_card():
             return pred
     players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
     players[0].awaken_card()
-    assert len(players[0].discard_zone) == 3
-    assert players[0].discard_zone[-1].name == Name.GHOST
+    assert len(players[0].cards[Zone.DISCARD]) == 3
+    assert players[0].cards[Zone.DISCARD][-1].name == Name.GHOST
 
     # change strategy to not buy
     class ModifiedStrategy(Strategy):
@@ -145,7 +152,7 @@ def test_awaken_card():
             return pred
     players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
     players[0].awaken_card()
-    assert len(players[0].discard_zone) == 3
+    assert len(players[0].cards[Zone.DISCARD]) == 3
 
 
 def test_battle_opponent():
@@ -159,24 +166,24 @@ def test_battle_opponent():
     assert players[0].temples == players[1].temples == 3
 
     # battle: power off by one
-    players[0].play_zone.append(Card(Name.WIZARD))
+    players[0].cards[Zone.PLAY].append(Card(Name.WIZARD))
     assert players[0].battle_opponent() is None
     assert players[0].temples == players[1].temples == 3
 
     # battle: power off by two
-    players[0].play_zone.append(Card(Name.WIZARD))
+    players[0].cards[Zone.PLAY].append(Card(Name.WIZARD))
     assert players[0].battle_opponent() == players[0].identity
     assert players[0].temples == 3
     assert players[1].temples == 2
 
     # battle: power off by three
-    players[0].play_zone.append(Card(Name.WIZARD))
+    players[0].cards[Zone.PLAY].append(Card(Name.WIZARD))
     assert players[0].battle_opponent() == players[0].identity
     assert players[0].temples == 3
     assert players[1].temples == 1
 
     # battle: comeback
-    players[1].play_zone.extend([Card(Name.WIZARD) for _ in range(5)])
+    players[1].cards[Zone.PLAY].extend([Card(Name.WIZARD) for _ in range(5)])
     assert players[0].battle_opponent() == players[1].identity
     assert players[0].temples == 2
     assert players[1].temples == 2
@@ -190,44 +197,46 @@ def test_draw_cards():
 
     # draw 4 cards
     player.draw_cards(4)
-    assert len(player.deck_zone) == 8
-    assert len(player.hand_zone) == 4
+    assert len(player.cards[Zone.DECK]) == 8
+    assert len(player.cards[Zone.HAND]) == 4
 
     # draw all cards (w/ overdraw)
     player.draw_cards(30)
-    assert len(player.deck_zone) == 0
-    assert len(player.hand_zone) == 12
+    assert len(player.cards[Zone.DECK]) == 0
+    assert len(player.cards[Zone.HAND]) == 12
 
 
 def test_freeze_state():
     players = [Player(identity, []) for identity in Identity]
     players[0].handshake(players[1])
     players[0].freeze_state()
-    players[0].discard_zone.append(Card(Name.GHOST))
+    players[0].cards[Zone.DISCARD].append(Card(Name.GHOST))
     assert (players[0]._get_global_state() == 0).all()
     players[0].unfreeze_state()
-    assert players[0]._get_global_state()[Name.GHOST.value] == 1
+    assert players[0]._get_global_state()[
+        (Zone.DISCARD.value * len(Name)) + Name.GHOST.value
+    ] == 1
 
 
 def test_get_energy():
     player = Player(Identity.MIKE, [])
     assert player.get_energy() == 0
-    player.play_zone.append(Card(Name.MONK))
+    player.cards[Zone.PLAY].append(Card(Name.MONK))
     assert player.get_energy() == 1
-    player.play_zone.append(Card(Name.TRAVELER))
+    player.cards[Zone.PLAY].append(Card(Name.TRAVELER))
     assert player.get_energy() == 3
 
 
 def test_get_power():
     player = Player(Identity.MIKE, [])
     assert player.get_power() == 0
-    player.play_zone.append(Card(Name.MONK))
+    player.cards[Zone.PLAY].append(Card(Name.MONK))
     assert player.get_power() == 0
-    player.play_zone.append(Card(Name.TRAVELER))
+    player.cards[Zone.PLAY].append(Card(Name.TRAVELER))
     assert player.get_power() == 1
-    player.play_zone.append(Card(Name.WIZARD))
+    player.cards[Zone.PLAY].append(Card(Name.WIZARD))
     assert player.get_power() == 2
-    player.play_zone.append(Card(Name.WIZARD))
+    player.cards[Zone.PLAY].append(Card(Name.WIZARD))
     assert player.get_power() == 3
 
 
@@ -235,33 +244,44 @@ def test_get_state():
 
     # initialize
     player = Player(Identity.MIKE, [])
-    player.discard_zone.extend([Card(Name.MONK) for _ in range(2)])
-    player.play_zone.append(Card(Name.AURORA_DRACO))
-    player.deck_zone.extend([Card(Name.FINAL_JUDGMENT), Card(Name.GHOST)])
-    player.hand_zone.append(Card(Name.GHOST))
+    player.cards[Zone.DISCARD].extend([Card(Name.MONK) for _ in range(2)])
+    player.cards[Zone.PLAY].append(Card(Name.AURORA_DRACO))
+    player.cards[Zone.DECK].extend([
+        Card(Name.FINAL_JUDGMENT),
+        Card(Name.GHOST),
+    ])
+    player.cards[Zone.HAND].append(Card(Name.GHOST))
 
     # check private state
+    offset = {zone: zone.value * len(Name) for zone in Zone}
     private_state = player.get_state(public=False)
-    assert private_state[Name.MONK.value] == 2
-    assert private_state[len(Name) + Name.AURORA_DRACO.value] == 1
-    assert private_state[2 * len(Name) + Name.FINAL_JUDGMENT.value] == 1
-    assert private_state[2 * len(Name) + Name.GHOST.value] == 1
-    assert private_state[3 * len(Name) + Name.GHOST.value] == 1
-    assert private_state[-4] == 2
-    assert private_state[-3] == 1
-    assert private_state[-2] == 2
-    assert private_state[-1] == 1
+    assert private_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
+    assert private_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
+    assert private_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
+    assert private_state[offset[Zone.DECK] + Name.GHOST.value] == 1
+    assert private_state[offset[Zone.HAND] + Name.GHOST.value] == 1
+    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
+    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
+    assert private_state[-len(Zone) + Zone.DECK.value] == 2
+    assert private_state[-len(Zone) + Zone.HAND.value] == 1
 
     # check public state
+    offset = {}
+    hand_passed = False
+    for zone in Zone:
+        if zone == Zone.HAND:
+            hand_passed = True
+            continue
+        offset[zone] = (zone.value - hand_passed) * len(Name)
     public_state = player.get_state(public=True)
-    assert public_state[Name.MONK.value] == 2
-    assert public_state[len(Name) + Name.AURORA_DRACO.value] == 1
-    assert public_state[2 * len(Name) + Name.FINAL_JUDGMENT.value] == 1
-    assert public_state[2 * len(Name) + Name.GHOST.value] == 2
-    assert public_state[-4] == 2
-    assert public_state[-3] == 1
-    assert public_state[-2] == 2
-    assert public_state[-1] == 1
+    assert public_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
+    assert public_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
+    assert public_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
+    assert public_state[offset[Zone.DECK] + Name.GHOST.value] == 2
+    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
+    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
+    assert private_state[-len(Zone) + Zone.DECK.value] == 2
+    assert private_state[-len(Zone) + Zone.HAND.value] == 1
     assert len(public_state) + len(Name) == len(private_state)
 
 
@@ -278,7 +298,7 @@ def test_play_cards():
     players[0].handshake(players[1])
     players[0].shuffle_cards()
     players[0].draw_cards(6)
-    players[0].hand_zone.append(Card(Name.AURORA_DRACO))
+    players[0].cards[Zone.HAND].append(Card(Name.AURORA_DRACO))
 
     # set strategy to always choose aurora draco
     class ModifiedStrategy(Strategy):
@@ -290,7 +310,7 @@ def test_play_cards():
 
     # play card, check aurora draco was played
     players[0].play_cards()
-    assert players[0].play_zone[0].name == Name.AURORA_DRACO
+    assert players[0].cards[Zone.PLAY][0].name == Name.AURORA_DRACO
 
     # change strategy to play top card of the deck
     class ModifiedStrategy(Strategy):
@@ -300,7 +320,7 @@ def test_play_cards():
             return pred
     players[0].strategies[Action.PLAY] = ModifiedStrategy()
     players[0].play_cards()
-    assert len(players[0].deck_zone) == 5
+    assert len(players[0].cards[Zone.DECK]) == 5
 
 
 def test_shuffle_cards():
@@ -312,11 +332,14 @@ def test_shuffle_cards():
     # draw, then shuffle
     player.draw_cards(4)
     player.shuffle_cards()
-    assert len(player.deck_zone) == 12
-    assert len(player.hand_zone) == 0
+    assert len(player.cards[Zone.DECK]) == 12
+    assert len(player.cards[Zone.HAND]) == 0
 
     # show cards in discard go to deck
-    player.discard_zone.append(Card(Name.GHOST))
+    player.cards[Zone.DISCARD].append(Card(Name.GHOST))
     player.shuffle_cards()
-    assert len(player.deck_zone) == 13
-    assert sum([card.name == Name.GHOST for card in player.deck_zone]) == 1
+    assert len(player.cards[Zone.DECK]) == 13
+    assert sum([
+        card.name == Name.GHOST
+        for card in player.cards[Zone.DECK]
+    ]) == 1
