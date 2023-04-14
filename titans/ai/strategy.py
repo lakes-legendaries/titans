@@ -70,8 +70,15 @@ class RandomStrategy(Strategy):
 class StandardStrategy(RandomStrategy):
     """Standard strategy for making decisions
 
-    This class conforms to the sklearn API. You can substitute for it any class
-    that provides a fit and predict method.
+    This class scales data (via z-score normalization) and then using an MLP
+    (feedforward regression ANN) to predict best courses of action (given the
+    player's / game's state).
+
+    This model is designed so that you can resume fitting at any point: If you
+    call the fit function multiple times, the ANN will simply resume fitting
+    from where you left off. (The scaler will be static, though, configured
+    through your first time you called fit. This ensures that new data is on
+    the same scale as old data.)
 
     Parameters
     ----------
