@@ -30,9 +30,9 @@ class Game:
     players: list[Players]
         players playing the game
     history: dict[Identity, dict[Action, dict[bytes, list[int]]]]
-        here, the history of each player's global state, and the choices they
-        made given that global state, is recorded. This variable contains three
-        nested dictionaries:
+        here, the history of each player's state, and the choices they made
+        given that state, is recorded. This variable contains three nested
+        dictionaries:
 
         1. The top-level dictionary is indexed by each player
         2. The mid-level dictionary is indexed by each action
@@ -120,9 +120,9 @@ class Game:
         Returns
         -------
         Generator
-            This generator yields each player's global state, and sends
-            precomputed decision matrices for each player. If
-            `use_generators=False`, then this will be a zero-length generator.
+            This generator yields each player's state, and sends precomputed
+            decision matrices for each player. If `use_generators=False`, then
+            this will be a zero-length generator.
         """
 
         # freeze states

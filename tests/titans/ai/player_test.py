@@ -52,50 +52,49 @@ def test___init__():
     assert all([card.name == Name.GHOST for card in players[0].ritual_piles])
 
 
-def test__get_global_state():
+def test__get_individual_state():
 
     # initialize
-    players = [
-        Player(identity, [], random_state=random_state)
-        for identity, random_state in zip(Identity, [42, 271828])
-    ]
-    for player in players:
-        player.cards[Zone.DECK].extend([Card(name) for name in Name])
-        player.shuffle_cards()
-        player.draw_cards(6)
-    players[0].handshake(players[1])
-
-    # ensure hands aren't equal (which is a check on shuffle_cards)
-    assert any([
-        c0.name != c1.name
-        for c0, c1 in zip(
-            players[0].cards[Zone.HAND],
-            players[1].cards[Zone.HAND],
-        )
+    player = Player(Identity.MIKE, [])
+    player.cards[Zone.DISCARD].extend([Card(Name.MONK) for _ in range(2)])
+    player.cards[Zone.PLAY].append(Card(Name.AURORA_DRACO))
+    player.cards[Zone.DECK].extend([
+        Card(Name.FINAL_JUDGMENT),
+        Card(Name.GHOST),
     ])
+    player.cards[Zone.HAND].append(Card(Name.GHOST))
 
-    # toss out a few cards from the deck, so that public states don't match
-    for player in players:
-        for _ in range(5):
-            player.cards[Zone.DECK].pop()
+    # check private state
+    offset = {zone: zone.value * len(Name) for zone in Zone}
+    private_state = player._get_individual_state(public=False)
+    assert private_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
+    assert private_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
+    assert private_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
+    assert private_state[offset[Zone.DECK] + Name.GHOST.value] == 1
+    assert private_state[offset[Zone.HAND] + Name.GHOST.value] == 1
+    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
+    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
+    assert private_state[-len(Zone) + Zone.DECK.value] == 2
+    assert private_state[-len(Zone) + Zone.HAND.value] == 1
 
-    # get states
-    public_states = [player.get_state(public=True) for player in players]
-    private_states = [player.get_state(public=False) for player in players]
-
-    # check states don't match
-    assert (public_states[0] != public_states[1]).any()
-    assert (private_states[0] != private_states[1]).any()
-
-    # check global states
-    assert (players[0]._get_global_state() == np.concatenate((
-        private_states[0],
-        public_states[1],
-    ))).all()
-    assert (players[1]._get_global_state() == np.concatenate((
-        private_states[1],
-        public_states[0],
-    ))).all()
+    # check public state
+    offset = {}
+    hand_passed = False
+    for zone in Zone:
+        if zone == Zone.HAND:
+            hand_passed = True
+            continue
+        offset[zone] = (zone.value - hand_passed) * len(Name)
+    public_state = player._get_individual_state(public=True)
+    assert public_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
+    assert public_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
+    assert public_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
+    assert public_state[offset[Zone.DECK] + Name.GHOST.value] == 2
+    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
+    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
+    assert private_state[-len(Zone) + Zone.DECK.value] == 2
+    assert private_state[-len(Zone) + Zone.HAND.value] == 1
+    assert len(public_state) + len(Name) == len(private_state)
 
 
 def test_awaken_card():
@@ -211,9 +210,9 @@ def test_freeze_state():
     players[0].handshake(players[1])
     players[0].freeze_state()
     players[0].cards[Zone.DISCARD].append(Card(Name.GHOST))
-    assert (players[0]._get_global_state() == 0).all()
+    assert (players[0].get_state() == 0).all()
     players[0].unfreeze_state()
-    assert players[0]._get_global_state()[
+    assert players[0].get_state()[
         (Zone.DISCARD.value * len(Name)) + Name.GHOST.value
     ] == 1
 
@@ -240,49 +239,56 @@ def test_get_power():
     assert player.get_power() == 3
 
 
-def test_get_state():
+def test_get_individual_state():
 
     # initialize
-    player = Player(Identity.MIKE, [])
-    player.cards[Zone.DISCARD].extend([Card(Name.MONK) for _ in range(2)])
-    player.cards[Zone.PLAY].append(Card(Name.AURORA_DRACO))
-    player.cards[Zone.DECK].extend([
-        Card(Name.FINAL_JUDGMENT),
-        Card(Name.GHOST),
+    players = [
+        Player(identity, [], random_state=random_state)
+        for identity, random_state in zip(Identity, [42, 271828])
+    ]
+    for player in players:
+        player.cards[Zone.DECK].extend([Card(name) for name in Name])
+        player.shuffle_cards()
+        player.draw_cards(6)
+    players[0].handshake(players[1])
+
+    # ensure hands aren't equal (which is a check on shuffle_cards)
+    assert any([
+        c0.name != c1.name
+        for c0, c1 in zip(
+            players[0].cards[Zone.HAND],
+            players[1].cards[Zone.HAND],
+        )
     ])
-    player.cards[Zone.HAND].append(Card(Name.GHOST))
 
-    # check private state
-    offset = {zone: zone.value * len(Name) for zone in Zone}
-    private_state = player.get_state(public=False)
-    assert private_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
-    assert private_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
-    assert private_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
-    assert private_state[offset[Zone.DECK] + Name.GHOST.value] == 1
-    assert private_state[offset[Zone.HAND] + Name.GHOST.value] == 1
-    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
-    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
-    assert private_state[-len(Zone) + Zone.DECK.value] == 2
-    assert private_state[-len(Zone) + Zone.HAND.value] == 1
+    # toss out a few cards from the deck, so that public states don't match
+    for player in players:
+        for _ in range(5):
+            player.cards[Zone.DECK].pop()
 
-    # check public state
-    offset = {}
-    hand_passed = False
-    for zone in Zone:
-        if zone == Zone.HAND:
-            hand_passed = True
-            continue
-        offset[zone] = (zone.value - hand_passed) * len(Name)
-    public_state = player.get_state(public=True)
-    assert public_state[offset[Zone.DISCARD] + Name.MONK.value] == 2
-    assert public_state[offset[Zone.PLAY] + Name.AURORA_DRACO.value] == 1
-    assert public_state[offset[Zone.DECK] + Name.FINAL_JUDGMENT.value] == 1
-    assert public_state[offset[Zone.DECK] + Name.GHOST.value] == 2
-    assert private_state[-len(Zone) + Zone.DISCARD.value] == 2
-    assert private_state[-len(Zone) + Zone.PLAY.value] == 1
-    assert private_state[-len(Zone) + Zone.DECK.value] == 2
-    assert private_state[-len(Zone) + Zone.HAND.value] == 1
-    assert len(public_state) + len(Name) == len(private_state)
+    # get states
+    public_states = [
+        player._get_individual_state(public=True)
+        for player in players
+    ]
+    private_states = [
+        player._get_individual_state(public=False)
+        for player in players
+    ]
+
+    # check states don't match
+    assert (public_states[0] != public_states[1]).any()
+    assert (private_states[0] != private_states[1]).any()
+
+    # check states
+    assert (players[0].get_state() == np.concatenate((
+        private_states[0],
+        public_states[1],
+    ))).all()
+    assert (players[1].get_state() == np.concatenate((
+        private_states[1],
+        public_states[0],
+    ))).all()
 
 
 def test_play_cards():

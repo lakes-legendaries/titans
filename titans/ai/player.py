@@ -89,31 +89,59 @@ class Player:
         # initialize rng
         self._rng: np.random.Generator = np.random.default_rng(random_state)
 
-    def _get_global_state(self) -> np.ndarray:
-        """Get your private state + opponent's public state
+    def _get_individual_state(self, public: bool) -> np.ndarray:
+        """Get player state
+
+        This is the numeric state that is fed into the ML model as the training
+        data (when combining a player's own private state with their opponent's
+        public state). The public state is the knowledge your opponent has,
+        while the private verstion includes which cards are in your hand.
+
+        Parameters
+        ----------
+        public: bool
+            whether to only include public knowledge in the state
 
         Returns
         -------
         np.ndarray
-            global state, from this instance's point-of-view
+            numeric representation of player's state
         """
+        # initialzie state
+        state = np.zeros(0)
 
-        # make sure opponent is initialized
-        if self.opponent is None:
-            raise AttributeError(
-                "No opponent set!"
-                " You must run Player.handshake() before playing!"
-            )
+        # get cards in each zone
+        for zone in Zone:
 
-        # return frozen state
-        if self._frozen_state is not None:
-            return self._frozen_state
+            # skip hand if public knowledge only
+            if public and zone == Zone.HAND:
+                continue
 
-        # return state
-        return np.concatenate((
-            self.get_state(public=False),
-            self.opponent.get_state(public=True),
+            # get counts in zone
+            counts = np.zeros(len(Name))
+            for card in self.cards[zone]:
+                counts[card.name.value] += 1
+
+            # combine hand and deck for public knowledge only
+            if public and zone == Zone.DECK:
+                for card in self.cards[Zone.HAND]:
+                    counts[card.name.value] += 1
+
+            # append counts to state
+            state = np.concatenate((state, counts))
+
+        # get overall card counts for each zone. This helps with
+        # publicly-available knowledge.
+        state = np.concatenate((
+            state,
+            [
+                len(cards)
+                for cards in self.cards.values()
+            ],
         ))
+
+        # return
+        return state
 
     def awaken_card(self, /) -> tuple[Card | None, int]:
         """Awaken a card from the ritual piles
@@ -134,7 +162,7 @@ class Player:
 
         # get decision matrix
         decision_matrix = (
-            self.strategies[Action.AWAKEN].predict(self._get_global_state())
+            self.strategies[Action.AWAKEN].predict(self.get_state())
         ) if self._precomputed_decision_matrices is None else (
             self._precomputed_decision_matrices[Action.AWAKEN]
         )
@@ -235,13 +263,13 @@ class Player:
         return drawn
 
     def freeze_state(self):
-        """Freeze global state (for simultaneous actions)
+        """Freeze state (for simultaneous actions)
 
-        This causes self._get_global_state() to return what the state is when
-        you call self.freeze_state(). This will persist until you call
+        This causes self.get_state() to return what the state is when you call
+        self.freeze_state(). This will persist until you call
         self.unfreeze_state().
         """
-        self._frozen_state = self._get_global_state()
+        self._frozen_state = self.get_state()
 
     def get_energy(self) -> int:
         """Get total energy from all cards in play
@@ -269,64 +297,39 @@ class Player:
             power += card.power
         return power
 
-    def get_state(self, public: bool) -> np.ndarray:
-        """Get player state
+    def get_state(self) -> np.ndarray:
+        """Player's state
 
         This is the numeric state that is fed into the ML model as the training
-        data. The public state is the knowledge your opponent has, while the
-        private verstion includes which cards are in your hand.
-
-        Parameters
-        ----------
-        public: bool
-            whether to only include public knowledge in the state
+        data
 
         Returns
         -------
         np.ndarray
-            numeric representation of player's state
+            state, from this instance's point-of-view
         """
-        # initialzie state
-        state = np.zeros(0)
 
-        # get cards in each zone
-        for zone in Zone:
+        # make sure opponent is initialized
+        if self.opponent is None:
+            raise AttributeError(
+                "No opponent set!"
+                " You must run Player.handshake() before playing!"
+            )
 
-            # skip hand if public knowledge only
-            if public and zone == Zone.HAND:
-                continue
+        # return frozen state
+        if self._frozen_state is not None:
+            return self._frozen_state
 
-            # get counts in zone
-            counts = np.zeros(len(Name))
-            for card in self.cards[zone]:
-                counts[card.name.value] += 1
-
-            # combine hand and deck for public knowledge only
-            if public and zone == Zone.DECK:
-                for card in self.cards[Zone.HAND]:
-                    counts[card.name.value] += 1
-
-            # append counts to state
-            state = np.concatenate((state, counts))
-
-        # get overall card counts for each zone. This helps with
-        # publicly-available knowledge.
-        state = np.concatenate((
-            state,
-            [
-                len(cards)
-                for cards in self.cards.values()
-            ],
+        # return state
+        return np.concatenate((
+            self._get_individual_state(public=False),
+            self.opponent._get_individual_state(public=True),
         ))
-
-        # return
-        return state
 
     def handshake(self, opponent: Player, /):
         """Set this player's opponent (and vice-versa)
 
-        This sets self.opponent, which is used when getting the global game
-        state
+        This sets self.opponent, which is used when getting the game state
 
         You always must handshake before starting a game.
 
@@ -371,7 +374,7 @@ class Player:
 
         # get decision matrix
         decision_matrix = (
-            self.strategies[Action.PLAY].predict(self._get_global_state())
+            self.strategies[Action.PLAY].predict(self.get_state())
         ) if self._precomputed_decision_matrices is None else (
             self._precomputed_decision_matrices[Action.PLAY]
         )
@@ -421,9 +424,8 @@ class Player:
         self._rng.shuffle(self.cards[Zone.DECK])
 
     def unfreeze_state(self):
-        """Unfreeze global state
+        """Unfreeze state
 
-        This ends the hold put on the global state initiated by
-        self.freeze_state()
+        This ends the hold put on the state initiated by self.freeze_state()
         """
         self._frozen_state = None

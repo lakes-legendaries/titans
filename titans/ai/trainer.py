@@ -32,7 +32,7 @@ class Trainer:
     ----------
     history: dict[bool, dict[Action, dict[bytes, np.ndarray]]]
         here, the history of winning and losing players is recorded. This
-        variable maps every global state to every choice made given that state,
+        variable maps every state to every choice made given that state,
         recording whether the player that made that choice ultimately won or
         lost the game.
 
