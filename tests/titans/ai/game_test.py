@@ -115,7 +115,7 @@ def test__play_turn():
 def test_parallel_play():
 
     # initialize game
-    game = Game()
+    game = Game({"random_state": 271828})
     controller = game.parallel_play()
 
     # check initial states
@@ -132,6 +132,20 @@ def test_parallel_play():
     # check correct card played
     for player in game.players.values():
         assert player.cards[Zone.PLAY][0].name == Name.MONK
+
+    # play until victory, using random choices
+    rng = np.random.default_rng(281727)
+    while controller.send({
+        identity: {
+            action: rng.random(NUM_CHOICES)
+            for action in Action
+        }
+        for identity in Identity
+    }) is not None:
+        pass
+
+    # check that a winner has been declared
+    assert game.winner is not None
 
 
 def test_play():
