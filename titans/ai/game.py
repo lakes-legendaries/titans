@@ -20,6 +20,10 @@ class Game:
         provided, then one is used for each player.
     turn_limit: int, optional, default=1000
         max number of turns before a draw is declared
+    use_generators: bool, optional, default=False
+        if True, return Generator objects in `play()` (for making decisions
+        across multiple games simultaneously). This has the potential to be a
+        lot faster, but it requires quite a bit of work to get working right.
 
     Attributes
     ----------
@@ -43,8 +47,10 @@ class Game:
         self,
         *args: dict[str, Any] | list[dict[str, Any]],
         turn_limit: int = 1000,
+        use_generators: bool = False,
     ):
         # save parameters
+        self._use_generators = use_generators
         self._turn_limit = turn_limit
 
         # construct cards
@@ -94,6 +100,13 @@ class Game:
         for player in self.players:
             player.freeze_state()
 
+        # yield player states, make decisions outside of this game
+        if self._use_generators:
+            decision_matrices = \
+                yield [player._frozen_state for player in self.players]
+            for player, matrix in zip(self.players, decision_matrices):
+                player._precomputed_decision_matrices = matrix
+
         # play and awaken cards, saving states
         for player in self.players:
             frozen_state = player._frozen_state.tobytes()
@@ -115,6 +128,11 @@ class Game:
         for player in self.players:
             player.unfreeze_state()
 
+        # void out decision matrices
+        if self._use_generators:
+            for player in self.players:
+                player._precomputed_decision_matrices = None
+
     def _play_turn(self):
         """Execute a complete turn"""
 
@@ -125,7 +143,10 @@ class Game:
 
         # play ages
         for _ in range(3):
-            self._play_age()
+            if self._use_generators:
+                yield from self._play_age()
+            else:
+                self._play_age()
 
         # battle
         self.players[0].battle_opponent()
@@ -139,7 +160,10 @@ class Game:
             calling instance
         """
         for _ in range(self._turn_limit):
-            self._play_turn()
+            if self._use_generators:
+                yield from self._play_turn()
+            else:
+                self._play_turn()
             for player in self.players:
                 if player.temples <= 0:
                     self.winner = player.opponent.identity

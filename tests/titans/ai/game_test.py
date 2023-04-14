@@ -114,3 +114,25 @@ def test_play():
     game = Game().play()
     assert game.players[game.winner].temples > 0
     assert game.players[game.winner].opponent.temples == 0
+
+
+def test_play_use_generators():
+
+    # initialize game
+    game = Game(use_generators=True)
+    controller = game.play()
+
+    # check initial states
+    states = next(controller)
+    assert len(states) == 2
+    assert states[0][-1] == 6
+    assert states[0][-2] == 6
+
+    # send choice to play monk
+    decision_matrix = {action: np.zeros(NUM_CHOICES) for action in Action}
+    decision_matrix[Action.PLAY][Name.MONK] = 1
+    controller.send([decision_matrix] * 2)
+
+    # check correct card played
+    for player in game.players:
+        assert player.play_zone[0].name == Name.MONK
