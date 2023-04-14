@@ -205,10 +205,11 @@ class Trainer:
         /,
         *,
         num_games: int = 1000,
+        parallel: bool = False,
         save_history: bool = True,
         totally_random: bool = False,
         use_random: bool = False,
-        use_strategy: PlayerStrategyDict | None = None,
+        use_strategy: dict[Action, Strategy] | None = None,
     ) -> float:
         """Play a game with random strategies
 
@@ -220,6 +221,8 @@ class Trainer:
         ----------
         num_games: int, optional, default=1000
             number of games to play each session
+        parallel: bool, optional, default=False
+            play games in parallel (much faster)
         save_history: bool, optional, default=True
             save state history from these games
         totally_random: bool, optional, default=False
@@ -227,7 +230,7 @@ class Trainer:
         use_random: bool, optional, default=False
             if True, instead of using `self.strategies` as player 1's strategy,
             use random choices.
-        use_strategy: PlayerStrategyDict | None, optional, default=None
+        use_strategy: dict[Action, Strategy] | None, optional, default=None
             if provided, instead of using `self.strategies` as player 1's
             strategy, use the provided strategy here.
 
@@ -248,14 +251,18 @@ class Trainer:
             )
 
         # get strategies
-        strategies: list[dict[str, PlayerStrategyDict]] = [
+        random_strategy_dict = {
+            action: RandomStrategy()
+            for action in Action
+        }
+        strategies: list[dict[str, dict[Action, Strategy]]] = [
             {"strategies": (
-                None
+                random_strategy_dict
                 if totally_random
                 else self.strategies
             )},
             {"strategies": (
-                None
+                random_strategy_dict
                 if use_random or totally_random
                 else use_strategy
                 if use_strategy is not None
@@ -263,14 +270,18 @@ class Trainer:
             )},
         ]
 
-        # run game
-        wins = 0
-        for _ in range(num_games):
-            game = self._play_game(*strategies)
-            wins += game.winner == Identity.MIKE
-            if save_history:
-                self._save_history(game)
-        return wins / num_games
+        # play games sequentially
+        if not parallel:
+            wins = 0
+            for _ in range(num_games):
+                game = self._play_game(*strategies)
+                wins += game.winner == Identity.MIKE
+                if save_history:
+                    self._save_history(game)
+            return wins / num_games
+
+        # play games in parallel
+        raise NotImplementedError("Parallel play not implemented")
 
     def train(self):
         """Train network"""
