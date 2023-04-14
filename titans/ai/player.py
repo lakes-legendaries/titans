@@ -80,7 +80,7 @@ class Player:
             if card.name in [Name.MONK, Name.WIZARD]:
 
                 # this player gets every other starting card
-                if c % len(Identity) == self.identity:
+                if c % len(Identity) == self.identity.value:
                     self.deck_zone.append(card)
 
             # add card to ritual piles
@@ -93,7 +93,7 @@ class Player:
         self._precomputed_decision_matrices: np.ndarray | None = None
 
         # initialize rng
-        self.rng: np.random.Generator = np.random.default_rng(random_state)
+        self._rng: np.random.Generator = np.random.default_rng(random_state)
 
     def _get_global_state(self) -> np.ndarray:
         """Get your private state + opponent's public state
@@ -184,7 +184,7 @@ class Player:
         energy = self.get_energy()
 
         # awaken highest-valued accessible card we can afford
-        name_list = np.array([card.name for card in self.ritual_piles])
+        name_list = np.array([card.name.value for card in self.ritual_piles])
         for choice in np.argsort(decision_matrix)[::-1]:
 
             # choose to not awaken
@@ -344,7 +344,7 @@ class Player:
 
             # get the counts of each card in the zone
             for card in zone:
-                counts[card.name] += 1
+                counts[card.name.value] += 1
 
             # save the state
             if save_state:
@@ -413,7 +413,7 @@ class Player:
         )
 
         # play highest-valued card that we can play
-        name_list = np.array([card.name for card in self.hand_zone])
+        name_list = np.array([card.name.value for card in self.hand_zone])
         for choice in np.argsort(decision_matrix)[::-1]:
 
             # play top card of deck
@@ -445,7 +445,7 @@ class Player:
         self.play_zone.clear()
 
         # shuffle order
-        self.rng.shuffle(self.deck_zone)
+        self._rng.shuffle(self.deck_zone)
 
     def unfreeze_state(self):
         """Unfreeze global state

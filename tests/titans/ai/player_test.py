@@ -108,8 +108,8 @@ def test_awaken_card():
     class ModifiedStrategy(Strategy):
         def predict(self, X: np.ndarray) -> np.ndarray:
             pred = np.zeros(NUM_CHOICES)
-            pred[Name.AURORA_DRACO] = 2
-            pred[Name.GHOST] = 1
+            pred[Name.AURORA_DRACO.value] = 2
+            pred[Name.GHOST.value] = 1
             return pred
     players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
 
@@ -129,8 +129,8 @@ def test_awaken_card():
     class ModifiedStrategy(Strategy):
         def predict(self, X: np.ndarray) -> np.ndarray:
             pred = np.zeros(NUM_CHOICES)
-            pred[Name.GHOST] = 2
-            pred[Name.AURORA_DRACO] = 1
+            pred[Name.GHOST.value] = 2
+            pred[Name.AURORA_DRACO.value] = 1
             return pred
     players[0].strategies[Action.AWAKEN] = ModifiedStrategy()
     players[0].awaken_card()
@@ -206,7 +206,7 @@ def test_freeze_state():
     players[0].discard_zone.append(Card(Name.GHOST))
     assert (players[0]._get_global_state() == 0).all()
     players[0].unfreeze_state()
-    assert players[0]._get_global_state()[Name.GHOST] == 1
+    assert players[0]._get_global_state()[Name.GHOST.value] == 1
 
 
 def test_get_energy():
@@ -242,11 +242,11 @@ def test_get_state():
 
     # check private state
     private_state = player.get_state(public=False)
-    assert private_state[Name.MONK] == 2
-    assert private_state[len(Name) + Name.AURORA_DRACO] == 1
-    assert private_state[2 * len(Name) + Name.FINAL_JUDGMENT] == 1
-    assert private_state[2 * len(Name) + Name.GHOST] == 1
-    assert private_state[3 * len(Name) + Name.GHOST] == 1
+    assert private_state[Name.MONK.value] == 2
+    assert private_state[len(Name) + Name.AURORA_DRACO.value] == 1
+    assert private_state[2 * len(Name) + Name.FINAL_JUDGMENT.value] == 1
+    assert private_state[2 * len(Name) + Name.GHOST.value] == 1
+    assert private_state[3 * len(Name) + Name.GHOST.value] == 1
     assert private_state[-4] == 2
     assert private_state[-3] == 1
     assert private_state[-2] == 2
@@ -254,10 +254,10 @@ def test_get_state():
 
     # check public state
     public_state = player.get_state(public=True)
-    assert public_state[Name.MONK] == 2
-    assert public_state[len(Name) + Name.AURORA_DRACO] == 1
-    assert public_state[2 * len(Name) + Name.FINAL_JUDGMENT] == 1
-    assert public_state[2 * len(Name) + Name.GHOST] == 2
+    assert public_state[Name.MONK.value] == 2
+    assert public_state[len(Name) + Name.AURORA_DRACO.value] == 1
+    assert public_state[2 * len(Name) + Name.FINAL_JUDGMENT.value] == 1
+    assert public_state[2 * len(Name) + Name.GHOST.value] == 2
     assert public_state[-4] == 2
     assert public_state[-3] == 1
     assert public_state[-2] == 2
@@ -284,7 +284,7 @@ def test_play_cards():
     class ModifiedStrategy(Strategy):
         def predict(self, X: np.ndarray) -> np.ndarray:
             pred = np.zeros(NUM_CHOICES)
-            pred[Name.AURORA_DRACO] = 1
+            pred[Name.AURORA_DRACO.value] = 1
             return pred
     players[0].strategies[Action.PLAY] = ModifiedStrategy()
 

@@ -81,9 +81,9 @@ def test_get_Xy():
         is_winner: {
             action: {
                 np.array([0., 2.]).tobytes():
-                    (1 + action) * (not is_winner) * default_count,
+                    (1 + action.value) * (not is_winner) * default_count,
                 np.array([0., 1.]).tobytes():
-                    (1 + action) * is_winner * default_count,
+                    (1 + action.value) * is_winner * default_count,
             }
             for action in Action
         }
@@ -97,12 +97,12 @@ def test_get_Xy():
     for action in Action:
         assert (Xy[action][0][0] == [0, 2]).all()
         assert (Xy[action][0][1] == [0, 1]).all()
-    assert (Xy[0][1][0] == 0.40).all()
-    assert (Xy[0][1][1] == 0.60).all()
-    assert (Xy[1][1][0] == 0.25).all()
-    assert (Xy[1][1][1] == 0.75).all()
-    assert Xy[0][0].shape == (2, 2)
-    assert Xy[0][1].shape == (2, NUM_CHOICES)
+    assert (Xy[Action(0)][1][0] == 0.40).all()
+    assert (Xy[Action(0)][1][1] == 0.60).all()
+    assert (Xy[Action(1)][1][0] == 0.25).all()
+    assert (Xy[Action(1)][1][1] == 0.75).all()
+    assert Xy[Action(0)][0].shape == (2, 2)
+    assert Xy[Action(0)][1].shape == (2, NUM_CHOICES)
 
 
 def test_play():

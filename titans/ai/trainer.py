@@ -142,7 +142,7 @@ class Trainer:
         default_zeros = np.ndarray(NUM_CHOICES)
 
         # do for each action
-        Xy = {}
+        Xy: dict[Action, tuple[np.ndarray, np.ndarray]] = {}
         for action in Action:
 
             # get list of all states

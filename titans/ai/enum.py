@@ -1,9 +1,9 @@
 """Common enums"""
 
-from enum import auto, IntEnum
+from enum import auto, Enum
 
 
-class Ability(IntEnum):
+class Ability(Enum):
     """Card Abilities"""
     BOLSTER_FIRE = 0
     BOLSTER_ICE = auto()
@@ -27,13 +27,13 @@ class Ability(IntEnum):
     SUMMON = auto()
 
 
-class Action(IntEnum):
+class Action(Enum):
     """Various actions (one for each strategy)"""
     AWAKEN = 0
     PLAY = auto()
 
 
-class Element(IntEnum):
+class Element(Enum):
     """Card Elements"""
     FOREST = 0
     DESERT = auto()
@@ -43,13 +43,13 @@ class Element(IntEnum):
     ROCK = auto()
 
 
-class Identity(IntEnum):
+class Identity(Enum):
     """Player names"""
     MIKE = 0
     BRYAN = auto()
 
 
-class Name(IntEnum):
+class Name(Enum):
     """Card Names"""
 
     # Forest
@@ -85,7 +85,7 @@ class Name(IntEnum):
     WHAT_LIES_BELOW = auto()
 
 
-class Species(IntEnum):
+class Species(Enum):
     """Card Species"""
     DWELLER = 0
     WARRIOR = auto()

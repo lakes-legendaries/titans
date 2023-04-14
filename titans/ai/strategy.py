@@ -90,7 +90,7 @@ class StandardStrategy(RandomStrategy):
         from titans.ai.player import Player
 
         # initialize parent
-        RandomStrategy(self, **kwargs)
+        RandomStrategy.__init__(self, **kwargs)
 
         # initialize scaler
         self._scaler = StandardScaler() if scale else None
