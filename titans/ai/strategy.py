@@ -50,12 +50,21 @@ class Strategy(ABC):
 
 
 class RandomStrategy(Strategy):
-    """Strategy for making random decisions"""
+    """Strategy for making random decisions
+
+    Parameters
+    ----------
+    random_state: int, optional, default=None
+        random seed
+    """
+    def __init__(self, random_state: int = None):
+        self._rng: np.random.Generator = np.random.default_rng(random_state)
+
     def predict(self, X: np.ndarray, /) -> np.ndarray:
         return np.array([
-            np.random.sample(NUM_CHOICES)
+            self._rng.random(NUM_CHOICES)
             for _ in range(X.shape[0])
-        ]) if len(X.shape) > 1 else np.random.sample(NUM_CHOICES)
+        ]) if len(X.shape) > 1 else self._rng.random(NUM_CHOICES)
 
 
 class StandardStrategy(RandomStrategy):
@@ -68,14 +77,20 @@ class StandardStrategy(RandomStrategy):
     ----------
     scale: bool, optional, default=True
         use `sklearn.preprocessing.StandardScaler` to scale data
+    **kwargs: Any
+        passed to `RandomStrategy` on `__init__()`
     """
     def __init__(
         self,
         *,
         scale: bool = True,
+        **kwargs,
     ):
         # import here to avoid circular import
         from titans.ai.player import Player
+
+        # initialize parent
+        RandomStrategy(self, **kwargs)
 
         # initialize scaler
         self._scaler = StandardScaler() if scale else None
