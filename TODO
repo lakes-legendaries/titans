@@ -1,0 +1,5 @@
+#. Parallel play for Trainer
+#. Better docstrings for Game
+#. Explore saving Player.history as np.ndarray
+#. Explore functional forms for Xy()
+#. Make pretty graphs
