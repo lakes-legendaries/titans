@@ -59,7 +59,10 @@ class Player:
         self.strategies: dict[Action, Strategy] = (
             strategies
             if strategies is not None
-            else [RandomStrategy() for _ in Action]
+            else {
+                action: RandomStrategy(random_state=random_state)
+                for action in Action
+            }
         )
 
         # initialize zones and temples
