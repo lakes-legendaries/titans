@@ -115,19 +115,6 @@ class Player:
             self.opponent.get_state(public=True),
         ))
 
-    @classmethod
-    def _get_global_state_size(cls) -> int:
-        """Get length of global state, for dummy constructions
-
-        Returns
-        -------
-        int
-            length of global state
-        """
-        players = [Player(identity, []) for identity in Identity]
-        players[0].handshake(players[1])
-        return len(players[0]._get_global_state())
-
     def awaken_card(self, /) -> tuple[Card | None, int]:
         """Awaken a card from the ritual piles
 

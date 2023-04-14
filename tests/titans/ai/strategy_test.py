@@ -3,7 +3,7 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from titans.ai import NUM_CHOICES, Player, StandardStrategy
+from titans.ai import NUM_CHOICES, NUM_FEATURES, StandardStrategy
 
 
 def test__nanmse_loss():
@@ -16,11 +16,10 @@ def test_standard_strategy():
 
     # parameters
     num_samples = 100
-    num_features = Player._get_global_state_size()
 
     # make data
     rng = np.random.default_rng(271828)
-    X = rng.random((num_samples, num_features))
+    X = rng.random((num_samples, NUM_FEATURES))
     y = np.zeros((num_samples, NUM_CHOICES))
     for sample_num in range(num_samples):
         for choice_num in range(NUM_CHOICES):

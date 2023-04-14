@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 
-from titans.ai.constants import NUM_CHOICES
+from titans.ai.constants import NUM_CHOICES, NUM_FEATURES
 
 
 class Strategy(ABC):
@@ -86,9 +86,6 @@ class StandardStrategy(RandomStrategy):
         scale: bool = True,
         **kwargs,
     ):
-        # import here to avoid circular import
-        from titans.ai.player import Player
-
         # initialize parent
         RandomStrategy.__init__(self, **kwargs)
 
@@ -97,7 +94,7 @@ class StandardStrategy(RandomStrategy):
         self._scaler_fitted = False
 
         # initialize model
-        input_layer = layers.Input(shape=(Player._get_global_state_size()))
+        input_layer = layers.Input(shape=(NUM_FEATURES))
         x = layers.Dense(100, activation="relu")(input_layer)
         output_layer = layers.Dense(NUM_CHOICES)(x)
         model = keras.Model(input_layer, output_layer)

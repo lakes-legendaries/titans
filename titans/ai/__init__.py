@@ -3,7 +3,7 @@
 # flake8: noqa
 
 from titans.ai.card import Card
-from titans.ai.constants import NUM_CHOICES
+from titans.ai.constants import NUM_CHOICES, NUM_FEATURES
 from titans.ai.enum import (
     Action,
     Ability,
