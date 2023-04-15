@@ -217,10 +217,10 @@ class Game:
         return self
 
     def parallel_play(self) -> Generator[
-        dict[Identity, np.array],
+        dict[Identity, np.array] | None,
         dict[Identity, dict[Action, np.ndarray]],
         None,
-    ] | None:
+    ]:
         """Play game, returning a generator that pauses at each decision point
         """
         yield from self._play(use_generators=True)
