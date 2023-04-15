@@ -84,6 +84,7 @@ class Trainer:
             for is_winner in [True, False]
         }
 
+    @classmethod
     def _parallel_step(
         cls,
         strategies: dict[Identity, dict[str, dict[Action, Strategy]]],

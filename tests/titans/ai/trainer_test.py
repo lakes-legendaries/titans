@@ -2,12 +2,97 @@ import numpy as np
 
 from titans.ai import (
     Action,
+    Card,
     Game,
     Identity,
+    Name,
     NUM_CHOICES,
     Player,
+    Strategy,
     Trainer,
+    Zone,
 )
+
+
+def test__parallel_step():
+
+    # initialize, setup games and controllers
+    games = [
+        Game({"random_state": 271828})
+        for _ in range(2)
+    ]
+    controllers = [
+        game.parallel_play()
+        for game in games
+    ]
+
+    # go to first decision point
+    [
+        next(controller)
+        for controller in controllers
+    ]
+
+    # modify cards in play
+    for game in games:
+        game.players[Identity.MIKE].cards[Zone.PLAY].append(
+            Card(Name.MONK)
+        )
+    for _ in range(2):
+        games[0].players[Identity.MIKE].cards[Zone.PLAY].append(
+            Card(Name.GHOST)
+        )
+        games[1].players[Identity.MIKE].cards[Zone.PLAY].append(
+            Card(Name.AKARI_TIMELESS_FIGHTER)
+        )
+
+    # get updated states
+    for game in games:
+        for player in game.players.values():
+            player.unfreeze_state()
+    states = [
+        {
+            identity: player.get_state()
+            for identity, player in game.players.items()
+        }
+        for game in games
+    ]
+    for game in games:
+        for player in game.players.values():
+            player.freeze_state()
+
+    # make strategies
+    class ModifiedStrategy(Strategy):
+        def predict(self, X: np.ndarray) -> np.ndarray:
+            offset = Zone.PLAY.value * len(Name)
+            decision_matrix = X[:, offset: offset + NUM_CHOICES]
+            decision_matrix[:, -1] = 0
+            return decision_matrix
+    strategies = {  # noqa
+        identity: {
+            "strategies": {
+                action: ModifiedStrategy()
+                for action in Action
+            }
+        }
+        for identity in Identity
+    }
+
+    # run decision step
+    Trainer._parallel_step(
+        controllers=controllers,
+        states=states,
+        strategies=strategies,
+    )
+
+    # check result
+    assert (
+        games[0].players[Identity.MIKE].cards[Zone.DISCARD][0].name
+        == Name.GHOST
+    )
+    assert (
+        games[1].players[Identity.MIKE].cards[Zone.DISCARD][0].name
+        == Name.AKARI_TIMELESS_FIGHTER
+    )
 
 
 def test__save_history__check_match():
