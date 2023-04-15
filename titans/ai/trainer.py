@@ -1,6 +1,6 @@
 """Trainer module"""
 
-from typing import Any
+from typing import Any, Generator
 
 import numpy as np
 
@@ -83,6 +83,79 @@ class Trainer:
             }
             for is_winner in [True, False]
         }
+
+    def _parallel_step(
+        cls,
+        strategies: dict[Identity, dict[str, dict[Action, Strategy]]],
+        controllers: list[
+            Generator[
+                dict[Identity, np.array] | None,
+                dict[Identity, dict[Action, np.ndarray]],
+                None,
+            ]
+        ],
+        states: list[dict[Identity, np.ndarray] | None],
+    ) -> list[dict[Identity, np.ndarray] | None]:
+        """Run one decision point of a game played in parallel
+
+        Completed games will be passed over.
+
+        This function is broken out for easy testing of this
+        somewhat-complicated method.
+
+        Parameters
+        ----------
+        strategies: dict[Identity, dict[str, dict[Action, Strategy]]]
+            strategies passed to games being played. This method expects that
+            all games played in parallel have the same strategies (although
+            players within a game can have different strategies).
+        controllers: list[Generator]
+            generators created from Game.parallel_play()
+        states: list[dict[Identity, np.ndarray] | None]
+            game states yielded from controllers
+
+        Returns
+        -------
+        list[dict[Identity, np.ndarray] | None]
+            updated states, after running one decision step in parallel.
+        """
+        decision_matrices = {
+            identity: {
+                action: (
+                    (
+                        strategies
+                        .get(identity)
+                        .get("strategies")
+                        .get(action)
+                        .predict(np.vstack([
+                            state[identity]
+                            if state is not None
+                            else np.zeros(NUM_FEATURES)
+                            for state in states
+                        ]))
+                    )
+                )
+                for action in Action
+            }
+            for identity in Identity
+        }
+        return [
+            (
+                controller.send({
+                    identity: {
+                        action: decision_matrices[identity][action][c]
+                        for action in Action
+                    }
+                    for identity in Identity
+                })
+                if state is not None
+                else None
+            )
+            for c, (controller, state) in enumerate(zip(
+                controllers,
+                states,
+            ))
+        ]
 
     def _play_game(
         self,
@@ -292,41 +365,11 @@ class Trainer:
         controllers = [game.parallel_play() for game in games]
         states = [next(controller) for controller in controllers]
         while any([state is not None for state in states]):
-            decision_matrices = {
-                identity: {
-                    action: (
-                        (
-                            strategies
-                            .get(identity)
-                            .get("strategies")
-                            .get(action)
-                            .predict(np.vstack([
-                                state[identity]
-                                if state is not None
-                                else np.zeros(NUM_FEATURES)
-                                for state in states
-                            ]))
-                        )
-                    )
-                    for action in Action
-                }
-                for identity in Identity
-            }
-            states = [
-                controller.send({
-                    identity: {
-                        action: decision_matrices[identity][action][c]
-                        for action in Action
-                    }
-                    for identity in Identity
-                })
-                if state is not None
-                else None
-                for c, (controller, state) in enumerate(zip(
-                    controllers,
-                    states,
-                ))
-            ]
+            states = self._parallel_step(
+                strategies=strategies,
+                controllers=controllers,
+                states=states,
+            )
         return np.mean([game.winner == Identity.MIKE for game in games])
 
     def train(self):
