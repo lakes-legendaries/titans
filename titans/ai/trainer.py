@@ -1,5 +1,6 @@
 """Trainer module"""
 
+from itertools import chain
 from typing import Any, Generator
 
 import numpy as np
@@ -225,17 +226,23 @@ class Trainer:
         for action in Action:
 
             # get list of all states
-            all_states = np.unique(np.concatenate([
-                list(self.history[is_winner][action].keys())
+            all_states = chain(*[
+                self.history[is_winner][action].keys()
                 for is_winner in [True, False]
-            ]))
+            ])
 
             # initialize X, y data
             X = []
             y = []
 
             # process each state
+            processed = set()
             for state in all_states:
+
+                # check if already processed
+                if state in processed:
+                    continue
+                processed.add(state)
 
                 # get wins and counts
                 wins = self.history[True][action].get(state, default_zeros)
@@ -270,7 +277,7 @@ class Trainer:
                     )
 
                 # save results
-                X.append(np.frombuffer(state))
+                X.append(np.frombuffer(state, dtype="float64"))
                 y.append(scores)
 
             # save as arrays
