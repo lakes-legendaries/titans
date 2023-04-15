@@ -371,6 +371,9 @@ class Trainer:
                 controllers=controllers,
                 states=states,
             )
+        if save_history:
+            for game in games:
+                self._save_history(game)
         return np.mean([game.winner == Identity.MIKE for game in games])
 
     def train(self):
