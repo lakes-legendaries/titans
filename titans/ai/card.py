@@ -223,4 +223,4 @@ class Card:
                 )
 
     def __repr__(self) -> str:
-        return f"{self.name.name} Card"
+        return f"{self.name.name}"
