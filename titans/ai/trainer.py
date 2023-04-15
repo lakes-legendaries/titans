@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 
-from titans.ai.constants import NUM_CHOICES
+from titans.ai.constants import NUM_CHOICES, NUM_FEATURES
 from titans.ai.enum import Ability, Action, Identity
 from titans.ai.game import Game
 from titans.ai.strategy import RandomStrategy, StandardStrategy, Strategy
@@ -288,7 +288,46 @@ class Trainer:
             return wins / num_games
 
         # play games in parallel
-        raise NotImplementedError("Parallel play not implemented")
+        games = [Game(strategies) for _ in range(num_games)]
+        controllers = [game.parallel_play() for game in games]
+        states = [next(controller) for controller in controllers]
+        while any([state is not None for state in states]):
+            decision_matrices = {
+                identity: {
+                    action: (
+                        (
+                            strategies
+                            .get(identity)
+                            .get("strategies")
+                            .get(action)
+                            .predict(np.vstack([
+                                state[identity]
+                                if state is not None
+                                else np.zeros(NUM_FEATURES)
+                                for state in states
+                            ]))
+                        )
+                    )
+                    for action in Action
+                }
+                for identity in Identity
+            }
+            states = [
+                controller.send({
+                    identity: {
+                        action: decision_matrices[identity][action][c]
+                        for action in Action
+                    }
+                    for identity in Identity
+                })
+                if state is not None
+                else None
+                for c, (controller, state) in enumerate(zip(
+                    controllers,
+                    states,
+                ))
+            ]
+        return np.mean([game.winner == Identity.MIKE for game in games])
 
     def train(self):
         """Train network"""
