@@ -103,7 +103,11 @@ def test__play_turn():
     )
 
     # check history
-    choices = list(game.history[Identity.MIKE][Action.AWAKEN].values())
+    choices = [
+        choice_dict[Action.AWAKEN][Identity.MIKE]
+        for choice_dict in game.history.values()
+        if Identity.MIKE in choice_dict[Action.AWAKEN]
+    ]
     assert len(choices[0]) == 1
     assert choices[0][0] == Name.NIKOLAI_THE_CURSED.value
     assert len(choices[1]) == 1

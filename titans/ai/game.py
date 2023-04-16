@@ -31,14 +31,19 @@ class Game:
         cards in the game
     players: list[Players]
         players playing the game
-    history: dict[Identity, dict[Action, dict[bytes, list[int]]]]
+    history: dict[bytes, dict[Action, dict[Identity, list[int]]]]
         here, the history of each player's state, and the choices they made
-        given that state, is recorded. This variable contains three nested
+        given that state, are recorded. This variable contains three nested
         dictionaries:
 
-        1. The top-level dictionary is indexed by each player
-        2. The mid-level dictionary is indexed by each action
-        3. The bottom-level dictionary maps from game state to the choices made
+        1. The top-level dictionary is indexed by each game state at which a
+           decision was made (converted from np.ndarrary -> bytes, for
+           hashability)
+        2. The mid-level dictionary is indexed by each action made at that
+           decision point
+        3. The bottom-level dictionary is indexed by the player that made that
+           action, and maps to the choice(s) that player made at that decision
+           point
 
     winner: Identity | None
         winner of game
@@ -84,13 +89,7 @@ class Game:
         self.players[Identity.MIKE].handshake(self.players[Identity.BRYAN])
 
         # initialize history tracking
-        self.history: dict[Identity, dict[Action, dict[bytes, list[int]]]] = {
-            identity: {
-                action: {}
-                for action in Action
-            }
-            for identity in Identity
-        }
+        self.history: dict[bytes, dict[Action, dict[Identity, list[int]]]] = {}
         self.winner: Identity | None = None
 
     def _play_age(
@@ -144,7 +143,7 @@ class Game:
                 self.players[identity]._decision_matrices = matrix
 
         # play and awaken cards, saving states
-        for player in self.players.values():
+        for identity, player in self.players.items():
             frozen_state = player._frozen_state.tobytes()
             for method, action in [
                 (Player.play_cards, Action.PLAY),
@@ -152,8 +151,10 @@ class Game:
             ]:
                 _, choice = method(player)
                 state_dict = (
-                    self.history[player.identity][action]
-                    .setdefault(frozen_state, [])
+                    self.history
+                    .setdefault(frozen_state, {})
+                    .setdefault(action, {})
+                    .setdefault(identity, [])
                 )
                 if type(choice) is list:
                     state_dict.extend(choice)

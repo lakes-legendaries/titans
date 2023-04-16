@@ -100,7 +100,7 @@ def test__save_history__check_match():
     # initialize
     trainer = Trainer()
     game = Game({"random_state": 271828}).play()
-    trainer._save_history(game)
+    trainer._save_history([game])
 
     # check histories match
     for is_winner in [True, False]:
@@ -112,18 +112,16 @@ def test__save_history__check_match():
         identity = player.identity
 
         # check histories match
-        for action in Action:
-            for state, choices in game.history[identity][action].items():
-
-                # convert choices from index rep
-                counts = np.zeros(NUM_CHOICES)
-                for choice in choices:
-                    counts[choice] += 1
-
-                # make sure matches
-                assert (
-                    counts == trainer.history[is_winner][action][state]
-                ).all()
+        for state in game.history.keys():
+            for action in Action:
+                if identity not in game.history[state][action]:
+                    assert is_winner not in trainer.history[-1][state][action]
+                    continue
+                game_choices = game.history[state][action][identity]
+                trainer_choices = trainer.history[-1][state][action][is_winner]
+                assert len(game_choices) == len(trainer_choices)
+                for g, t in zip(game_choices, trainer_choices):
+                    assert g == t
 
 
 def test__save_history__check_values():
@@ -134,58 +132,69 @@ def test__save_history__check_values():
     state0 = np.array([0., 2.]).tobytes()
     state1 = np.array([0., 1.]).tobytes()
     game.history = {
-        identity: {
+        state0: {
             action: {
-                state0: [0],
-                state1: [1, 3, 3],
+                Identity.MIKE: [0],
+                Identity.BRYAN: [1, 2, 3],
             }
             for action in Action
-        }
-        for identity in Identity
+        },
+        state1: {
+            action: {
+                Identity.MIKE: [5, 6, 7],
+            }
+            for action in Action
+        },
     }
     game.winner = Identity.MIKE
-    trainer._save_history(game)
+    trainer._save_history([game])
 
     # check
-    for is_winner in [True, False]:
-        for action in Action:
-            history = trainer.history[is_winner][action]
-            assert history[state0].sum() == 1
-            assert history[state0][0] == 1
-            assert history[state1].sum() == 3
-            assert history[state1][1] == 1
-            assert history[state1][3] == 2
+    history = trainer.history[-1]
+    for action in Action:
+        assert history[state0][action][True] == [0]
+        assert history[state0][action][False] == [1, 2, 3]
+        assert history[state1][action][True] == [5, 6, 7]
+        assert False not in history[state1][action]
 
 
 def test_get_Xy():
 
     # initialize
-    default_count = 2 * np.ones(NUM_CHOICES)
     trainer = Trainer()
-    trainer.history = {
-        is_winner: {
-            action: {
-                np.array([0., 2.]).tobytes():
-                    (1 + action.value) * (not is_winner) * default_count,
-                np.array([0., 1.]).tobytes():
-                    (1 + action.value) * is_winner * default_count,
-            }
-            for action in Action
-        }
-        for is_winner in [True, False]
-    }
+    trainer.history = [{
+        np.array([0., 1.]).tobytes(): {
+            Action.AWAKEN: {
+                True: [0, 0, 0, 0],
+            },
+            Action.PLAY: {
+                False: [0],
+            },
+        },
+        np.array([0., 2.]).tobytes(): {
+            Action.AWAKEN: {
+                True: [0, 0, 0, 0],
+                False: [0, 0],
+            },
+            Action.PLAY: {
+                True: [2],
+                False: [2],
+            },
+        },
+    }]
 
     # get Xy
     Xy = trainer.get_Xy()
 
     # check results
     for action in Action:
-        assert (Xy[action][0][0] == [0, 2]).all()
-        assert (Xy[action][0][1] == [0, 1]).all()
-    assert (Xy[Action(0)][1][0] == 0.40).all()
-    assert (Xy[Action(0)][1][1] == 0.60).all()
-    assert (Xy[Action(1)][1][0] == 0.25).all()
-    assert (Xy[Action(1)][1][1] == 0.75).all()
+        assert (Xy[action][0][0] == [0, 1]).all()
+        assert (Xy[action][0][1] == [0, 2]).all()
+    assert Xy[Action.AWAKEN][1][0][0] == 1
+    assert Xy[Action.AWAKEN][1][1][0] == 4 / 6
+    assert Xy[Action.PLAY][1][0][0] == 0
+    assert Xy[Action.PLAY][1][1][2] == 0.5
+    assert np.isnan(Xy[Action.PLAY][1][1][5])
     assert Xy[Action(0)][0].shape == (2, 2)
     assert Xy[Action(0)][1].shape == (2, NUM_CHOICES)
 

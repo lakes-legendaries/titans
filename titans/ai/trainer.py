@@ -1,6 +1,6 @@
 """Trainer module"""
 
-from itertools import chain
+from collections import deque
 from typing import Any, Generator
 
 import numpy as np
@@ -16,74 +16,35 @@ class Trainer:
 
     Parameters
     ----------
-    clip_exclusion_zone: float, optional, default=0.2
-        when computing the win percentage for any given choice, we bring it in
-        towards 0.5 by the standard error. (E.g. if, for a given state, we make
-        a choice 4 times, and we win all 4 times, then the y-label for that
-        instance will be 1.0 - 1/sqrt(4)). Values less than 0.5 are raised, and
-        values greater than 0.5 are lowered. However, we'll only bring in by so
-        much (because we don't want, say, something with a win percentage of
-        0.55 to be brought to the other side of 0.50).
-
-        The clip_exclusion_zone is the window surrounding 0.5 that values won't
-        be brought beyond. E.g. if clip_exclusion_zone=0.2, then values won't
-        be raised above 0.4 and lowered beneath 0.6.
-
-        If you set this to None, then no clipping will occur.
+    retention: int, optional, default=10
+        number of game histories to keep
 
     Attributes
     ----------
-    history: dict[bool, dict[Action, dict[bytes, np.ndarray]]]
+    history: deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]
         here, the history of winning and losing players is recorded. This
         variable maps every state to every choice made given that state,
         recording whether the player that made that choice ultimately won or
         lost the game.
 
-        This variable contains three nested dictionaries:
-
-        2. The top-level dictionary shows whether the state came from the
-           winning or losing player. (Please note that states can exist in both
-           the winning and losing dictionaries, and you have to compare these
-           to get the win percentage for any given move.)
-        2. The mid-level dictionary is indexed by each action
-        3. The bottom-level dictionary maps from game state to the number of
-           times each choice was made
-
-        There are two differences between Trainer.history and Game.history:
-
-        1. Game.history lists the choices of each player, while Trainer.history
-           combines across winning and losing players.
-        2. While the bottom-level dictionary of Game.history contains a
-           list[int] that shows each choice that was made, the equivalent
-           Trainer.history dictionary contains an np.ndarray that shows the
-           number of times each choice was made.
+        This is saved as a circular buffer (deque), so that the Trainer can
+        retain the histories from the most recent N games.
     """
     def __init__(
         self,
         *,
-        clip_exclusion_zone: float = 0.2,
+        retention: int = 10,
     ):
-        # save passed
-        self._clip_exclusion_zone = clip_exclusion_zone
-
-        # initialize history dictionary
-        self._clear_history()
-
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
             action: StandardStrategy()
             for action in Action
         }
 
-    def _clear_history(self):
-        """Reset `self.history`"""
-        self.history: dict[bool, dict[Action, dict[bytes, np.ndarray]]] = {
-            is_winner: {
-                action: {}
-                for action in Action
-            }
-            for is_winner in [True, False]
-        }
+        # initialize history
+        self.history: (
+            deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]
+        ) = deque(maxlen=retention)
 
     @classmethod
     def _parallel_step(
@@ -177,30 +138,33 @@ class Trainer:
         """
         return Game(player_kwargs).play()
 
-    def _save_history(self, game: Game):
-        """Extract and save history from the most recently-played game
+    def _save_history(self, games: list[Game]):
+        """Extract and save histories from games
 
         Parameters
         ----------
-        game: Game
+        games: list[Game]
             most recently-played game
         """
-        default_zeros = np.zeros(NUM_CHOICES)
-        for identity, player_history in game.history.items():
-            is_winner = identity == game.winner
-            for action, network_history in player_history.items():
-                for state, choices in network_history.items():
 
-                    # add default zeros to dictionary
-                    (
-                        self
-                        .history[is_winner][action]
-                        .setdefault(state, default_zeros.copy())
-                    )
+        # initialize overall history dictionary
+        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
 
-                    # increment choices
-                    for choice in choices:
-                        self.history[is_winner][action][state][choice] += 1
+        # combine history from all games. index by winner (instead of identity)
+        for game in games:
+            for state, state_dict in game.history.items():
+                for action, action_dict in state_dict.items():
+                    for identity, choices in action_dict.items():
+                        is_winner = identity == game.winner
+                        (
+                            history
+                            .setdefault(state, {})
+                            .setdefault(action, {})
+                            .setdefault(is_winner, [])
+                        ).extend(choices)
+
+        # save history
+        self.history.append(history)
 
     def get_Xy(self) -> dict[Action, tuple[np.ndarray, np.ndarray]]:
         """Transform self.history -> (X, y) data
@@ -218,79 +182,57 @@ class Trainer:
         # enable divide-by-zero without warning
         np.seterr(divide="ignore", invalid="ignore")
 
-        # default counts for value-missing
-        default_zeros = np.ndarray(NUM_CHOICES)
+        # combine history from all recent games
+        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
+        for epoch in self.history:
+            for state, state_dict in epoch.items():
+                for action, action_dict in state_dict.items():
+                    for is_winner, choices in action_dict.items():
+                        (
+                            history
+                            .setdefault(state, {})
+                            .setdefault(action, {})
+                            .setdefault(is_winner, [])
+                        ).extend(choices)
 
-        # do for each action
-        Xy: dict[Action, tuple[np.ndarray, np.ndarray]] = {}
-        for action in Action:
+        # initialize Xy data
+        Xy: dict[Action, tuple[list[np.ndarray], list[np.ndarray]]] = {
+            action: ([], [])
+            for action in Action
+        }
 
-            # get list of all states
-            all_states = chain(*[
-                self.history[is_winner][action].keys()
-                for is_winner in [True, False]
-            ])
+        # process each action and each state
+        for state, state_dict in history.items():
+            for action, action_dict in state_dict.items():
 
-            # initialize X, y data
-            X = []
-            y = []
-
-            # process each state
-            processed = set()
-            for state in all_states:
-
-                # check if already processed
-                if state in processed:
-                    continue
-                processed.add(state)
-
-                # get wins and counts
-                wins = self.history[True][action].get(state, default_zeros)
-                losses = self.history[False][action].get(state, default_zeros)
-                counts = wins + losses
+                # translate wins and losses from list[int] -> np.ndarray
+                win_loss_count: dict[bool, np.ndarray] = {
+                    is_winner: np.zeros(NUM_CHOICES)
+                    for is_winner in [True, False]
+                }
+                for is_winner, choices in action_dict.items():
+                    for choice in choices:
+                        win_loss_count[is_winner][choice] += 1
 
                 # get means and std err
-                means = wins / counts
-                std_err = 1 / counts
-
-                # clip scores
-                margin = self._clip_exclusion_zone / 2
-                scores = means.copy()
-                for raise_values in [False, True]:
-                    bound = (
-                        (np.subtract if raise_values else np.add)
-                        (0.5, margin)
-                    )
-                    mod_idx = (
-                        (np.less if raise_values else np.greater)
-                        (means, bound)
-                    )
-                    scores[mod_idx] = (
-                        (np.minimum if raise_values else np.maximum)
-                        (
-                            (
-                                (np.add if raise_values else np.subtract)
-                                (scores[mod_idx], std_err[mod_idx])
-                            ),
-                            bound,
-                        )
-                    )
+                counts = win_loss_count[True] + win_loss_count[False]
+                means = win_loss_count[True] / counts
 
                 # save results
-                X.append(np.frombuffer(state, dtype="float64"))
-                y.append(scores)
+                Xy[action][0].append(np.frombuffer(state))
+                Xy[action][1].append(means)
 
-            # save as arrays
-            Xy[action] = (np.array(X), np.array(y))
-
-        # return
-        return Xy
+        # return, converting from list[1d np.ndarrays] to 2d np.ndarrays
+        return {
+            action: (np.array(X), np.array(y))
+            for action, (X, y) in Xy.items()
+        }
 
     def play(
         self,
         /,
         *,
-        num_games: int = 1000,
+        num_games: int = 100,
         parallel: bool = False,
         save_history: bool = True,
         use_random: bool = False,
@@ -360,27 +302,25 @@ class Trainer:
 
         # play games sequentially
         if not parallel:
-            wins = 0
-            for _ in range(num_games):
-                game = self._play_game(strategies)
-                wins += game.winner == Identity.MIKE
-                if save_history:
-                    self._save_history(game)
-            return wins / num_games
+            games = [self._play_game(strategies) for _ in range(num_games)]
 
         # play games in parallel
-        games = [Game(strategies) for _ in range(num_games)]
-        controllers = [game.parallel_play() for game in games]
-        states = [next(controller) for controller in controllers]
-        while any([state is not None for state in states]):
-            states = self._parallel_step(
-                strategies=strategies,
-                controllers=controllers,
-                states=states,
-            )
+        else:
+            games = [Game(strategies) for _ in range(num_games)]
+            controllers = [game.parallel_play() for game in games]
+            states = [next(controller) for controller in controllers]
+            while any([state is not None for state in states]):
+                states = self._parallel_step(
+                    strategies=strategies,
+                    controllers=controllers,
+                    states=states,
+                )
+
+        # save game histories
         if save_history:
-            for game in games:
-                self._save_history(game)
+            self._save_history(games)
+
+        # return win fraction
         return np.mean([game.winner == Identity.MIKE for game in games])
 
     def train(self):
@@ -388,7 +328,6 @@ class Trainer:
         Xy = self.get_Xy()
         for action in Action:
             self.strategies[action].fit(*Xy[action])
-        self._clear_history()
 
 
 class POCTrainer(Trainer):
