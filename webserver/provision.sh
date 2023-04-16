@@ -58,7 +58,7 @@ echo "alias python=python3.11" > ~/.bash_aliases
 echo "alias venv=\"source .venv/bin/activate\"" >> ~/.bash_aliases
 echo "export PYTHONPATH=\".:/home/mike/titans\"" >> ~/.bash_aliases
 echo "export SECRETS_DIR=\"/home/mike/secrets\"" >> ~/.bash_aliases
-echo "export TF_CPP_MIN_LOG_LEVEL=3" >> ~/bash_aliases
+echo "export TF_CPP_MIN_LOG_LEVEL=3" >> ~/.bash_aliases
 
 # schedule restart and daily updates
 CRONDIR="/var/spool/cron/crontabs"
