@@ -1,3 +1,4 @@
 #. Better docstrings
 #. Explore saving Player.history
 #. Make pretty graphs
+#. Context manager for freeze state
