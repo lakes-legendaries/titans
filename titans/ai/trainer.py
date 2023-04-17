@@ -33,7 +33,7 @@ class Trainer:
     def __init__(
         self,
         *,
-        retention: int = 10,
+        retention: int = 3,
     ):
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
