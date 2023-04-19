@@ -309,7 +309,7 @@ class Trainer:
 
         # play games in parallel
         else:
-            games = [Game(strategies) for _ in range(num_games)]
+            games = [self._init_game(strategies) for _ in range(num_games)]
             controllers = [game.parallel_play() for game in games]
             states = [next(controller) for controller in controllers]
             while any([state is not None for state in states]):
