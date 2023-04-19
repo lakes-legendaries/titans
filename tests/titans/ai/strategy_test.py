@@ -1,3 +1,4 @@
+from copy import deepcopy
 import random
 
 import numpy as np
@@ -33,3 +34,12 @@ def test_standard_strategy():
     # test model
     pred = strategy.predict(X)
     assert abs(np.mean(y - pred)) < 0.02
+
+    # test copy
+    copy = deepcopy(strategy)
+    assert (copy.predict(X) == pred).all()
+
+    # modify model, validate copy unchanged
+    strategy.fit(X[0:10, :], y[0:10, :])
+    assert not ((strategy.predict(X) == pred).all())
+    assert (copy.predict(X) == pred).all()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import keras
 from keras import callbacks, layers, optimizers
@@ -111,6 +112,26 @@ class StandardStrategy(RandomStrategy):
         )
         self._model = model
         self._model_fitted = False
+
+    def __deepcopy__(self, memo: dict) -> Strategy:
+
+        # initialize copy
+        copy = StandardStrategy()
+
+        # copy inheritted
+        copy._rng = deepcopy(self._rng)
+
+        # copy standard attributes
+        copy._scaler = deepcopy(self._scaler)
+        copy._scaler_fitted = deepcopy(self._scaler_fitted)
+        copy._model_fitted = deepcopy(self._model_fitted)
+
+        # copy neural network
+        copy._model = keras.models.clone_model(self._model)
+        copy._model.set_weights(self._model.get_weights())
+
+        # return copy
+        return copy
 
     @staticmethod
     def _nanmse_loss(y_true, y_pred):
