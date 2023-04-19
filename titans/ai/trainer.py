@@ -46,6 +46,24 @@ class Trainer:
             deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]
         ) = deque(maxlen=retention)
 
+    def _init_game(
+        self,
+        player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]],
+    ) -> Game:
+        """Initialize game object
+
+        Parameters
+        ----------
+        *args: Any
+            passed to `Game()` on `__init__()`
+
+        Returns
+        -------
+        Game
+            game, already played
+        """
+        return Game(player_kwargs)
+
     @classmethod
     def _parallel_step(
         cls,
@@ -119,24 +137,6 @@ class Trainer:
                 states,
             ))
         ]
-
-    def _play_game(
-        self,
-        player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]],
-    ) -> Game:
-        """Play game
-
-        Parameters
-        ----------
-        *args: Any
-            passed to `Game()` on `__init__()`
-
-        Returns
-        -------
-        Game
-            game, already played
-        """
-        return Game(player_kwargs).play()
 
     def _save_history(self, games: list[Game]):
         """Extract and save histories from games
@@ -302,7 +302,10 @@ class Trainer:
 
         # play games sequentially
         if not parallel:
-            games = [self._play_game(strategies) for _ in range(num_games)]
+            games = [
+                self._init_game(strategies).play()
+                for _ in range(num_games)
+            ]
 
         # play games in parallel
         else:
@@ -335,7 +338,7 @@ class POCTrainer(Trainer):
 
     This trainer removes all non-Energy abilities from the cards before playing
     """
-    def _play_game(self) -> Game:
+    def _init_game(self) -> Game:
         game = Game()
         for card in game.cards:
             card.abilities = {
@@ -343,4 +346,4 @@ class POCTrainer(Trainer):
                 for ability, value in card.abilities.items()
                 if ability == Ability.ENERGY
             }
-        return game.play()
+        return game
