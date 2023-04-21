@@ -129,6 +129,10 @@ class StandardStrategy(RandomStrategy):
         # copy neural network
         copy._model = keras.models.clone_model(self._model)
         copy._model.set_weights(self._model.get_weights())
+        copy._model.compile(
+            loss=self._nanmse_loss,
+            optimizer=optimizers.Adam(),
+        )
 
         # return copy
         return copy
