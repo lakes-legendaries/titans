@@ -1,7 +1,8 @@
 """Trainer module"""
 
 from collections import deque
-from typing import Any, Generator
+from copy import deepcopy
+from typing import Any, Generator, Self
 
 import numpy as np
 
@@ -29,12 +30,30 @@ class Trainer:
 
         This is saved as a circular buffer (deque), so that the Trainer can
         retain the histories from the most recent N games.
+    strategies: dict[Action, Strategy]
+        Strategies trained by this class
     """
     def __init__(
         self,
+        /,
         *,
+        baseline: bool = False,
+        epochs: int = 10,
+        games_per_epoch: int = 100,
+        parallel: bool = True,
+        patience: int = 3,
         retention: int = 3,
+        verbose: bool = False,
     ):
+        # save passed
+        self._baseline = baseline
+        self._epochs = epochs
+        self._games_per_epoch = games_per_epoch
+        self._parallel = parallel
+        self._patience = patience
+        self._retention = retention
+        self._verbose = verbose
+
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
             action: StandardStrategy()
@@ -46,9 +65,72 @@ class Trainer:
             deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]
         ) = deque(maxlen=retention)
 
+    def _get_Xy(self, /) -> dict[Action, tuple[np.ndarray, np.ndarray]]:
+        """Transform self.history -> (X, y) data
+
+        Expect lots of np.NaN values in y! Additionally, y data will be brought
+        in by the std error (see err_bound_low and err_bound_high in
+        __init__()).
+
+        Returns
+        -------
+        dict[Action, tuple[np.ndarray, np.ndarray]]
+            dictionary mapping from action -> (X, y) data
+        """
+
+        # enable divide-by-zero without warning
+        np.seterr(divide="ignore", invalid="ignore")
+
+        # combine history from all recent games
+        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
+        for epoch in self.history:
+            for state, state_dict in epoch.items():
+                for action, action_dict in state_dict.items():
+                    for is_winner, choices in action_dict.items():
+                        (
+                            history
+                            .setdefault(state, {})
+                            .setdefault(action, {})
+                            .setdefault(is_winner, [])
+                        ).extend(choices)
+
+        # initialize Xy data
+        Xy: dict[Action, tuple[list[np.ndarray], list[np.ndarray]]] = {
+            action: ([], [])
+            for action in Action
+        }
+
+        # process each action and each state
+        for state, state_dict in history.items():
+            for action, action_dict in state_dict.items():
+
+                # translate wins and losses from list[int] -> np.ndarray
+                win_loss_count: dict[bool, np.ndarray] = {
+                    is_winner: np.zeros(NUM_CHOICES)
+                    for is_winner in [True, False]
+                }
+                for is_winner, choices in action_dict.items():
+                    for choice in choices:
+                        win_loss_count[is_winner][choice] += 1
+
+                # get means and std err
+                counts = win_loss_count[True] + win_loss_count[False]
+                means = win_loss_count[True] / counts
+
+                # save results
+                Xy[action][0].append(np.frombuffer(state))
+                Xy[action][1].append(means)
+
+        # return, converting from list[1d np.ndarrays] to 2d np.ndarrays
+        return {
+            action: (np.array(X), np.array(y))
+            for action, (X, y) in Xy.items()
+        }
+
     def _init_game(
         self,
         player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]],
+        /,
     ) -> Game:
         """Initialize game object
 
@@ -67,6 +149,8 @@ class Trainer:
     @classmethod
     def _parallel_step(
         cls,
+        /,
+        *,
         strategies: dict[Identity, dict[str, dict[Action, Strategy]]],
         controllers: list[
             Generator[
@@ -138,108 +222,16 @@ class Trainer:
             ))
         ]
 
-    def _save_history(self, games: list[Game]):
-        """Extract and save histories from games
-
-        Parameters
-        ----------
-        games: list[Game]
-            most recently-played game
-        """
-
-        # initialize overall history dictionary
-        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
-
-        # combine history from all games. index by winner (instead of identity)
-        for game in games:
-            for state, state_dict in game.history.items():
-                for action, action_dict in state_dict.items():
-                    for identity, choices in action_dict.items():
-                        is_winner = identity == game.winner
-                        (
-                            history
-                            .setdefault(state, {})
-                            .setdefault(action, {})
-                            .setdefault(is_winner, [])
-                        ).extend(choices)
-
-        # save history
-        self.history.append(history)
-
-    def get_Xy(self) -> dict[Action, tuple[np.ndarray, np.ndarray]]:
-        """Transform self.history -> (X, y) data
-
-        Expect lots of np.NaN values in y! Additionally, y data will be brought
-        in by the std error (see err_bound_low and err_bound_high in
-        __init__()).
-
-        Returns
-        -------
-        dict[Action, tuple[np.ndarray, np.ndarray]]
-            dictionary mapping from action -> (X, y) data
-        """
-
-        # enable divide-by-zero without warning
-        np.seterr(divide="ignore", invalid="ignore")
-
-        # combine history from all recent games
-        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
-        for epoch in self.history:
-            for state, state_dict in epoch.items():
-                for action, action_dict in state_dict.items():
-                    for is_winner, choices in action_dict.items():
-                        (
-                            history
-                            .setdefault(state, {})
-                            .setdefault(action, {})
-                            .setdefault(is_winner, [])
-                        ).extend(choices)
-
-        # initialize Xy data
-        Xy: dict[Action, tuple[list[np.ndarray], list[np.ndarray]]] = {
-            action: ([], [])
-            for action in Action
-        }
-
-        # process each action and each state
-        for state, state_dict in history.items():
-            for action, action_dict in state_dict.items():
-
-                # translate wins and losses from list[int] -> np.ndarray
-                win_loss_count: dict[bool, np.ndarray] = {
-                    is_winner: np.zeros(NUM_CHOICES)
-                    for is_winner in [True, False]
-                }
-                for is_winner, choices in action_dict.items():
-                    for choice in choices:
-                        win_loss_count[is_winner][choice] += 1
-
-                # get means and std err
-                counts = win_loss_count[True] + win_loss_count[False]
-                means = win_loss_count[True] / counts
-
-                # save results
-                Xy[action][0].append(np.frombuffer(state))
-                Xy[action][1].append(means)
-
-        # return, converting from list[1d np.ndarrays] to 2d np.ndarrays
-        return {
-            action: (np.array(X), np.array(y))
-            for action, (X, y) in Xy.items()
-        }
-
-    def play(
+    def _play_games(
         self,
         /,
         *,
-        num_games: int = 100,
-        parallel: bool = False,
         save_history: bool = True,
         use_random: bool = False,
         vs_random: bool = False,
         vs_strategy: dict[Action, Strategy] | None = None,
     ) -> float:
-        """Play a game with random strategies
+        """Play games
 
         Player 0 will always use the strategies in self.strategies. Player 1
         will default to using the same strategies, but this can be overridden
@@ -247,10 +239,6 @@ class Trainer:
 
         Parameters
         ----------
-        num_games: int, optional, default=1000
-            number of games to play each session
-        parallel: bool, optional, default=False
-            play games in parallel (much faster)
         save_history: bool, optional, default=True
             save state history from these games
         use_random: bool, optional, default=False
@@ -301,15 +289,18 @@ class Trainer:
         }
 
         # play games sequentially
-        if not parallel:
+        if not self._parallel:
             games = [
                 self._init_game(strategies).play()
-                for _ in range(num_games)
+                for _ in range(self._games_per_epoch)
             ]
 
         # play games in parallel
         else:
-            games = [self._init_game(strategies) for _ in range(num_games)]
+            games = [
+                self._init_game(strategies)
+                for _ in range(self._games_per_epoch)
+            ]
             controllers = [game.parallel_play() for game in games]
             states = [next(controller) for controller in controllers]
             while any([state is not None for state in states]):
@@ -326,11 +317,90 @@ class Trainer:
         # return win fraction
         return np.mean([game.winner == Identity.MIKE for game in games])
 
-    def train(self):
-        """Train network"""
-        Xy = self.get_Xy()
-        for action in Action:
-            self.strategies[action].fit(*Xy[action])
+    def _save_history(self, games: list[Game], /):
+        """Extract and save histories from games
+
+        Parameters
+        ----------
+        games: list[Game]
+            most recently-played game
+        """
+
+        # initialize overall history dictionary
+        history: dict[bytes, dict[Action, dict[bool, list[int]]]] = {}
+
+        # combine history from all games. index by winner (instead of identity)
+        for game in games:
+            for state, state_dict in game.history.items():
+                for action, action_dict in state_dict.items():
+                    for identity, choices in action_dict.items():
+                        is_winner = identity == game.winner
+                        (
+                            history
+                            .setdefault(state, {})
+                            .setdefault(action, {})
+                            .setdefault(is_winner, [])
+                        ).extend(choices)
+
+        # save history
+        self.history.append(history)
+
+    def train(self, /) -> Self:
+        """Train network
+
+        Parameters
+        ----------
+        baseline: bool, optional, default=False
+            if True, only train against random choices (the baseline), instead
+            on iterating on the best-discovered-strategy-so-far
+        """
+
+        # initial best as empty standard strategy
+        top_strategy = {
+            action: StandardStrategy()
+            for action in Action
+        }
+
+        # train against baseline
+        if self._baseline:
+
+            # initialize win tracker
+            win_frac = []
+
+            # run training epochs
+            for epoch in range(self._epochs):
+
+                # train on most recent data
+                if epoch:
+                    Xy = self._get_Xy()
+                    for action in Action:
+                        self.strategies[action].fit(*Xy[action])
+
+                # test current strategy (vs random)
+                win_frac.append(
+                    self._play_games(vs_random=True)
+                )
+
+                # if best yet, save as best yet
+                if win_frac[-1] == max(win_frac):
+                    top_strategy = deepcopy(self.strategies)
+
+                # if not best, restore best, check for early stopping
+                else:
+                    self.strategies = deepcopy(top_strategy)
+                    best_idx = win_frac.index(max(win_frac))
+                    if best_idx < len(win_frac) - self._patience - 1:
+                        break
+
+            # save metrics
+            self.metrics = {"vs_baseline": win_frac}
+
+        # train against best
+        else:
+            raise NotImplementedError()
+
+        # return
+        return self
 
 
 class POCTrainer(Trainer):

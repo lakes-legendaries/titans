@@ -14,6 +14,47 @@ from titans.ai import (
 )
 
 
+def test__get_Xy():
+
+    # initialize
+    trainer = Trainer()
+    trainer.history = [{
+        np.array([0., 1.]).tobytes(): {
+            Action.AWAKEN: {
+                True: [0, 0, 0, 0],
+            },
+            Action.PLAY: {
+                False: [0],
+            },
+        },
+        np.array([0., 2.]).tobytes(): {
+            Action.AWAKEN: {
+                True: [0, 0, 0, 0],
+                False: [0, 0],
+            },
+            Action.PLAY: {
+                True: [2],
+                False: [2],
+            },
+        },
+    }]
+
+    # get Xy
+    Xy = trainer._get_Xy()
+
+    # check results
+    for action in Action:
+        assert (Xy[action][0][0] == [0, 1]).all()
+        assert (Xy[action][0][1] == [0, 2]).all()
+    assert Xy[Action.AWAKEN][1][0][0] == 1
+    assert Xy[Action.AWAKEN][1][1][0] == 4 / 6
+    assert Xy[Action.PLAY][1][0][0] == 0
+    assert Xy[Action.PLAY][1][1][2] == 0.5
+    assert np.isnan(Xy[Action.PLAY][1][1][5])
+    assert Xy[Action(0)][0].shape == (2, 2)
+    assert Xy[Action(0)][1].shape == (2, NUM_CHOICES)
+
+
 def test__parallel_step():
 
     # initialize, setup games and controllers
@@ -95,6 +136,10 @@ def test__parallel_step():
     )
 
 
+def test__play_games():
+    Trainer()._play_games()
+
+
 def test__save_history__check_match():
 
     # initialize
@@ -156,48 +201,3 @@ def test__save_history__check_values():
         assert history[state0][action][False] == [1, 2, 3]
         assert history[state1][action][True] == [5, 6, 7]
         assert False not in history[state1][action]
-
-
-def test_get_Xy():
-
-    # initialize
-    trainer = Trainer()
-    trainer.history = [{
-        np.array([0., 1.]).tobytes(): {
-            Action.AWAKEN: {
-                True: [0, 0, 0, 0],
-            },
-            Action.PLAY: {
-                False: [0],
-            },
-        },
-        np.array([0., 2.]).tobytes(): {
-            Action.AWAKEN: {
-                True: [0, 0, 0, 0],
-                False: [0, 0],
-            },
-            Action.PLAY: {
-                True: [2],
-                False: [2],
-            },
-        },
-    }]
-
-    # get Xy
-    Xy = trainer.get_Xy()
-
-    # check results
-    for action in Action:
-        assert (Xy[action][0][0] == [0, 1]).all()
-        assert (Xy[action][0][1] == [0, 2]).all()
-    assert Xy[Action.AWAKEN][1][0][0] == 1
-    assert Xy[Action.AWAKEN][1][1][0] == 4 / 6
-    assert Xy[Action.PLAY][1][0][0] == 0
-    assert Xy[Action.PLAY][1][1][2] == 0.5
-    assert np.isnan(Xy[Action.PLAY][1][1][5])
-    assert Xy[Action(0)][0].shape == (2, 2)
-    assert Xy[Action(0)][1].shape == (2, NUM_CHOICES)
-
-
-def test_play():
-    Trainer().play()
