@@ -87,6 +87,12 @@ class StandardStrategy(RandomStrategy):
         use `sklearn.preprocessing.StandardScaler` to scale data
     **kwargs: Any
         passed to `RandomStrategy` on `__init__()`
+
+    Attributes
+    ----------
+    restricted: list[int] | None
+        If set, then don't predict these values. This must be manually set, and
+        is provided for exploring the relative values of cards
     """
     def __init__(
         self,
@@ -113,6 +119,9 @@ class StandardStrategy(RandomStrategy):
         self._model = model
         self._model_fitted = False
 
+        # initialize attributes
+        self.restricted: list[int] | None = None
+
     def __deepcopy__(self, memo: dict) -> Strategy:
 
         # initialize copy
@@ -134,6 +143,9 @@ class StandardStrategy(RandomStrategy):
             optimizer=tf.keras.optimizers.Adam(),
         )
 
+        # copy attributes
+        copy.restricted = self.restricted
+
         # return copy
         return copy
 
@@ -145,20 +157,6 @@ class StandardStrategy(RandomStrategy):
         return tf.reduce_mean(tf.square(y_true[mask] - y_pred[mask]))
 
     def fit(self, X: np.ndarray, y: np.ndarray, /) -> Strategy:
-        """Fit model
-
-        Parameters
-        ----------
-        X: np.ndarray
-            data to use for fitting
-        y: np.ndarray
-            labels
-
-        Returns
-        -------
-        Strategy
-            calling instance
-        """
 
         # scale data
         if self._scaler is not None:
@@ -185,19 +183,6 @@ class StandardStrategy(RandomStrategy):
         return self
 
     def predict(self, X: np.ndarray, /) -> np.ndarray:
-        """Predict best course of action
-
-        Parameters
-        ----------
-        X: np.ndarray
-            data to predict for
-
-        Returns
-        -------
-        np.ndarray
-            predictions, returned as the predicted probability of winning given
-            each possible choice
-        """
 
         # use random if untrained
         if not self._model_fitted:
@@ -214,6 +199,11 @@ class StandardStrategy(RandomStrategy):
 
         # make predictions
         pred = self._model(X).numpy()
+
+        # modify via restricted list
+        if self.restricted is not None:
+            for r in self.restricted:
+                pred[:, r] = -np.Inf
 
         # return (matching input shape)
         return (
