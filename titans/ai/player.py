@@ -24,6 +24,8 @@ class Player:
         strategies for performing actions. If None, random choices will be used
     random_state: int | None, optional, default=None
         player's random seed
+    temperature: float | None, optional, default=None
+        randomness to add into decision making
 
     Attributes
     ----------
@@ -46,7 +48,8 @@ class Player:
         cards: list[Card],
         strategies: dict[Action, Strategy] | None = None,
         *,
-        random_state: int = None,
+        random_state: int | None = None,
+        temperature: float | None = None,
     ):
         # save identity and strategies
         self.identity: Identity = identity
@@ -58,6 +61,7 @@ class Player:
                 for action in Action
             }
         )
+        self._temperature = temperature
 
         # initialize player's card zones and temples
         self.temples: int = 3
@@ -88,6 +92,28 @@ class Player:
 
         # initialize rng
         self._rng: np.random.Generator = np.random.default_rng(random_state)
+
+    def _add_stochasticity(self, decision_matrix: np.ndarray) -> np.ndarray:
+        """Add noise to decision matrix
+
+        Amplitude is decided by temperature
+
+        Parameters
+        ----------
+        decision_matrix: np.ndarray
+            input decision matrix
+
+        Returns
+        -------
+        np.ndarray
+            decision matrix with noise applied
+        """
+        if self._temperature is not None:
+            decision_matrix += self._rng.normal(
+                scale=self._temperature,
+                size=decision_matrix.shape,
+            )
+        return decision_matrix
 
     def _get_individual_state(self, public: bool) -> np.ndarray:
         """Get player state
@@ -161,11 +187,11 @@ class Player:
         """
 
         # get decision matrix
-        decision_matrix = (
+        decision_matrix = self._add_stochasticity((
             self.strategies[Action.AWAKEN].predict(self.get_state())
         ) if self._decision_matrices is None else (
             self._decision_matrices[Action.AWAKEN]
-        )
+        ))
 
         # get our current energy
         energy = self.get_energy()
@@ -373,11 +399,11 @@ class Player:
             return played, choices
 
         # get decision matrix
-        decision_matrix = (
+        decision_matrix = self._add_stochasticity((
             self.strategies[Action.PLAY].predict(self.get_state())
         ) if self._decision_matrices is None else (
             self._decision_matrices[Action.PLAY]
-        )
+        ))
 
         # play highest-valued card that we can play
         name_list = np.array([
