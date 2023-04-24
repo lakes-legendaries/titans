@@ -227,6 +227,7 @@ class Trainer:
         /,
         *,
         save_history: bool = True,
+        temperature: float | None = None,
         use_random: bool = False,
         vs_random: bool = False,
         vs_strategy: dict[Action, Strategy] | None = None,
@@ -241,6 +242,8 @@ class Trainer:
         ----------
         save_history: bool, optional, default=True
             save state history from these games
+        temperature: float | None, optional, default=None
+            stochastic noise to add to players' decisions
         use_random: bool, optional, default=False
             if True, then use random choices for both player 0 and player 1.
         vs_random: bool, optional, default=False
@@ -275,7 +278,8 @@ class Trainer:
                     random_strategy_dict
                     if use_random
                     else self.strategies
-                )
+                ),
+                "temperature": temperature,
             },
             Identity.BRYAN: {
                 "strategies": (
@@ -285,7 +289,8 @@ class Trainer:
                     if vs_strategy is not None
                     else self.strategies
                 ),
-            }
+                "temperature": temperature,
+            },
         }
 
         # play games sequentially
@@ -418,19 +423,28 @@ class Trainer:
         # run training epochs
         for epoch in range(self._epochs):
 
-            # train on most recent data
+            # train network
             if epoch:
+                self._play_games(
+                    temperature=0.1,
+                    vs_random=self._baseline,
+                )
                 Xy = self._get_Xy()
                 for action in Action:
                     self.strategies[action].fit(*Xy[action])
 
-            # test strategies, save win fractions
+            # test strategies
             vs_baseline.append(self._play_games(
-                save_history=self._baseline,
+                save_history=False,
                 vs_random=True,
             ))
             if not self._baseline:
-                vs_best.append(self._play_games(vs_strategy=best_strategy))
+                vs_best.append(
+                    self._play_games(
+                        save_history=False,
+                        vs_strategy=best_strategy,
+                    )
+                )
 
             # if best scores yet, export strategy as best
             if (best_idx := get_best_idx()) == len(vs_baseline) - 1:
