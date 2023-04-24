@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 
 import keras
-from keras import callbacks, layers, optimizers
+from keras import callbacks, layers
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
@@ -108,7 +108,7 @@ class StandardStrategy(RandomStrategy):
         model = keras.Model(input_layer, output_layer)
         model.compile(
             loss=self._nanmse_loss,
-            optimizer=optimizers.Adam(),
+            optimizer=tf.keras.optimizers.Adam(),
         )
         self._model = model
         self._model_fitted = False
@@ -131,13 +131,14 @@ class StandardStrategy(RandomStrategy):
         copy._model.set_weights(self._model.get_weights())
         copy._model.compile(
             loss=self._nanmse_loss,
-            optimizer=optimizers.Adam(),
+            optimizer=tf.keras.optimizers.Adam(),
         )
 
         # return copy
         return copy
 
     @staticmethod
+    @keras.utils.register_keras_serializable("titans.ai.strategy")
     def _nanmse_loss(y_true, y_pred):
         """MSE that ignores NaN entries"""
         mask = ~tf.math.is_nan(y_true)

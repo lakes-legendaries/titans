@@ -1,4 +1,7 @@
 from copy import deepcopy
+from os import remove
+from os.path import isfile
+import pickle
 import random
 
 import numpy as np
@@ -43,3 +46,13 @@ def test_standard_strategy():
     strategy.fit(X[0:10, :], y[0:10, :])
     assert not ((strategy.predict(X) == pred).all())
     assert (copy.predict(X) == pred).all()
+
+    # test pickle
+    fname = "/tmp/scratch.pickle"
+    try:
+        pickle.dump(copy, open(fname, "wb"))
+        copy2 = pickle.load(open(fname, "rb"))
+        assert (copy2.predict(X) == pred).all()
+    finally:
+        if isfile(fname):
+            remove(fname)
