@@ -7,7 +7,7 @@ from typing import Any, Generator, Self
 import numpy as np
 
 from titans.ai.constants import NUM_CHOICES, NUM_FEATURES
-from titans.ai.enum import Ability, Action, Identity
+from titans.ai.enum import Ability, Action, Identity, Name
 from titans.ai.game import Game
 from titans.ai.strategy import RandomStrategy, StandardStrategy, Strategy
 
@@ -344,6 +344,28 @@ class Trainer:
 
         # save history
         self.history.append(history)
+
+    def discover(self, /) -> np.ndarray:
+        """Discover best cards
+
+        This function uses this trainer's strategy to weight each card
+        according to its relative value.
+
+        Returns
+        -------
+        np.ndarray of shape(len(Name),) of dtype float
+            weights (relative value) of each card
+        """
+        weights = np.zeros(len(Name))
+        for name in Name:
+            vs_strategy = deepcopy(self.strategies)
+            for strategy in vs_strategy.values():
+                strategy.restricted = [name.value]
+            weights[name.value] = self._play_games(
+                save_history=False,
+                vs_strategy=vs_strategy,
+            )
+        return weights
 
     def train(self, /) -> Self:
         """Train network"""
