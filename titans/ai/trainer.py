@@ -370,15 +370,21 @@ class Trainer:
             fraction against random plays, and simultaneously (2) outperforms
             the previous top-performing strategy.
 
+            Technicaly, this isn't *really* finding the best strategy; it's
+            more of a patience checker, as it finds the most recent strategy
+            that satisifes all criterion, and gives ties to the oldest. You can
+            then compare the best idx to the current idx, and see if the
+            patience counter has been exceeded.
+
             Returns
             -------
             int
-                index of top-performing strategy
+                round number of top-performing strategy
             """
             best_idx = 0
             for idx in range(1, len(vs_baseline)):
                 if (
-                    vs_baseline[idx] > vs_baseline[best_idx]
+                    vs_baseline[idx] >= vs_baseline[best_idx]
                     and (
                         self._baseline
                         or vs_best[idx] > 0.50
