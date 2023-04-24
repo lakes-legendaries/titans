@@ -346,58 +346,73 @@ class Trainer:
         self.history.append(history)
 
     def train(self, /) -> Self:
-        """Train network
+        """Train network"""
 
-        Parameters
-        ----------
-        baseline: bool, optional, default=False
-            if True, only train against random choices (the baseline), instead
-            on iterating on the best-discovered-strategy-so-far
-        """
-
-        # initial best as empty standard strategy
-        top_strategy = {
+        # initialize best strategy as empty standard strategy
+        best_strategy = {
             action: StandardStrategy()
             for action in Action
         }
 
-        # train against baseline
-        if self._baseline:
+        # initialize metrics (win trackers)
+        vs_baseline = []
+        vs_best = []
+        self.metrics = {
+            "vs_baseline": vs_baseline,
+            "vs_best": vs_best,
+        }
 
-            # initialize win tracker
-            win_frac = []
+        # function to check for best
+        def get_best_idx() -> int:
+            """Get best strategy
 
-            # run training epochs
-            for epoch in range(self._epochs):
+            The best strategy is the one that both has (1) the highest win
+            fraction against random plays, and simultaneously (2) outperforms
+            the previous top-performing strategy.
 
-                # train on most recent data
-                if epoch:
-                    Xy = self._get_Xy()
-                    for action in Action:
-                        self.strategies[action].fit(*Xy[action])
+            Returns
+            -------
+            int
+                index of top-performing strategy
+            """
+            best_idx = 0
+            for idx in range(1, len(vs_baseline)):
+                if (
+                    vs_baseline[idx] > vs_baseline[best_idx]
+                    and (
+                        self._baseline
+                        or vs_best[idx] > 0.50
+                    )
+                ):
+                    best_idx = idx
+            return best_idx
 
-                # test current strategy (vs random)
-                win_frac.append(
-                    self._play_games(vs_random=True)
-                )
+        # run training epochs
+        for epoch in range(self._epochs):
 
-                # if best yet, save as best yet
-                if win_frac[-1] == max(win_frac):
-                    top_strategy = deepcopy(self.strategies)
+            # train on most recent data
+            if epoch:
+                Xy = self._get_Xy()
+                for action in Action:
+                    self.strategies[action].fit(*Xy[action])
 
-                # if not best, restore best, check for early stopping
-                else:
-                    self.strategies = deepcopy(top_strategy)
-                    best_idx = win_frac.index(max(win_frac))
-                    if best_idx < len(win_frac) - self._patience - 1:
-                        break
+            # test strategies, save win fractions
+            vs_baseline.append(self._play_games(
+                save_history=self._baseline,
+                vs_random=True,
+            ))
+            if not self._baseline:
+                vs_best.append(self._play_games(vs_strategy=best_strategy))
 
-            # save metrics
-            self.metrics = {"vs_baseline": win_frac}
+            # if best scores yet, export strategy as best
+            if (best_idx := get_best_idx()) == len(vs_baseline) - 1:
+                best_strategy = deepcopy(self.strategies)
 
-        # train against best
-        else:
-            raise NotImplementedError()
+            # if not best, restore best strategy, check for early stopping
+            else:
+                self.strategies = deepcopy(best_strategy)
+                if best_idx < len(vs_baseline) - self._patience:
+                    break
 
         # return
         return self
