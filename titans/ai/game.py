@@ -7,7 +7,7 @@ from typing import Any, Generator
 import numpy as np
 
 from titans.ai.card import Card
-from titans.ai.enum import Action, Name, Identity
+from titans.ai.enum import Action, Name, Identity, Zone
 from titans.ai.player import Player
 
 
@@ -29,8 +29,6 @@ class Game:
     ----------
     cards: list[Card]
         cards in the game
-    players: list[Players]
-        players playing the game
     history: dict[bytes, dict[Action, dict[Identity, list[int]]]]
         here, the history of each player's state, and the choices they made
         given that state, are recorded. This variable contains three nested
@@ -45,6 +43,10 @@ class Game:
            action, and maps to the choice(s) that player made at that decision
            point
 
+    players: list[Players]
+        players playing the game
+    transcript: str
+        human-readable transcript (log) of the game
     winner: Identity | None
         winner of game
     """
@@ -91,6 +93,7 @@ class Game:
         # initialize history tracking
         self.history: dict[bytes, dict[Action, dict[Identity, list[int]]]] = {}
         self.winner: Identity | None = None
+        self.transcript = ""
 
     def _play_age(
         self,
@@ -149,17 +152,39 @@ class Game:
                 (Player.play_cards, Action.PLAY),
                 (Player.awaken_card, Action.AWAKEN),
             ]:
-                _, choice = method(player)
+                # do action, get consistent formatting
+                cards, choices = method(player)
+                if type(choices) is not list:
+                    choices = [choices]
+                    cards = [cards]
+
+                # update state dictionary
                 state_dict = (
                     self.history
                     .setdefault(frozen_state, {})
                     .setdefault(action, {})
                     .setdefault(identity, [])
                 )
-                if type(choice) is list:
-                    state_dict.extend(choice)
-                else:
-                    state_dict.append(choice)
+                state_dict.extend(choices)
+
+                # update transcript
+                self.transcript += (
+                    "        "
+                    + f"{identity.name.title():5s}"
+                    + f" {action.name.lower():6s}'d "
+                    + ", ".join([
+                        (
+                            card.name.name
+                            if card is not None
+                            else "None"
+                        ) + (
+                            ""
+                            if choice < len(Name)
+                            else " (default)"
+                        )
+                        for choice, card in zip(choices, cards)
+                    ]) + "\n"
+                )
 
         # unfreeze states
         for player in self.players.values():
@@ -189,11 +214,33 @@ class Game:
             player.draw_cards(6)
 
         # play ages
-        for _ in range(3):
+        for age_num in range(3):
+            self.transcript += f"    Age {age_num + 1}\n"
             yield from self._play_age(use_generators=use_generators)
 
         # battle
-        self.players[Identity.MIKE].battle_opponent()
+        self.transcript += "    Battle\n"
+        for identity, player in self.players.items():
+            self.transcript += (
+                f"        {identity.name.title():5s}'s power:"
+                f" {player.get_power()}\n"
+            )
+        winner = self.players[Identity.MIKE].battle_opponent()
+        if winner is not None:
+            self.transcript += f"        Winner: {winner.name}\n"
+            for identity, player in self.players.items():
+                self.transcript += (
+                    f"        {identity.name.title()}'s temples:"
+                    f" {player.temples}\n"
+                )
+
+        # overview
+        self.transcript += "    Overview\n"
+        for zone in Zone:
+            self.transcript += f"{' ':8s}{zone.name.title()}\n"
+            for identity, player in self.players.items():
+                self.transcript += f"{' ':12s}{identity.name.title()}\n"
+                self.transcript += f"{' ':16s}{player.cards[zone]}\n"
 
     def _play(
         self,
@@ -206,7 +253,8 @@ class Game:
         """Play game"""
 
         # play game
-        for _ in range(self._turn_limit):
+        for turn_num in range(self._turn_limit):
+            self.transcript += f"Turn {turn_num + 1}\n"
             yield from self._play_turn(use_generators=use_generators)
             for player in self.players.values():
                 if player.temples <= 0:
