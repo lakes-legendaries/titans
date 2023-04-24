@@ -1,4 +1,5 @@
 __pycache__
 /.venv
 /.vscode
+/titans/pdfset/order.yaml
 /titans/website/site
