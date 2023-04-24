@@ -109,7 +109,8 @@ class Player:
             decision matrix with noise applied
         """
         if self._temperature is not None:
-            decision_matrix += self._rng.normal(
+            decision_matrix *= self._rng.normal(
+                loc=1,
                 scale=self._temperature,
                 size=decision_matrix.shape,
             )
