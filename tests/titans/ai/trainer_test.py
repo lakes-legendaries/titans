@@ -108,7 +108,7 @@ def test__parallel_step():
             decision_matrix = X[:, offset: offset + NUM_CHOICES]
             decision_matrix[:, -1] = 0
             return decision_matrix
-    strategies = {  # noqa
+    player_kwargs = {  # noqa
         identity: {
             "strategies": {
                 action: ModifiedStrategy()
@@ -122,7 +122,7 @@ def test__parallel_step():
     Trainer._parallel_step(
         controllers=controllers,
         states=states,
-        strategies=strategies,
+        player_kwargs=player_kwargs,
     )
 
     # check result

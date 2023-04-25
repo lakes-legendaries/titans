@@ -151,7 +151,7 @@ class Trainer:
         cls,
         /,
         *,
-        strategies: dict[Identity, dict[str, dict[Action, Strategy]]],
+        player_kwargs: dict[Identity, dict[str, dict[Action, Strategy]]],
         controllers: list[
             Generator[
                 dict[Identity, np.array] | None,
@@ -188,7 +188,7 @@ class Trainer:
             identity: {
                 action: (
                     (
-                        strategies
+                        player_kwargs
                         .get(identity)
                         .get("strategies")
                         .get(action)
@@ -227,8 +227,8 @@ class Trainer:
         /,
         *,
         save_history: bool = True,
-        temperature: float | None = None,
         use_random: bool = False,
+        vary_temperature: bool = False,
         vs_random: bool = False,
         vs_strategy: dict[Action, Strategy] | None = None,
     ) -> float:
@@ -242,10 +242,11 @@ class Trainer:
         ----------
         save_history: bool, optional, default=True
             save state history from these games
-        temperature: float | None, optional, default=None
-            stochastic noise to add to players' decisions
         use_random: bool, optional, default=False
             if True, then use random choices for both player 0 and player 1.
+        vary_temperature: bool, optional, default=False
+            vary temperature for each game, to make sure there's a good amount
+            of noise (and thus varied decisions)
         vs_random: bool, optional, default=False
             if True, instead of using `self.strategies` as player 1's strategy,
             use random choices.
@@ -272,14 +273,13 @@ class Trainer:
             action: RandomStrategy()
             for action in Action
         }
-        strategies: dict[Identity, dict[str, dict[Action, Strategy]]] = {
+        player_kwargs: dict[Identity, dict[str, dict[Action, Strategy]]] = {
             Identity.MIKE: {
                 "strategies": (
                     random_strategy_dict
                     if use_random
                     else self.strategies
                 ),
-                "temperature": temperature,
             },
             Identity.BRYAN: {
                 "strategies": (
@@ -289,28 +289,33 @@ class Trainer:
                     if vs_strategy is not None
                     else self.strategies
                 ),
-                "temperature": temperature,
             },
         }
 
+        # initialize games
+        games = [
+            self._init_game({
+                **player_kwargs,
+                **(
+                    {"temperature": game_num / self._games_per_epoch}
+                    if vary_temperature
+                    else {}
+                ),
+            })
+            for game_num in range(self._games_per_epoch)
+        ]
+
         # play games sequentially
         if not self._parallel:
-            games = [
-                self._init_game(strategies).play()
-                for _ in range(self._games_per_epoch)
-            ]
+            games = [game.play() for game in games]
 
         # play games in parallel
         else:
-            games = [
-                self._init_game(strategies)
-                for _ in range(self._games_per_epoch)
-            ]
             controllers = [game.parallel_play() for game in games]
             states = [next(controller) for controller in controllers]
             while any([state is not None for state in states]):
                 states = self._parallel_step(
-                    strategies=strategies,
+                    player_kwargs=player_kwargs,
                     controllers=controllers,
                     states=states,
                 )
@@ -426,7 +431,7 @@ class Trainer:
             # train network
             if epoch:
                 self._play_games(
-                    temperature=0.1,
+                    vary_temperature=True,
                     vs_random=self._baseline,
                 )
                 Xy = self._get_Xy()
