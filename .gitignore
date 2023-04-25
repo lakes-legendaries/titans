@@ -1,5 +1,21 @@
-__pycache__
-/.venv
-/.vscode
-/titans/pdfset/order.yaml
+# build files and folders
+/*.egg-info
+/build
+/dist
 /titans/website/site
+
+# docs
+/docs
+
+# ide files
+/.vscode
+
+# temp files
+/titans/pdfset/order.yaml
+scratch.*
+
+# test files
+__pycache__
+
+# virtual environments
+/.venv
