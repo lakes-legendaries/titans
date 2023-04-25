@@ -12,7 +12,9 @@ from titans.ai.strategy import RandomStrategy, Strategy
 class Player:
     """Player class
 
-    This class performs all of the core operations of each player.
+    This class performs all of the core operations of each player. These
+    actions are meant to be relatively low-level: The logic of walking through
+    an actual game is located in the `titans.ai.game.Game` class.
 
     Parameters
     ----------
@@ -25,7 +27,8 @@ class Player:
     random_state: int | None, optional, default=None
         player's random seed
     temperature: float | None, optional, default=None
-        randomness to add into decision making
+        randomness to add into decision making. This is important for making
+        sure strategies don't get stuck in local minimums during training.
 
     Attributes
     ----------
@@ -291,7 +294,7 @@ class Player:
         # return list of drawn cards
         return drawn
 
-    def freeze_state(self):
+    def freeze_state(self) -> None:
         """Freeze state (for simultaneous actions)
 
         This causes self.get_state() to return what the state is when you call
@@ -355,7 +358,7 @@ class Player:
             self.opponent._get_individual_state(public=True),
         ))
 
-    def handshake(self, opponent: Player, /):
+    def handshake(self, opponent: Player, /) -> None:
         """Set this player's opponent (and vice-versa)
 
         This sets self.opponent, which is used when getting the game state
@@ -434,7 +437,7 @@ class Player:
         # return card played and choice made
         return played, choices
 
-    def shuffle_cards(self):
+    def shuffle_cards(self) -> None:
         """Shuffle all cards together"""
 
         # move all cards to the deck
@@ -452,7 +455,7 @@ class Player:
         # shuffle order
         self._rng.shuffle(self.cards[Zone.DECK])
 
-    def unfreeze_state(self):
+    def unfreeze_state(self) -> None:
         """Unfreeze state
 
         This ends the hold put on the state initiated by self.freeze_state()

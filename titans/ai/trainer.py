@@ -15,10 +15,38 @@ from titans.ai.strategy import RandomStrategy, StandardStrategy, Strategy
 class Trainer:
     """Standard trainer
 
+    This class trains up strategies for execellently-playing Titans of Eden. It
+    works by executing a number of training epochs, wherein each epoch a bunch
+    of games are played, and then data from those games is used to train up
+    better and better strategies.
+
+    During each epoch, the current strategy is played against the previous-best
+    strategy to generate new training data.
+
+    Early-stopping, weight restoration, and patience are all used to ensure the
+    best strategy dominates. Callback is judged on the strategy that (1) plays
+    the best against baseline, and (2) outperforms previous-best strategies.
+
+    A temperature parameter is used and varied across games to make ensure that
+    strategies don't get stuck in local minima.
+
     Parameters
     ----------
-    retention: int, optional, default=10
-        number of game histories to keep
+    baseline: bool, optional, default=False
+        if True, only play against random-card-choosing strategies (instead of
+        playing against latest-gen-minus-one)
+    epochs: int, optional, default=10
+        number of training epochs to execute
+    games_per_epoch: int, optioanl, default=100
+        number of games to play each epoch
+    parallel: bool, optional, default=True
+        play games in parallel, performing batch decision making at each
+        decision point. This is much faster than making decisions
+        one-at-a-time.
+    retention: int, optional, default=3
+        when training, keep game histories across this many epochs to train on.
+        (i.e. training data from games more than `retention` epochs ago will be
+        forgotten.)
 
     Attributes
     ----------
@@ -43,7 +71,6 @@ class Trainer:
         parallel: bool = True,
         patience: int = 3,
         retention: int = 3,
-        verbose: bool = False,
     ):
         # save passed
         self._baseline = baseline
@@ -52,7 +79,6 @@ class Trainer:
         self._parallel = parallel
         self._patience = patience
         self._retention = retention
-        self._verbose = verbose
 
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
@@ -163,7 +189,7 @@ class Trainer:
     ) -> list[dict[Identity, np.ndarray] | None]:
         """Run one decision point of a game played in parallel
 
-        Completed games will be passed over.
+        Completed games will be skipped.
 
         This function is broken out for easy testing of this
         somewhat-complicated method.
@@ -237,6 +263,8 @@ class Trainer:
         Player 0 will always use the strategies in self.strategies. Player 1
         will default to using the same strategies, but this can be overridden
         with `use_random` or `use_strategy`.
+
+        This is an internal method that is called by `train`.
 
         Parameters
         ----------
@@ -327,7 +355,7 @@ class Trainer:
         # return win fraction
         return np.mean([game.winner == Identity.MIKE for game in games])
 
-    def _save_history(self, games: list[Game], /):
+    def _save_history(self, games: list[Game], /) -> None:
         """Extract and save histories from games
 
         Parameters
@@ -378,7 +406,10 @@ class Trainer:
         return weights
 
     def train(self, /) -> Self:
-        """Train network"""
+        """Train network
+
+        All parameters for training are set in `__init__`.
+        """
 
         # initialize best strategy as empty standard strategy
         best_strategy = {

@@ -14,6 +14,8 @@ from titans.ai.player import Player
 class Game:
     """Game Class
 
+    This class contains all the logic to play a full game.
+
     Parameters
     ----------
     player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]]
@@ -105,18 +107,6 @@ class Game:
     ]:
         """Execute an age
 
-        This function is modularly designed to either yield a generator that
-        you can interact with (if you set `use_generators=True`), or to return
-        a zero-length generator so you can execute the whole age with
-        `tuple(Game._play_age())`. It's set up this way so that you have the
-        option to run many games in parallel with one another, syncing
-        decisions across games (which allows for much faster decision matrix
-        computation).
-
-        If you are using this as a generator, the function will yield at each
-        decision point, and let you send in the decision each player is to
-        make.
-
         Parameters
         ----------
         use_generators: bool, optional, default=False
@@ -126,9 +116,9 @@ class Game:
         Returns
         -------
         Generator
-            This generator yields each player's state, and sends precomputed
-            decision matrices for each player. If `use_generators=False`, then
-            this will be a zero-length generator.
+            A generator that yields at each decision point (if
+            `use_generators`; otherwise, generator is zero-length). See `_play`
+            for more details.
         """
 
         # freeze states
@@ -202,11 +192,25 @@ class Game:
         self,
         use_generators: bool = False,
     ) -> Generator[
-        dict[Identity, np.array],
+        dict[Identity, np.ndarray],
         dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
-        """Execute a complete turn"""
+        """Execute a complete turn
+
+        Parameters
+        ----------
+        use_generators: bool, optional, default=False
+            if True, yield at each decision point. Otherwise, play end-to-end
+            (i.e. yielding a zero-length generator).
+
+        Returns
+        -------
+        Generator
+            A generator that yields at each decision point (if
+            `use_generators`; otherwise, generator is zero-length). See `_play`
+            for more details.
+        """
 
         # shuffle step (we do this first)
         for player in self.players.values():
@@ -246,11 +250,34 @@ class Game:
         self,
         use_generators: bool = False,
     ) -> Generator[
-        dict[Identity, np.array],
+        dict[Identity, np.ndarray],
         dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
-        """Play game"""
+        """Play game
+
+        This function is modularly designed to either yield a generator that
+        you can interact with (if you set `use_generators=True`), or to return
+        a zero-length generator so you can execute the whole age with
+        `tuple(Game._play_age())`. It's set up this way so that you have the
+        option to run many games in parallel with one another, syncing
+        decisions across games (which allows for much faster decision matrix
+        computation).
+
+        If you are using this as a generator, the function will yield at each
+        decision point, and let you send in the decision each player is to
+        make.
+
+        Returns
+        -------
+        Generator
+            A generator that yields at each decision point (if
+            `use_generators`; otherwise, generator is zero-length). The only
+            difference between the return here and the return in
+            `parallel_play` is that this function will never yield `None`; that
+            is added by `parallel_play` once the game completes. See
+            `parallel_play` for more information.
+        """
 
         # play game
         for turn_num in range(self._turn_limit):
@@ -266,17 +293,41 @@ class Game:
         return self
 
     def parallel_play(self) -> Generator[
-        dict[Identity, np.array] | None,
+        dict[Identity, np.ndarray] | None,
         dict[Identity, dict[Action, np.ndarray]],
         None,
     ]:
         """Play game, returning a generator that pauses at each decision point
+
+        This lets an operator simultaneously make decisions across many
+        different games. This is important because the slowest part of
+        processing is using the ANNs to make decisions. So, using this function
+        lets operators speed up game simulations considerably.
+
+        Returns
+        -------
+        Generator
+            This generator will play the game to each decision point, and will
+            then expect you to send in the `decision_matrices` that rank each
+            possible choice.
+
+            Yields: dict[Identity, np.ndarray] | None
+                dictionary mapping from each player to their current state. If
+                None is yielded, the game is over.
+            Send: dict[Identity, dict[Action, np.ndarray]]
+                dictionary mapping from each player to (
+                    dictionary mapping from each action to the choices that
+                    player should make for that action, wherein each possible
+                    choice is ranked by its relative value. (highest value =
+                    perform that decision)
+                )
+            Returns: None
         """
         yield from self._play(use_generators=True)
         yield None
 
     def play(self) -> Game:
-        """Play game
+        """Play game end-to-end
 
         Returns
         -------

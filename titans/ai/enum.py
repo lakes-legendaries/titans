@@ -1,4 +1,10 @@
-"""Common enums"""
+"""Common enums
+
+There are used as Enum, instead of IntEnum, so that users don't accidently mix
+up dictionaries that are index by a given enum type. E.g.
+`my_dict[Action][Identity]` would resolve calls to `my_dict[Identity][Action]`
+if both were IntEnums.
+"""
 
 from enum import auto, Enum
 
@@ -97,6 +103,6 @@ class Species(Enum):
 class Zone(Enum):
     """Different zones a player's cards can be in"""
     DECK = 0
-    DISCARD = 1
-    HAND = 2
-    PLAY = 3
+    DISCARD = auto()
+    HAND = auto()
+    PLAY = auto()

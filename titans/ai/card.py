@@ -1,10 +1,13 @@
-"""Cards"""
+"""All cards a player can add to their deck"""
 
 from titans.ai.enum import Ability, Element, Name, Species
 
 
 class Card:
     """Card, with all properties
+
+    This class both has all the logic to instantiate cards, and holds all
+    properties as a player uses cards in a game.
 
     Parameters
     ----------
