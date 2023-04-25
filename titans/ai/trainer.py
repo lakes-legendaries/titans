@@ -297,12 +297,12 @@ class Trainer:
             self._init_game({
                 **player_kwargs,
                 **(
-                    {"temperature": game_num / self._games_per_epoch}
+                    {"temperature": temperature}
                     if vary_temperature
                     else {}
                 ),
             })
-            for game_num in range(self._games_per_epoch)
+            for temperature in np.linspace(0, 1, self._games_per_epoch)
         ]
 
         # play games sequentially
