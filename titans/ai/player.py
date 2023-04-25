@@ -109,11 +109,13 @@ class Player:
             decision matrix with noise applied
         """
         if self._temperature is not None:
-            decision_matrix *= self._rng.normal(
+            multiplier = self._rng.normal(
                 loc=1,
                 scale=self._temperature,
                 size=decision_matrix.shape,
             )
+            multiplier[multiplier < 0] = 0
+            decision_matrix *= multiplier
         return decision_matrix
 
     def _get_individual_state(self, public: bool) -> np.ndarray:
