@@ -208,10 +208,10 @@ def test_draw_cards():
 def test_freeze_state():
     players = [Player(identity, []) for identity in Identity]
     players[0].handshake(players[1])
-    players[0].freeze_state()
-    players[0].cards[Zone.DISCARD].append(Card(Name.GHOST))
-    assert (players[0].get_state() == 0).all()
-    players[0].unfreeze_state()
+    with players[0].freeze_state():
+        players[0].freeze_state()
+        players[0].cards[Zone.DISCARD].append(Card(Name.GHOST))
+        assert (players[0].get_state() == 0).all()
     assert players[0].get_state()[
         (Zone.DISCARD.value * len(Name)) + Name.GHOST.value
     ] == 1

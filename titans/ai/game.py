@@ -122,63 +122,61 @@ class Game:
         """
 
         # freeze states
-        for player in self.players.values():
-            player.freeze_state()
+        with (
+            self.players[Identity.MIKE].freeze_state(),
+            self.players[Identity.BRYAN].freeze_state(),
+        ):
 
-        # yield player states, make decisions outside of this game
-        if use_generators:
-            decision_matrices = \
-                yield {
-                    identity: player._frozen_state
-                    for identity, player in self.players.items()
-                }
-            for identity, matrix in decision_matrices.items():
-                self.players[identity]._decision_matrices = matrix
+            # yield player states, make decisions outside of this game
+            if use_generators:
+                decision_matrices = \
+                    yield {
+                        identity: player._frozen_state
+                        for identity, player in self.players.items()
+                    }
+                for identity, matrix in decision_matrices.items():
+                    self.players[identity]._decision_matrices = matrix
 
-        # play and awaken cards, saving states
-        for identity, player in self.players.items():
-            frozen_state = player._frozen_state.tobytes()
-            for method, action in [
-                (Player.play_cards, Action.PLAY),
-                (Player.awaken_card, Action.AWAKEN),
-            ]:
-                # do action, get consistent formatting
-                cards, choices = method(player)
-                if type(choices) is not list:
-                    choices = [choices]
-                    cards = [cards]
+            # play and awaken cards, saving states
+            for identity, player in self.players.items():
+                frozen_state = player._frozen_state.tobytes()
+                for method, action in [
+                    (Player.play_cards, Action.PLAY),
+                    (Player.awaken_card, Action.AWAKEN),
+                ]:
+                    # do action, get consistent formatting
+                    cards, choices = method(player)
+                    if type(choices) is not list:
+                        choices = [choices]
+                        cards = [cards]
 
-                # update state dictionary
-                state_dict = (
-                    self.history
-                    .setdefault(frozen_state, {})
-                    .setdefault(action, {})
-                    .setdefault(identity, [])
-                )
-                state_dict.extend(choices)
+                    # update state dictionary
+                    state_dict = (
+                        self.history
+                        .setdefault(frozen_state, {})
+                        .setdefault(action, {})
+                        .setdefault(identity, [])
+                    )
+                    state_dict.extend(choices)
 
-                # update transcript
-                self.transcript += (
-                    "        "
-                    + f"{identity.name.title():5s}"
-                    + f" {action.name.lower():6s}'d "
-                    + ", ".join([
-                        (
-                            card.name.name
-                            if card is not None
-                            else "None"
-                        ) + (
-                            ""
-                            if choice < len(Name)
-                            else " (default)"
-                        )
-                        for choice, card in zip(choices, cards)
-                    ]) + "\n"
-                )
-
-        # unfreeze states
-        for player in self.players.values():
-            player.unfreeze_state()
+                    # update transcript
+                    self.transcript += (
+                        "        "
+                        + f"{identity.name.title():5s}"
+                        + f" {action.name.lower():6s}'d "
+                        + ", ".join([
+                            (
+                                card.name.name
+                                if card is not None
+                                else "None"
+                            ) + (
+                                ""
+                                if choice < len(Name)
+                                else " (default)"
+                            )
+                            for choice, card in zip(choices, cards)
+                        ]) + "\n"
+                    )
 
         # void out decision matrices
         if use_generators:

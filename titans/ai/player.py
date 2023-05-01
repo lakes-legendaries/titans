@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from typing import Generator
+
 import numpy as np
 
 from titans.ai.card import Card
@@ -294,14 +297,16 @@ class Player:
         # return list of drawn cards
         return drawn
 
-    def freeze_state(self) -> None:
+    @contextmanager
+    def freeze_state(self) -> Generator[np.ndarray, None, None]:
         """Freeze state (for simultaneous actions)
 
         This causes self.get_state() to return what the state is when you call
-        self.freeze_state(). This will persist until you call
-        self.unfreeze_state().
+        self.freeze_state().
         """
         self._frozen_state = self.get_state()
+        yield self._frozen_state
+        self._frozen_state = None
 
     def get_energy(self) -> int:
         """Get total energy from all cards in play
@@ -454,10 +459,3 @@ class Player:
 
         # shuffle order
         self._rng.shuffle(self.cards[Zone.DECK])
-
-    def unfreeze_state(self) -> None:
-        """Unfreeze state
-
-        This ends the hold put on the state initiated by self.freeze_state()
-        """
-        self._frozen_state = None

@@ -87,9 +87,11 @@ def test__parallel_step():
         )
 
     # get updated states
+    init_states = []
     for game in games:
         for player in game.players.values():
-            player.unfreeze_state()
+            init_states.append(player._frozen_state)
+            player._frozen_state = None
     states = [
         {
             identity: player.get_state()
@@ -99,7 +101,7 @@ def test__parallel_step():
     ]
     for game in games:
         for player in game.players.values():
-            player.freeze_state()
+            player._frozen_state = init_states.pop(0)
 
     # make strategies
     class ModifiedStrategy(Strategy):
