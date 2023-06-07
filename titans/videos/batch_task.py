@@ -55,12 +55,13 @@ def animate(
 
     # run blender
     odir = "animated"
+    ofname = f'{odir}/{fname}'
     Path(odir).mkdir(exist_ok=True)
     sh.Command('/blender/blender')([
         '-b',
         f'blend/{fname}.blend',
         '--render-output',
-        f'{odir}/{fname}',
+        ofname,
         '-s',
         f'{first_frame}',
         '-e',
@@ -70,7 +71,7 @@ def animate(
 
     # upload result
     sh.azcopy.copy([
-        f"{odir}/*",
+        f"{ofname}*",
         (
             "https://titansfileserver.blob.core.windows.net/"
             + f"{odir}/{os.environ['AZCOPY_SAS']}"
@@ -102,18 +103,19 @@ def render(
 
     # run blender
     odir = "rendered"
+    ofname = join(odir, fname) + (".mkv" if mkv else "")
     Path(odir).mkdir(exist_ok=True)
     sh.Command('/blender/blender')([
         '-b',
         f'blend/{fname}.blend',
         '--render-output',
-        join(odir, fname) + (".mkv" if mkv else ""),
+        ofname,
         '-a',
     ])
 
     # upload result
     sh.azcopy.copy([
-        f"{odir}/*",
+        f"{ofname}*",
         (
             "https://titansfileserver.blob.core.windows.net/"
             + f"{odir}/{os.environ['AZCOPY_SAS']}"
