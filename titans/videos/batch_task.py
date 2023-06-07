@@ -69,13 +69,13 @@ def animate(
     ])
 
     # upload result
-    sh.az.storage.blob([
-        'upload-batch',
-        '-s',
-        odir,
-        '-d',
-        odir,
-        '--overwrite',
+    sh.azcopy.copy([
+        f"{odir}/*",
+        (
+            "https://titansfileserver.blob.core.windows.net/"
+            + f"{odir}/{os.environ['AZCOPY_SAS']}"
+        ),
+        "--recursive",
     ])
 
 
