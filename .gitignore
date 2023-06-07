@@ -12,7 +12,7 @@
 
 # temp files
 /titans/pdfset/order.yaml
-scratch.*
+/scratch*
 
 # test files
 __pycache__
