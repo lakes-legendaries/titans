@@ -201,8 +201,8 @@ def animate(
             args.append(f"""
                 animate
                 --fname "{fname}"
-                --first_frame {first_frame}
-                --final_frame {final_frame}
+                --first-frame {first_frame}
+                --final-frame {final_frame}
             """)
 
     # submit jobs
