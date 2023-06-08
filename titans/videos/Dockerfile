@@ -22,7 +22,8 @@ RUN apt-get install -y \
     subversion \
     wayland-protocols \
     wget \
-    xz-utils
+    xz-utils \
+    yasm
 
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
@@ -41,6 +42,11 @@ RUN wget $BLENDER_URL/$BLENDER_FNAME.tar.xz
 RUN tar xvf $BLENDER_FNAME.tar.xz
 RUN rm $BLENDER_FNAME.tar.xz
 RUN mv $BLENDER_FNAME /blender
+
+# install aom
+RUN git clone https://aomedia.googlesource.com/aom
+RUN mkdir aom_build
+RUN cd aom_build && cmake ../aom && make && make install
 
 # setup python
 RUN pip install --upgrade pip
