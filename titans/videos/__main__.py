@@ -61,7 +61,7 @@ def _submit_jobs(
     # function to name tasks
     submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
     def task_name(n: int, /) -> str:  # noqa
-        return f"render-{submission_time}-{n}"
+        return f"{job}-{submission_time}-{n}"
 
     # build tasks json
     all_tasks: list[dict] = []
