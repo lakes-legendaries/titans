@@ -197,28 +197,12 @@ def convert(fname: str = typer.Option(...)):
 
     # convert to av1
     ofname_av1 = f"{ofname}.av1.mp4"
-    common_docker = [
-        "--rm",
-        "-v",
-        f"{os.getcwd()}:{os.getcwd()}",
-        "-w",
-        os.getcwd(),
-    ]
-    sh.docker.run(
-        *common_docker,
-        "mwader/static-ffmpeg:5.0.1-3",
+    sh.ffmpeg(
         *common_ffmpeg,
-        "libsvtav1",
-        "-preset",
-        "4",
+        "libaom-av1",
+        "-crf",
+        "30",
         ofname_av1,
-    )
-    sh.docker.run(
-        *common_docker,
-        "debian:stable-slim",
-        "/bin/bash",
-        "-c",
-        f'"chmod 777 {ofname_av1}"',
     )
     upload(ofname_av1)
 
