@@ -19,12 +19,12 @@ app = typer.Typer()
 
 
 def _submit_jobs(
-        args: list[str],
-        /,
-        job: str,
-        *,
-        dependencies: list[list[int]] | None = None,
-        local: bool = False,
+    args: list[str],
+    /,
+    job: str,
+    *,
+    dependencies: list[list[int]] | None = None,
+    local: bool = False,
 ):
     """Submit jobs to azure batch
 
