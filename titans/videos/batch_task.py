@@ -154,7 +154,19 @@ def convert(fname: str = typer.Option(...)):
     )
     Path(odir).mkdir(exist_ok=True)
 
+    # function to upload
+    def upload(ofname_full: str):
+        sh.azcopy.copy([
+            f"{ofname_full}",
+            (
+                "https://titansfileserver.blob.core.windows.net/"
+                + f"{odir}/{os.environ['AZCOPY_SAS']}"
+            ),
+            "--recursive",
+        ])
+
     # convert to H.264
+    ofname_h264 = f"{ofname}.h264.mp4"
     common_ffmpeg = [
         "-i",
         ifname,
@@ -168,19 +180,23 @@ def convert(fname: str = typer.Option(...)):
         "libx264",
         "-c:a",
         "aac",
-        ofname + ".h264.mp4",
+        ofname_h264,
     )
+    upload(ofname_h264)
 
     # convert to H.265
+    ofname_h265 = f"{ofname}.h265.mp4"
     sh.ffmpeg(
         *common_ffmpeg,
         "libx265",
         "-vtag",
         "hvc1",
-        ofname + ".h265.mp4",
+        ofname_h265,
     )
+    upload(ofname_h265)
 
     # convert to av1
+    ofname_av1 = f"{ofname}.av1.mp4"
     common_docker = [
         "--rm",
         "-v",
@@ -195,17 +211,19 @@ def convert(fname: str = typer.Option(...)):
         "libsvtav1",
         "-preset",
         "4",
-        ofname + ".av1.mp4",
+        ofname_av1,
     )
     sh.docker.run(
         *common_docker,
         "debian:stable-slim",
         "/bin/bash",
         "-c",
-        f'"chmod 777 {ofname}.av1.mp4"',
+        f'"chmod 777 {ofname_av1}"',
     )
+    upload(ofname_av1)
 
     # convert to webm
+    ofname_webm = f"{ofname}.vp9.webm"
     common_webm = [
         *common_ffmpeg,
         "libvpx-vp9",
@@ -228,18 +246,9 @@ def convert(fname: str = typer.Option(...)):
         "2",
         "-c:a",
         "libopus",
-        ofname + ".vp9.webm",
+        ofname_webm,
     )
-
-    # upload result
-    sh.azcopy.copy([
-        f"{ofname}*",
-        (
-            "https://titansfileserver.blob.core.windows.net/"
-            + f"{odir}/{os.environ['AZCOPY_SAS']}"
-        ),
-        "--recursive",
-    ])
+    upload(ofname_webm)
 
 
 # cli
