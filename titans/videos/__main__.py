@@ -370,7 +370,7 @@ def convert(
     # build argsets
     args = []
     for video in videos:
-        args.append(f"convert --fname {video}")
+        args.append(f'convert --fname "{video}"')
 
     # submit jobs
     _submit_jobs(
