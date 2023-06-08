@@ -180,7 +180,7 @@ def convert(fname: str = typer.Option(...)):
         ofname + ".h265.mp4",
     )
 
-    # convert to avi
+    # convert to av1
     common_docker = [
         "--rm",
         "-v",
