@@ -349,6 +349,37 @@ def render(
     _render(fname=fname, local=local)
 
 
+@app.command()
+def convert(
+    fname: str = Option(None, help="""
+        if provided, only convert this video file (instead of all video files)
+    """),
+    local: bool = Option(False, help="""
+        run locally (instead of on batch). For debugging.
+    """),
+):
+
+    # file list
+    videos: list[str] = [
+        "Landing Video",
+        "Empire Video",
+        "No-Wait Video",
+        "Constructed Video",
+    ] if fname is None else [fname]
+
+    # build argsets
+    args = []
+    for video in videos:
+        args.append(f"convert --fname {video}")
+
+    # submit jobs
+    _submit_jobs(
+        args,
+        job="convert",
+        local=local,
+    )
+
+
 # cli
 if __name__ == "__main__":
     app()
