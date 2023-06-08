@@ -6,6 +6,7 @@ RUN apt-get install -y \
     build-essential \
     cmake \
     curl \
+    ffmpeg \
     git \
     libdbus-1-dev \
     libegl-dev \
