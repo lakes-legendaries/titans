@@ -3,6 +3,7 @@
 import os
 from os.path import join
 from pathlib import Path
+import re
 
 import sh
 import typer
@@ -112,6 +113,116 @@ def render(
         ofname,
         '-a',
     ])
+
+    # upload result
+    sh.azcopy.copy([
+        f"{ofname}*",
+        (
+            "https://titansfileserver.blob.core.windows.net/"
+            + f"{odir}/{os.environ['AZCOPY_SAS']}"
+        ),
+        "--recursive",
+    ])
+
+
+@app.command()
+def convert(fname: str = typer.Option(...)):
+    """Convert mkv to modern video container formats
+
+    Parameters
+    ----------
+    fname: str
+        input video filename
+    """
+
+    # download files
+    _download_containers("rendered")
+
+    # get output filename
+    odir = "videos"
+    ofname = re.sub(
+        r"[^a-zA-Z0-9.]",
+        r"_",
+        join(odir, fname),
+    ).lower().removesuffix(".mkv")
+    Path(odir).mkdir(exist_ok=True)
+
+    # convert to H.264
+    common_ffmpeg = [
+        "-i",
+        fname,
+        "-strict",
+        "-2",
+        "-y",
+        "-c:v",
+    ]
+    sh.ffmpeg(
+        *common_ffmpeg,
+        "libx264",
+        "-c:a",
+        "aac",
+        ofname + ".h264.mp4",
+    )
+
+    # convert to H.265
+    sh.ffmpeg(
+        *common_ffmpeg,
+        "libx265",
+        "-vtag",
+        "hvc1",
+        ofname + ".h265.mp4",
+    )
+
+    # convert to avi
+    common_docker = [
+        "--rm",
+        "-v",
+        f"{os.getcwd()}:{os.getcwd()}",
+        "-w",
+        os.getcwd(),
+    ]
+    sh.docker.run(
+        *common_docker,
+        "mwader/static-ffmpeg:5.0.1-3",
+        *common_ffmpeg,
+        "libsvtav1",
+        "-preset",
+        "4",
+        ofname + ".av1.mp4",
+    )
+    sh.docker.run(
+        *common_docker,
+        "debian:stable-slim",
+        "/bin/bash",
+        "-c",
+        f'"chmod 777 {ofname}.av1.mp4"',
+    )
+
+    # convert to webm
+    common_webm = [
+        *common_ffmpeg,
+        "libvpx-vp9",
+        "-b:v",
+        "0",
+        "-crf",
+        "50",
+        "-pass",
+    ]
+    sh.ffmpeg(
+        *common_webm,
+        "1",
+        "-an",
+        "-f",
+        "null",
+        "/dev/null",
+    )
+    sh.ffmpeg(
+        *common_webm,
+        "2",
+        "-c:a",
+        "libopus",
+        ofname + ".vp9.webm",
+    )
 
     # upload result
     sh.azcopy.copy([
