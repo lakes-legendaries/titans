@@ -140,17 +140,24 @@ def convert(fname: str = typer.Option(...)):
 
     # get output filename
     odir = "videos"
-    ofname = re.sub(
-        r"[^a-zA-Z0-9.]",
-        r"_",
-        join(odir, fname),
-    ).lower().removesuffix(".mkv")
+    ifname = join("rendered", fname) + ".mkv"
+    ofname = join(
+        odir,
+        (
+            re.sub(
+                r"[^a-zA-Z0-9.]",
+                r"_",
+                fname,
+            ).lower()
+            .removesuffix(".mkv")
+        ),
+    )
     Path(odir).mkdir(exist_ok=True)
 
     # convert to H.264
     common_ffmpeg = [
         "-i",
-        fname,
+        ifname,
         "-strict",
         "-2",
         "-y",
