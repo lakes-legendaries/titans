@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# get access
+if [ -z "$AZURE_STORAGE_CONNECTION_STRING" ]; then
+    SECRETS_FILE=~/secrets/titans-fileserver-dev
+    if [ ! -f $SECRETS_FILE ]; then
+        echo "Cannot connect to Azure. "
+        echo "Set AZURE_STORAGE_CONNECTION_STRING, "
+        echo "or provide it in $SECRETS_FILE"
+        exit 1
+    fi
+    export AZURE_STORAGE_CONNECTION_STRING="$(cat $SECRETS_FILE)"
+fi
+
+# upload
+az storage blob upload-batch \
+    -d "\$web" \
+    -s titans-demo \
+    --destination-path titans-demo \
+    --no-progress \
+1> /dev/null
+az storage blob upload \
+    -c "\$web" \
+    -f titans-demo.html \
+    -n titans-demo.html \
+    --no-progress \
+1> /dev/null
