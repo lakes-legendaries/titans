@@ -12,7 +12,7 @@ var abilities = {
 	bolster_ice        :  2,
 	bolster_rivals     :  3,
 	bolster_rock       :  4,
-	bolster_storm        :  5,
+	bolster_storm      :  5,
 	discard            :  6,
 	draw               :  7,
 	energy             :  8,
