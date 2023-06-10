@@ -22,12 +22,12 @@ def upload(
     ----------
     source: str
         file (or directory) to upload
-    dest: str, optional, default=None
-        destination file/folder. If None, use :code:`basename(source)`
     *args: Any
         extra args to pass to :code:`az storage blob upload` command
     container: str, optional, default='$web'
         blob container to upload to
+    dest: str, optional, default=None
+        destination file/folder. If None, use :code:`basename(source)`
     dest: str, optional, default=None
         destination filepath in container. If None, use
         :code:`basename(source)`
