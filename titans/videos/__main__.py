@@ -371,7 +371,7 @@ def convert(
         "Elements Clip",
         "Interactive Clip",
         "No-Wait Clip",
-        "Consructed Clip",
+        "Constructed Clip",
         "Empire Clip",
     ] if fname is None else [fname]
 
