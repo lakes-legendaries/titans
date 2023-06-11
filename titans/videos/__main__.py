@@ -47,7 +47,7 @@ def _submit_jobs(
             SELECT Value from creds
             Where Name = '{key}'
         """).fetchone()[0]
-        for key in ['azurecr', 'batch', 'prod_sas']
+        for key in ['azurecr', 'batch', 'dev_sas', 'prod_sas']
     }
 
     # set env vars that let us submit jobs to azure batch
@@ -73,6 +73,7 @@ def _submit_jobs(
                 --username titansofeden
                 --password "{creds['azurecr']}"
             && docker run
+                --env AZCOPY_DEV_SAS="{creds['dev_sas']}"
                 --env AZCOPY_SAS="{creds['prod_sas']}"
                 titansofeden.azurecr.io/titans:videos
                 {argset}

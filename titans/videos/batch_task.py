@@ -139,28 +139,23 @@ def convert(fname: str = typer.Option(...)):
     _download_containers("rendered")
 
     # get output filename
-    odir = "videos"
     ifname = join("rendered", fname) + ".mkv"
-    ofname = join(
-        odir,
-        (
-            re.sub(
-                r"[^a-zA-Z0-9.]",
-                r"_",
-                fname,
-            ).lower()
-            .removesuffix(".mkv")
-        ),
+    ofname = (
+        re.sub(
+            r"[^a-zA-Z0-9.]",
+            r"_",
+            fname,
+        ).lower()
+        .removesuffix(".mkv")
     )
-    Path(odir).mkdir(exist_ok=True)
 
     # function to upload
     def upload(ofname_full: str):
         sh.azcopy.copy([
             f"{ofname_full}",
             (
-                "https://titansfileserver.blob.core.windows.net/"
-                + f"{odir}/{os.environ['AZCOPY_SAS']}"
+                "https://titansfileserverdev.blob.core.windows.net/"
+                + f"$web/vid/{os.environ['AZCOPY_DEV_SAS']}"
             ),
             "--recursive",
         ])
