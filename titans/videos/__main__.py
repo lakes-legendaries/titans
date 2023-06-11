@@ -361,6 +361,7 @@ def convert(
 
     # file list
     videos: list[str] = [
+        "Title Video",
         "Landing Video",
         "Empire Video",
         "No-Wait Video",
