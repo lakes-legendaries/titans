@@ -125,6 +125,87 @@ def render(
     ])
 
 
+def _make_clip(name: str, ofname: str):
+    """Make video clip by extracting from video
+
+    Parameters
+    ----------
+    name: str
+        name of clip
+    ofname: str
+        output filename for this function (not to be confused with output
+        filename for `convert`)
+    """
+
+    # parameters for clip extraction
+    params = {
+        'Elements Clip': {
+            'source': 'rendered/Landing Video.mkv',
+            'start': '00:00:15.75',
+            'duration': '00:00:05.00',
+        },
+        'Interactive Clip': {
+            'source': 'rendered/Landing Video.mkv',
+            'start': '00:00:22.00',
+            'duration': '00:00:15.50',
+        },
+        'No-Wait Clip': {
+            'source': 'rendered/Landing Video.mkv',
+            'start': '00:00:38.00',
+            'duration': '00:00:11.00',
+        },
+        'Constructed Clip': {
+            'source': 'rendered/Landing Video.mkv',
+            'start': '00:01:04.50',
+            'duration': '00:00:09.00',
+        },
+        'Empire Clip': {
+            'source': 'rendered/Empire Video.mkv',
+            'start': '00:01:11.50',
+            'duration': '00:00:19.50',
+            'speedup': 2,
+        },
+    }
+
+    # crop video
+    tmp_ofname = [f'{name}-cropped.mp4']
+    sh.ffmpeg(
+        '-ss',
+        params[name]["start"],
+        '-i',
+        params[name]["source"],
+        '-t',
+        params[name]["duration"],
+        '-y',
+        '-an',
+        '-filter:v',
+        'crop=1920:1000:0:0',
+        tmp_ofname[-1],
+    )
+
+    # speedup video
+    if "speedup" in params[name]:
+        tmp_ofname.append(f'{name}-speedup.mp4')
+        sh.ffmpeg(
+            '-i',
+            tmp_ofname[-2],
+            '-y',
+            '-filter:v',
+            f"setpts=PTS/{params[name]['speedup']}",
+            tmp_ofname[-1],
+        )
+
+    # add pause to end of video
+    sh.ffmpeg(
+        '-i',
+        tmp_ofname[-1],
+        '-y',
+        '-vf',
+        'tpad=stop_mode=clone:stop_duration=2',
+        ofname,
+    )
+
+
 @app.command()
 def convert(fname: str = typer.Option(...)):
     """Convert mkv to modern video container formats
@@ -132,13 +213,13 @@ def convert(fname: str = typer.Option(...)):
     Parameters
     ----------
     fname: str
-        input video filename
+        video name
     """
 
     # download files
     _download_containers("rendered")
 
-    # get output filename
+    # get input/output filename
     ifname = join("rendered", fname) + ".mkv"
     ofname = (
         re.sub(
@@ -148,6 +229,10 @@ def convert(fname: str = typer.Option(...)):
         ).lower()
         .removesuffix(".mkv")
     )
+
+    # make video clip
+    if fname.endswith("Clip"):
+        _make_clip(fname, ofname=ifname)
 
     # function to upload
     def upload(ofname_full: str):

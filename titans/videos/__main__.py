@@ -362,11 +362,17 @@ def convert(
 
     # file list
     videos: list[str] = [
+        "Card Flip",
         "Title Video",
         "Landing Video",
         "Empire Video",
         "No-Wait Video",
         "Constructed Video",
+        "Elements Clip",
+        "Interactive Clip",
+        "No-Wait Clip",
+        "Consructed Clip",
+        "Empire Clip",
     ] if fname is None else [fname]
 
     # build argsets
