@@ -195,17 +195,6 @@ def convert(fname: str = typer.Option(...)):
     )
     upload(ofname_h265)
 
-    # convert to av1
-    ofname_av1 = f"{ofname}.av1.mp4"
-    sh.ffmpeg(
-        *common_ffmpeg,
-        "libaom-av1",
-        "-crf",
-        "30",
-        ofname_av1,
-    )
-    upload(ofname_av1)
-
     # convert to webm
     ofname_webm = f"{ofname}.vp9.webm"
     common_webm = [
