@@ -1,9 +1,10 @@
-from titansemail import SendEmails
 import yaml
+
+from titans.email import SendEmails
 
 
 def subscribe_test():
-    SendEmails(**yaml.safe_load(open('email/config.yaml', 'r')))
+    SendEmails(**yaml.safe_load(open('email/test/config.yaml', 'r')))
 
 
 if __name__ == '__main__':

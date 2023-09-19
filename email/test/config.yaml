@@ -1,0 +1,8 @@
+subject: Welcome to Titans Of Eden!
+body: email/test/body.html
+attachments: [
+  email/assets/box.png,
+  email/assets/divider.png,
+  email/assets/logo.png,
+  email/assets/summoning.png,
+]

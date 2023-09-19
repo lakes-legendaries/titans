@@ -2,6 +2,7 @@
 
 from os import chdir, listdir
 from os.path import dirname, join, realpath
+from pathlib import Path
 import re
 
 
@@ -34,6 +35,9 @@ def compile():
         contents = re.sub(r'[ ]{2,}', ' ', contents)
         contents = re.sub(r'^ ', '', contents, flags=re.MULTILINE)
         contents = re.sub(r'\n{2,}', '\n', contents, flags=re.MULTILINE)
+
+        # create output folder (if missing)
+        Path("site").mkdir(exist_ok=True)
 
         # write compiled html file
         ofname = 'site/' + fname.rsplit('.')[0]
