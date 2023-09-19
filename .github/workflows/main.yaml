@@ -41,7 +41,7 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     environment: actions
-    needs: version
+    needs: strongly-version
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
