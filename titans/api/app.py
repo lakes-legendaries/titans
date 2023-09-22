@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import yaml
 
 from titans.email import SendEmails
 
@@ -82,6 +83,19 @@ def subscribe(email: str):
         INSERT INTO contacts (Email)
         VALUES ("{email}")
     """)
+
+    # send welcome email
+    try:
+        email_config = yaml.safe_load(open("email/test/config.yaml"))
+        SendEmails(**email_config)
+    except Exception:
+        return {
+            **job_info,
+            'success': False,
+            'reason': 'Failed to send welcome email',
+        }
+
+    # return success
     return {
         **job_info,
         'success': True,

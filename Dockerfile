@@ -16,6 +16,7 @@ ENV PYTHONPATH .
 
 # setup app
 ENV SECRETS_DIR /secrets
+COPY email/ email/
 COPY titans/ titans/
 CMD [ \
     "uvicorn", "titans.api.app:app", "--host", "0.0.0.0", "--port", "443", \

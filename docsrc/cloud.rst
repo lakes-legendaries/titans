@@ -254,9 +254,33 @@ insertions made from the website. This includes:
 
 Entries and scanned, sanitizied, and validating before insertions take place.
 
+Emails are additionally automatically sent by the API whenever a comment is
+left on the website, or whenever a new subscriber joins the email list.
+
 The API can be accessed `here <https://titansapi.eastus.cloudapp.azure.com/>`_.
 FastAPI docs for this API are located `here
 <https://titansapi.eastus.cloudapp.azure.com/docs>`_.
+
+Updates
+=======
+
+If you want to test changes to the API before going live, you can update the
+code, and then run (on the webserver):
+
+.. code-block:: bash
+
+   webserver/test-api.sh
+
+This will spin up a copy of the API on the webserver at the port 1024, which
+can be accessed `here <https://titansapi.eastus.cloudapp.azure.com:1024>`_.
+
+To update the real API, push your changes to GitHub, then run:
+
+.. code-block:: bash
+
+   webserver/run-service.sh
+
+This command is automatically run every time the webserver restarts.
 
 ******
 Emails
@@ -264,6 +288,9 @@ Emails
 
 This package handles sending emails to all of our subscribers, all from the
 command line. This uses the MS 365 Graph API to execute sending.
+
+Emails are additionally automatically sent whenever a comment is left on the
+website, or whenever a new subscriber joins the email list.
 
 Authenticating
 ==============
