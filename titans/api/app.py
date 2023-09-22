@@ -86,8 +86,8 @@ def subscribe(email: str):
 
     # send welcome email
     try:
-        email_config = yaml.safe_load(open("email/test/config.yaml"))
-        SendEmails(**email_config)
+        email_config = yaml.safe_load(open("email/welcome/config.yaml"))
+        SendEmails(**email_config, recipients=email)
     except Exception:
         return {
             **job_info,
