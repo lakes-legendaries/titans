@@ -194,3 +194,57 @@ def comment(comment: str, email: Optional[str] = ''):
         **job_info,
         'success': True,
     }
+
+
+@app.get('/poll/{name}')
+def poll(name: str, email: str, response: str):
+    """Respond to a poll
+
+    Parameters
+    ----------
+    name: str
+        name of poll
+    email: str
+        email of responder
+    response: str
+        response to poll
+    """
+
+    # sanitize input
+    name = sanitize(name)
+    email = sanitize(email).lower()
+    response = sanitize(response)
+
+    # get job info
+    job_info = {
+        **app_info,
+        'operation': 'poll',
+        'name': name,
+        'email': email,
+        'response': response,
+    }
+
+    # check if email already responded
+    engine = connect()
+    count = engine.execute(f"""
+        SELECT COUNT(*) FROM {name}
+        WHERE Email = "{email}"
+    """).fetchone()[0]
+    if count:
+        return {
+            **job_info,
+            'success': False,
+            'reason': "Email address has already responded",
+        }
+
+    # insert response into table
+    connect().execute(f"""
+        INSERT INTO {name} (Email, Response)
+        VALUES ("{email}", "{response}")
+    """)
+
+    # return success
+    return {
+        **job_info,
+        'success': True,
+    }

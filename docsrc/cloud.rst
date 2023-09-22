@@ -389,3 +389,38 @@ To send a test email, run:
    python tests/titans/api/subscribe_test.py
 
 Please note that this test will fail unless it's run on the whitelisted VM!
+
+Polls
+=====
+
+Periodically, we run polls out of the email service. To do so:
+
+#. Create a new table in the database:
+
+   .. code-block:: bash
+   
+      python titans/sql/polls.py table_name
+
+   This table will store the poll responses.
+
+#. Build the email that will contain this poll. This email needs to have links
+   that the recipient can click on that query the API. These responses have to
+   look like:
+
+   .. code-block:: text
+
+      https://titansapi.eastus.cloudapp.azure.com/poll/POLL_NAME?email=#|EMAIL|#&response=RESPONSE
+
+   which includes the parameters:
+
+   #. :code:`POLL_NAME``: The name of the poll, which is the name of the table
+      created in the previous step.
+
+   #. :code:`EMAIL`: The email of the responder, which will be auto-inserted by
+      the email client. (The string :code:`#|EMAIL|#` is a special string that
+      is processed by the email client.)
+
+   #. :code:`RESPONSE`: The response to the poll, which should be hard-coded
+      for each clickable link.
+
+#. Send the email, and check the results as they roll in!

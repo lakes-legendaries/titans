@@ -14,6 +14,7 @@
 /titans/pdfset/order.yaml
 /scratch*
 /TODO
+/*.sql
 
 # test files
 __pycache__
