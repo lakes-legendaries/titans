@@ -68,7 +68,7 @@ instr.update = function() {
 	
 	// Show tutorial text
 	if (instr.beginning && age.major() == 0 && age.minor() == 0) {
-		instr.show("Welcome to the online demo for Titans of Eden, an upcoming tabletop card game that will launch on KickStarter in 2021.\n\nFirst time playing? Click the Tutorial button below.\n\nTo start the game, play a card. Your opponent will play a card at the same time you do.");
+		instr.show("Welcome to the online demo for Titans of Eden, an upcoming tabletop card game.\n\nFirst time playing? Click the Tutorial button below.\n\nTo start the game, play a card. Your opponent will play a card at the same time you do.");
 		return;
 	} else {instr.beginning = false;}
 	
