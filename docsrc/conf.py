@@ -1,5 +1,5 @@
 project = "titans"
-version = "1.0.6"
+version = "1.0.7"
 copyright = "2023 Lake's Legendaries LLC"
 author = "Mike Powell PhD"
 
