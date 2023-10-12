@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.player &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.player</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.player</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Player module&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generator</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">titans.ai.card</span> <span class="kn">import</span> <span class="n">Card</span>
+<span class="kn">from</span> <span class="nn">titans.ai.enum</span> <span class="kn">import</span> <span class="n">Ability</span><span class="p">,</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Identity</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Zone</span>
+<span class="kn">from</span> <span class="nn">titans.ai.strategy</span> <span class="kn">import</span> <span class="n">RandomStrategy</span><span class="p">,</span> <span class="n">Strategy</span>
+
+
+<div class="viewcode-block" id="Player"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player">[docs]</a><span class="k">class</span> <span class="nc">Player</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Player class</span>
+
+<span class="sd">    This class performs all of the core operations of each player. These</span>
+<span class="sd">    actions are meant to be relatively low-level: The logic of walking through</span>
+<span class="sd">    an actual game is located in the `titans.ai.game.Game` class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    identity: Identity</span>
+<span class="sd">        player&#39;s identity</span>
+<span class="sd">    cards: list[Card]</span>
+<span class="sd">        cards used in this game</span>
+<span class="sd">    strategies: dict[Action, Strategy] | None, optional, default=None</span>
+<span class="sd">        strategies for performing actions. If None, random choices will be used</span>
+<span class="sd">    random_state: int | None, optional, default=None</span>
+<span class="sd">        player&#39;s random seed</span>
+<span class="sd">    temperature: float | None, optional, default=None</span>
+<span class="sd">        randomness to add into decision making. This is important for making</span>
+<span class="sd">        sure strategies don&#39;t get stuck in local minimums during training.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cards: dict[Zone, list[Card]]</span>
+<span class="sd">        player&#39;s cards, in each zone</span>
+<span class="sd">    identity: Identity</span>
+<span class="sd">        player&#39;s identity</span>
+<span class="sd">    ritual_piles: list[Card]</span>
+<span class="sd">        cards in the shared ritual piles. This is harmonized between players in</span>
+<span class="sd">        Player.handshake()</span>
+<span class="sd">    strategies: dict[Action, Strategy]</span>
+<span class="sd">        strategies for performing actions</span>
+<span class="sd">    temples: int</span>
+<span class="sd">        number of temples under player&#39;s control</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">identity</span><span class="p">:</span> <span class="n">Identity</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="n">cards</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Card</span><span class="p">],</span>
+        <span class="n">strategies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># save identity and strategies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">:</span> <span class="n">Identity</span> <span class="o">=</span> <span class="n">identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">strategies</span>
+            <span class="k">if</span> <span class="n">strategies</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">{</span>
+                <span class="n">action</span><span class="p">:</span> <span class="n">RandomStrategy</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+
+        <span class="c1"># initialize player&#39;s card zones and temples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Zone</span> <span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">card</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">zone</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">Zone</span><span class="p">}</span>
+
+        <span class="c1"># create deck and ritual piles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Card</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">card</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cards</span><span class="p">):</span>
+            <span class="c1"># make starting deck</span>
+            <span class="k">if</span> <span class="n">card</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Name</span><span class="o">.</span><span class="n">MONK</span><span class="p">,</span> <span class="n">Name</span><span class="o">.</span><span class="n">WIZARD</span><span class="p">]:</span>
+                <span class="c1"># this player gets every other starting card</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">Identity</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+
+            <span class="c1"># add card to ritual piles</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+
+        <span class="c1"># initialize placeholders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span><span class="p">:</span> <span class="n">Player</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decision_matrices</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># initialize rng</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_stochasticity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decision_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add noise to decision matrix</span>
+
+<span class="sd">        Amplitude is decided by temperature</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        decision_matrix: np.ndarray</span>
+<span class="sd">            input decision matrix</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            decision matrix with noise applied</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                <span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_temperature</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">decision_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">multiplier</span><span class="p">[</span><span class="n">multiplier</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">decision_matrix</span> <span class="o">*=</span> <span class="n">multiplier</span>
+        <span class="k">return</span> <span class="n">decision_matrix</span>
+
+    <span class="k">def</span> <span class="nf">_get_individual_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">public</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get player state</span>
+
+<span class="sd">        This is the numeric state that is fed into the ML model as the training</span>
+<span class="sd">        data (when combining a player&#39;s own private state with their opponent&#39;s</span>
+<span class="sd">        public state). The public state is the knowledge your opponent has,</span>
+<span class="sd">        while the private verstion includes which cards are in your hand.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        public: bool</span>
+<span class="sd">            whether to only include public knowledge in the state</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            numeric representation of player&#39;s state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># initialzie state</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># get cards in each zone</span>
+        <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">Zone</span><span class="p">:</span>
+            <span class="c1"># skip hand if public knowledge only</span>
+            <span class="k">if</span> <span class="n">public</span> <span class="ow">and</span> <span class="n">zone</span> <span class="o">==</span> <span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># get counts in zone</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Name</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">zone</span><span class="p">]:</span>
+                <span class="n">counts</span><span class="p">[</span><span class="n">card</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># combine hand and deck for public knowledge only</span>
+            <span class="k">if</span> <span class="n">public</span> <span class="ow">and</span> <span class="n">zone</span> <span class="o">==</span> <span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">]:</span>
+                    <span class="n">counts</span><span class="p">[</span><span class="n">card</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># append counts to state</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">state</span><span class="p">,</span> <span class="n">counts</span><span class="p">))</span>
+
+        <span class="c1"># get overall card counts for each zone. This helps with</span>
+        <span class="c1"># publicly-available knowledge.</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">state</span><span class="p">,</span>
+                <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">cards</span><span class="p">)</span> <span class="k">for</span> <span class="n">cards</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># return</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+<div class="viewcode-block" id="Player.awaken_card"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.awaken_card">[docs]</a>    <span class="k">def</span> <span class="nf">awaken_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Card</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Awaken a card from the ritual piles</span>
+
+<span class="sd">        The awakened card is added to your discard pile. You can always choose</span>
+<span class="sd">        to not awaken.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Card | None</span>
+<span class="sd">            awakened card. This is automatically added to the discard zone but</span>
+<span class="sd">            is returned here for easy debugging / logging. None is returned if</span>
+<span class="sd">            we choose to not awaken.</span>
+<span class="sd">        int</span>
+<span class="sd">            decision made. This is the index of the decision matrix that was</span>
+<span class="sd">            ultimately chosen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get decision matrix</span>
+        <span class="n">decision_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_stochasticity</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">[</span><span class="n">Action</span><span class="o">.</span><span class="n">AWAKEN</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_matrices</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decision_matrices</span><span class="p">[</span><span class="n">Action</span><span class="o">.</span><span class="n">AWAKEN</span><span class="p">])</span>
+        <span class="p">)</span>
+
+        <span class="c1"># get our current energy</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_energy</span><span class="p">()</span>
+
+        <span class="c1"># awaken highest-valued accessible card we can afford</span>
+        <span class="n">name_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">card</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">decision_matrix</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># choose to not awaken</span>
+            <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">Name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">choice</span>
+
+            <span class="c1"># check if card is in ritual piles</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">matches</span> <span class="o">:=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">name_list</span> <span class="o">==</span> <span class="n">choice</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="c1"># get chosen card</span>
+                <span class="n">ritual_piles_idx</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">card</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span><span class="p">[</span><span class="n">ritual_piles_idx</span><span class="p">]</span>
+
+                <span class="c1"># check if we have enough energy to awaken</span>
+                <span class="k">if</span> <span class="n">energy</span> <span class="o">&lt;</span> <span class="n">card</span><span class="o">.</span><span class="n">cost</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># awaken card</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ritual_piles_idx</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DISCARD</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">card</span><span class="p">,</span> <span class="n">choice</span>
+
+        <span class="c1"># error</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Code error in awakening card&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Player.battle_opponent"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.battle_opponent">[docs]</a>    <span class="k">def</span> <span class="nf">battle_opponent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Identity</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Battle opponent</span>
+
+<span class="sd">        This should NOT be called for each player, but only once</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Identity | None</span>
+<span class="sd">            winner of the battle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># make sure opponent is initialized</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;No opponent set!&quot;</span>
+                <span class="s2">&quot; You must run Player.handshake() before playing!&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># get power difference</span>
+        <span class="n">power_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_power</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span><span class="o">.</span><span class="n">get_power</span><span class="p">()</span>
+
+        <span class="c1"># battle is fought to a draw</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">power_delta</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># find winner and loser</span>
+        <span class="n">winner</span> <span class="o">=</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">power_delta</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span>
+        <span class="n">loser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span> <span class="k">if</span> <span class="n">power_delta</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span>
+
+        <span class="c1"># update temple count</span>
+        <span class="n">loser</span><span class="o">.</span><span class="n">temples</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">winner</span><span class="o">.</span><span class="n">temples</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">winner</span><span class="o">.</span><span class="n">temples</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># return winner</span>
+        <span class="k">return</span> <span class="n">winner</span><span class="o">.</span><span class="n">identity</span></div>
+
+<div class="viewcode-block" id="Player.draw_cards"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.draw_cards">[docs]</a>    <span class="k">def</span> <span class="nf">draw_cards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Card</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw cards</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        count: int</span>
+<span class="sd">            number of cards to draw</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[Card]</span>
+<span class="sd">            the cards drawn. These are added to the hand zone, but are also</span>
+<span class="sd">            returned for easy debugging / logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">drawn</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+            <span class="c1"># if we run out of cards to draw, then stop early</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">drawn</span>
+
+            <span class="c1"># draw card, add to hand</span>
+            <span class="n">drawn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drawn</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># return list of drawn cards</span>
+        <span class="k">return</span> <span class="n">drawn</span></div>
+
+<div class="viewcode-block" id="Player.freeze_state"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.freeze_state">[docs]</a>    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">freeze_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Freeze state (for simultaneous actions)</span>
+
+<span class="sd">        This causes self.get_state() to return what the state is when you call</span>
+<span class="sd">        self.freeze_state().</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Player.get_energy"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.get_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get total energy from all cards in play</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            available energy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]:</span>
+            <span class="n">energy</span> <span class="o">+=</span> <span class="n">card</span><span class="o">.</span><span class="n">abilities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Ability</span><span class="o">.</span><span class="n">ENERGY</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">energy</span></div>
+
+<div class="viewcode-block" id="Player.get_power"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.get_power">[docs]</a>    <span class="k">def</span> <span class="nf">get_power</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get total power from all cards in play</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            total power</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]:</span>
+            <span class="n">power</span> <span class="o">+=</span> <span class="n">card</span><span class="o">.</span><span class="n">power</span>
+        <span class="k">return</span> <span class="n">power</span></div>
+
+<div class="viewcode-block" id="Player.get_state"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.get_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Player&#39;s state</span>
+
+<span class="sd">        This is the numeric state that is fed into the ML model as the training</span>
+<span class="sd">        data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            state, from this instance&#39;s point-of-view</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># make sure opponent is initialized</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;No opponent set!&quot;</span>
+                <span class="s2">&quot; You must run Player.handshake() before playing!&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># return frozen state</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frozen_state</span>
+
+        <span class="c1"># return state</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_individual_state</span><span class="p">(</span><span class="n">public</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span><span class="o">.</span><span class="n">_get_individual_state</span><span class="p">(</span><span class="n">public</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Player.handshake"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.handshake">[docs]</a>    <span class="k">def</span> <span class="nf">handshake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opponent</span><span class="p">:</span> <span class="n">Player</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set this player&#39;s opponent (and vice-versa)</span>
+
+<span class="sd">        This sets self.opponent, which is used when getting the game state</span>
+
+<span class="sd">        You always must handshake before starting a game.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        opponent: Player</span>
+<span class="sd">            this instance&#39;s competitor for the game</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opponent</span> <span class="o">=</span> <span class="n">opponent</span>
+        <span class="n">opponent</span><span class="o">.</span><span class="n">opponent</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">opponent</span><span class="o">.</span><span class="n">ritual_piles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ritual_piles</span></div>
+
+<div class="viewcode-block" id="Player.play_cards"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.play_cards">[docs]</a>    <span class="k">def</span> <span class="nf">play_cards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Card</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Play one or more cards</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        count: int, optional, default=1</span>
+<span class="sd">            how many cards to play</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[Card]</span>
+<span class="sd">            cards played. The played card is automatically added to the play</span>
+<span class="sd">            zone, but is also returned here for easy debugging / logging</span>
+<span class="sd">        list[int]</span>
+<span class="sd">            decisions made (i.e. the indices of the decision matrix that were</span>
+<span class="sd">            executed)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize list of cards played</span>
+        <span class="n">played</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">choices</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># play multiple</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+                <span class="n">rez</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">play_cards</span><span class="p">()</span>
+                <span class="n">played</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rez</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">choices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rez</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">played</span><span class="p">,</span> <span class="n">choices</span>
+
+        <span class="c1"># get decision matrix</span>
+        <span class="n">decision_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_stochasticity</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">[</span><span class="n">Action</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_matrices</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_decision_matrices</span><span class="p">[</span><span class="n">Action</span><span class="o">.</span><span class="n">PLAY</span><span class="p">])</span>
+        <span class="p">)</span>
+
+        <span class="c1"># play highest-valued card that we can play</span>
+        <span class="n">name_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">card</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">decision_matrix</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># play top card of deck</span>
+            <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">card</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">played</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+                <span class="k">break</span>
+
+            <span class="c1"># play card from hand</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">matches</span> <span class="o">:=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">name_list</span> <span class="o">==</span> <span class="n">choice</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">card</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">played</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="c1"># return card played and choice made</span>
+        <span class="k">return</span> <span class="n">played</span><span class="p">,</span> <span class="n">choices</span></div>
+
+<div class="viewcode-block" id="Player.shuffle_cards"><a class="viewcode-back" href="../../../ai.html#titans.ai.player.Player.shuffle_cards">[docs]</a>    <span class="k">def</span> <span class="nf">shuffle_cards</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shuffle all cards together&quot;&quot;&quot;</span>
+
+        <span class="c1"># move all cards to the deck</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DISCARD</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">HAND</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">PLAY</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># clear out other zones</span>
+        <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">Zone</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">zone</span> <span class="o">!=</span> <span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">zone</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c1"># shuffle order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">Zone</span><span class="o">.</span><span class="n">DECK</span><span class="p">])</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.trainer &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.trainer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.trainer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Trainer module&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Self</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">titans.ai.constants</span> <span class="kn">import</span> <span class="n">NUM_CHOICES</span><span class="p">,</span> <span class="n">NUM_FEATURES</span>
+<span class="kn">from</span> <span class="nn">titans.ai.enum</span> <span class="kn">import</span> <span class="n">Ability</span><span class="p">,</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Identity</span><span class="p">,</span> <span class="n">Name</span>
+<span class="kn">from</span> <span class="nn">titans.ai.game</span> <span class="kn">import</span> <span class="n">Game</span>
+<span class="kn">from</span> <span class="nn">titans.ai.strategy</span> <span class="kn">import</span> <span class="n">RandomStrategy</span><span class="p">,</span> <span class="n">StandardStrategy</span><span class="p">,</span> <span class="n">Strategy</span>
+
+
+<div class="viewcode-block" id="Trainer"><a class="viewcode-back" href="../../../ai.html#titans.ai.trainer.Trainer">[docs]</a><span class="k">class</span> <span class="nc">Trainer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standard trainer</span>
+
+<span class="sd">    This class trains up strategies for execellently-playing Titans of Eden. It</span>
+<span class="sd">    works by executing a number of training epochs, wherein each epoch a bunch</span>
+<span class="sd">    of games are played, and then data from those games is used to train up</span>
+<span class="sd">    better and better strategies.</span>
+
+<span class="sd">    During each epoch, the current strategy is played against the previous-best</span>
+<span class="sd">    strategy to generate new training data.</span>
+
+<span class="sd">    Early-stopping, weight restoration, and patience are all used to ensure the</span>
+<span class="sd">    best strategy dominates. Callback is judged on the strategy that (1) plays</span>
+<span class="sd">    the best against baseline, and (2) outperforms previous-best strategies.</span>
+
+<span class="sd">    A temperature parameter is used and varied across games to make ensure that</span>
+<span class="sd">    strategies don&#39;t get stuck in local minima.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    baseline: bool, optional, default=False</span>
+<span class="sd">        if True, only play against random-card-choosing strategies (instead of</span>
+<span class="sd">        playing against latest-gen-minus-one)</span>
+<span class="sd">    epochs: int, optional, default=10</span>
+<span class="sd">        number of training epochs to execute</span>
+<span class="sd">    games_per_epoch: int, optioanl, default=100</span>
+<span class="sd">        number of games to play each epoch</span>
+<span class="sd">    parallel: bool, optional, default=True</span>
+<span class="sd">        play games in parallel, performing batch decision making at each</span>
+<span class="sd">        decision point. This is much faster than making decisions</span>
+<span class="sd">        one-at-a-time.</span>
+<span class="sd">    retention: int, optional, default=3</span>
+<span class="sd">        when training, keep game histories across this many epochs to train on.</span>
+<span class="sd">        (i.e. training data from games more than `retention` epochs ago will be</span>
+<span class="sd">        forgotten.)</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    history: deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]</span>
+<span class="sd">        here, the history of winning and losing players is recorded. This</span>
+<span class="sd">        variable maps every state to every choice made given that state,</span>
+<span class="sd">        recording whether the player that made that choice ultimately won or</span>
+<span class="sd">        lost the game.</span>
+
+<span class="sd">        This is saved as a circular buffer (deque), so that the Trainer can</span>
+<span class="sd">        retain the histories from the most recent N games.</span>
+<span class="sd">    strategies: dict[Action, Strategy]</span>
+<span class="sd">        Strategies trained by this class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">games_per_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">parallel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">patience</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">retention</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># save passed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseline</span> <span class="o">=</span> <span class="n">baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_epochs</span> <span class="o">=</span> <span class="n">epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_games_per_epoch</span> <span class="o">=</span> <span class="n">games_per_epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parallel</span> <span class="o">=</span> <span class="n">parallel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patience</span> <span class="o">=</span> <span class="n">patience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retention</span> <span class="o">=</span> <span class="n">retention</span>
+
+        <span class="c1"># initialize strategies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">action</span><span class="p">:</span> <span class="n">StandardStrategy</span><span class="p">()</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span>
+        <span class="p">}</span>
+
+        <span class="c1"># initialize history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">deque</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]]</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">retention</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_Xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform self.history -&gt; (X, y) data</span>
+
+<span class="sd">        Expect lots of np.NaN values in y! Additionally, y data will be brought</span>
+<span class="sd">        in by the std error (see err_bound_low and err_bound_high in</span>
+<span class="sd">        __init__()).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[Action, tuple[np.ndarray, np.ndarray]]</span>
+<span class="sd">            dictionary mapping from action -&gt; (X, y) data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># enable divide-by-zero without warning</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+        <span class="c1"># combine history from all recent games</span>
+        <span class="n">history</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">state_dict</span> <span class="ow">in</span> <span class="n">epoch</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">action_dict</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">is_winner</span><span class="p">,</span> <span class="n">choices</span> <span class="ow">in</span> <span class="n">action_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="p">(</span>
+                            <span class="n">history</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">{})</span>
+                            <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">{})</span>
+                            <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">is_winner</span><span class="p">,</span> <span class="p">[])</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span>
+
+        <span class="c1"># initialize Xy data</span>
+        <span class="n">Xy</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">action</span><span class="p">:</span> <span class="p">([],</span> <span class="p">[])</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span>
+        <span class="p">}</span>
+
+        <span class="c1"># process each action and each state</span>
+        <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">state_dict</span> <span class="ow">in</span> <span class="n">history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">action_dict</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># translate wins and losses from list[int] -&gt; np.ndarray</span>
+                <span class="n">win_loss_count</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">is_winner</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">NUM_CHOICES</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">is_winner</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">is_winner</span><span class="p">,</span> <span class="n">choices</span> <span class="ow">in</span> <span class="n">action_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">:</span>
+                        <span class="n">win_loss_count</span><span class="p">[</span><span class="n">is_winner</span><span class="p">][</span><span class="n">choice</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1"># get means and std err</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">win_loss_count</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">+</span> <span class="n">win_loss_count</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+                <span class="n">means</span> <span class="o">=</span> <span class="n">win_loss_count</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">/</span> <span class="n">counts</span>
+
+                <span class="c1"># save results</span>
+                <span class="n">Xy</span><span class="p">[</span><span class="n">action</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+                <span class="n">Xy</span><span class="p">[</span><span class="n">action</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
+
+        <span class="c1"># return, converting from list[1d np.ndarrays] to 2d np.ndarrays</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">action</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">Xy</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_init_game</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">player_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="o">/</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Game</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize game object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args: Any</span>
+<span class="sd">            passed to `Game()` on `__init__()`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Game</span>
+<span class="sd">            game, already played</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Game</span><span class="p">(</span><span class="n">player_kwargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parallel_step</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">player_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]]],</span>
+        <span class="n">controllers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span>
+            <span class="n">Generator</span><span class="p">[</span>
+                <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">],</span>
+        <span class="n">states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run one decision point of a game played in parallel</span>
+
+<span class="sd">        Completed games will be skipped.</span>
+
+<span class="sd">        This function is broken out for easy testing of this</span>
+<span class="sd">        somewhat-complicated method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        strategies: dict[Identity, dict[str, dict[Action, Strategy]]]</span>
+<span class="sd">            strategies passed to games being played. This method expects that</span>
+<span class="sd">            all games played in parallel have the same strategies (although</span>
+<span class="sd">            players within a game can have different strategies).</span>
+<span class="sd">        controllers: list[Generator]</span>
+<span class="sd">            generators created from Game.parallel_play()</span>
+<span class="sd">        states: list[dict[Identity, np.ndarray] | None]</span>
+<span class="sd">            game states yielded from controllers</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[dict[Identity, np.ndarray] | None]</span>
+<span class="sd">            updated states, after running one decision step in parallel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">decision_matrices</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">identity</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">action</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">player_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;strategies&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+                                <span class="p">[</span>
+                                    <span class="n">state</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span>
+                                    <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                                    <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">NUM_FEATURES</span><span class="p">)</span>
+                                    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span>
+                                <span class="p">]</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">Identity</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="n">controller</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="n">identity</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="n">action</span><span class="p">:</span> <span class="n">decision_matrices</span><span class="p">[</span><span class="n">identity</span><span class="p">][</span><span class="n">action</span><span class="p">][</span><span class="n">c</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span>
+                        <span class="p">}</span>
+                        <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">Identity</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">controller</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="nb">zip</span><span class="p">(</span>
+                    <span class="n">controllers</span><span class="p">,</span>
+                    <span class="n">states</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_play_games</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">save_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">use_random</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">vary_temperature</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">vs_random</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">vs_strategy</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Play games</span>
+
+<span class="sd">        Player 0 will always use the strategies in self.strategies. Player 1</span>
+<span class="sd">        will default to using the same strategies, but this can be overridden</span>
+<span class="sd">        with `use_random` or `use_strategy`.</span>
+
+<span class="sd">        This is an internal method that is called by `train`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_history: bool, optional, default=True</span>
+<span class="sd">            save state history from these games</span>
+<span class="sd">        use_random: bool, optional, default=False</span>
+<span class="sd">            if True, then use random choices for both player 0 and player 1.</span>
+<span class="sd">        vary_temperature: bool, optional, default=False</span>
+<span class="sd">            vary temperature for each game, to make sure there&#39;s a good amount</span>
+<span class="sd">            of noise (and thus varied decisions)</span>
+<span class="sd">        vs_random: bool, optional, default=False</span>
+<span class="sd">            if True, instead of using `self.strategies` as player 1&#39;s strategy,</span>
+<span class="sd">            use random choices.</span>
+<span class="sd">        vs_strategy: dict[Action, Strategy] | None, optional, default=None</span>
+<span class="sd">            if provided, instead of using `self.strategies` as player 1&#39;s</span>
+<span class="sd">            strategy, use the provided strategy here.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            fraction of games won by player 0</span>
+<span class="sd">        &quot;&quot;&quot;</span>  <span class="c1"># noqa</span>
+
+        <span class="c1"># check args</span>
+        <span class="k">if</span> <span class="n">vs_random</span> <span class="ow">and</span> <span class="n">vs_strategy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Conflicting strategies provided.&quot;</span>
+                <span class="s2">&quot; You can set vs_random or vs_strategy,&quot;</span>
+                <span class="s2">&quot; but not both.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># get strategies</span>
+        <span class="n">random_strategy_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">action</span><span class="p">:</span> <span class="n">RandomStrategy</span><span class="p">()</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span><span class="p">}</span>
+        <span class="n">player_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">Identity</span><span class="o">.</span><span class="n">MIKE</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;strategies&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">random_strategy_dict</span> <span class="k">if</span> <span class="n">use_random</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">Identity</span><span class="o">.</span><span class="n">BRYAN</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;strategies&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">random_strategy_dict</span>
+                    <span class="k">if</span> <span class="n">vs_random</span>
+                    <span class="k">else</span> <span class="n">vs_strategy</span>
+                    <span class="k">if</span> <span class="n">vs_strategy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="c1"># initialize games</span>
+        <span class="n">games</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_game</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="n">player_kwargs</span><span class="p">,</span>
+                    <span class="o">**</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">temperature</span><span class="p">}</span>
+                        <span class="k">if</span> <span class="n">vary_temperature</span>
+                        <span class="k">else</span> <span class="p">{}</span>
+                    <span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_games_per_epoch</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># play games sequentially</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parallel</span><span class="p">:</span>
+            <span class="n">games</span> <span class="o">=</span> <span class="p">[</span><span class="n">game</span><span class="o">.</span><span class="n">play</span><span class="p">()</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">]</span>
+
+        <span class="c1"># play games in parallel</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">controllers</span> <span class="o">=</span> <span class="p">[</span><span class="n">game</span><span class="o">.</span><span class="n">parallel_play</span><span class="p">()</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">]</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">controller</span><span class="p">)</span> <span class="k">for</span> <span class="n">controller</span> <span class="ow">in</span> <span class="n">controllers</span><span class="p">]</span>
+            <span class="k">while</span> <span class="nb">any</span><span class="p">([</span><span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">]):</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_step</span><span class="p">(</span>
+                    <span class="n">player_kwargs</span><span class="o">=</span><span class="n">player_kwargs</span><span class="p">,</span>
+                    <span class="n">controllers</span><span class="o">=</span><span class="n">controllers</span><span class="p">,</span>
+                    <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># save game histories</span>
+        <span class="k">if</span> <span class="n">save_history</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_history</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
+
+        <span class="c1"># return win fraction</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">game</span><span class="o">.</span><span class="n">winner</span> <span class="o">==</span> <span class="n">Identity</span><span class="o">.</span><span class="n">MIKE</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_save_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">],</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract and save histories from games</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        games: list[Game]</span>
+<span class="sd">            most recently-played game</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize overall history dictionary</span>
+        <span class="n">history</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># combine history from all games. index by winner (instead of identity)</span>
+        <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">state_dict</span> <span class="ow">in</span> <span class="n">game</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">action</span><span class="p">,</span> <span class="n">action_dict</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">choices</span> <span class="ow">in</span> <span class="n">action_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">is_winner</span> <span class="o">=</span> <span class="n">identity</span> <span class="o">==</span> <span class="n">game</span><span class="o">.</span><span class="n">winner</span>
+                        <span class="p">(</span>
+                            <span class="n">history</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">{})</span>
+                            <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">{})</span>
+                            <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">is_winner</span><span class="p">,</span> <span class="p">[])</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span>
+
+        <span class="c1"># save history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Trainer.discover"><a class="viewcode-back" href="../../../ai.html#titans.ai.trainer.Trainer.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Discover best cards</span>
+
+<span class="sd">        This function uses this trainer&#39;s strategy to weight each card</span>
+<span class="sd">        according to its relative value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray of shape(len(Name),) of dtype float</span>
+<span class="sd">            weights (relative value) of each card</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Name</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">Name</span><span class="p">:</span>
+            <span class="n">vs_strategy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">vs_strategy</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">strategy</span><span class="o">.</span><span class="n">restricted</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="n">weights</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_play_games</span><span class="p">(</span>
+                <span class="n">save_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">vs_strategy</span><span class="o">=</span><span class="n">vs_strategy</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">weights</span></div>
+
+<div class="viewcode-block" id="Trainer.train"><a class="viewcode-back" href="../../../ai.html#titans.ai.trainer.Trainer.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Train network</span>
+
+<span class="sd">        All parameters for training are set in `__init__`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize best strategy as empty standard strategy</span>
+        <span class="n">best_strategy</span> <span class="o">=</span> <span class="p">{</span><span class="n">action</span><span class="p">:</span> <span class="n">StandardStrategy</span><span class="p">()</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span><span class="p">}</span>
+
+        <span class="c1"># initialize metrics (win trackers)</span>
+        <span class="n">vs_baseline</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">vs_best</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;vs_baseline&quot;</span><span class="p">:</span> <span class="n">vs_baseline</span><span class="p">,</span>
+            <span class="s2">&quot;vs_best&quot;</span><span class="p">:</span> <span class="n">vs_best</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># function to check for best</span>
+        <span class="k">def</span> <span class="nf">get_best_idx</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Get best strategy</span>
+
+<span class="sd">            The best strategy is the one that both has (1) the highest win</span>
+<span class="sd">            fraction against random plays, and simultaneously (2) outperforms</span>
+<span class="sd">            the previous top-performing strategy.</span>
+
+<span class="sd">            Technicaly, this isn&#39;t *really* finding the best strategy; it&#39;s</span>
+<span class="sd">            more of a patience checker, as it finds the most recent strategy</span>
+<span class="sd">            that satisifes all criterion, and gives ties to the oldest. You can</span>
+<span class="sd">            then compare the best idx to the current idx, and see if the</span>
+<span class="sd">            patience counter has been exceeded.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            int</span>
+<span class="sd">                round number of top-performing strategy</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">best_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vs_baseline</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">vs_baseline</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">vs_baseline</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_baseline</span> <span class="ow">or</span> <span class="n">vs_best</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.50</span>
+                <span class="p">):</span>
+                    <span class="n">best_idx</span> <span class="o">=</span> <span class="n">idx</span>
+            <span class="k">return</span> <span class="n">best_idx</span>
+
+        <span class="c1"># run training epochs</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epochs</span><span class="p">):</span>
+            <span class="c1"># train network</span>
+            <span class="k">if</span> <span class="n">epoch</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_play_games</span><span class="p">(</span>
+                    <span class="n">vary_temperature</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vs_random</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_baseline</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">Xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Xy</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">Action</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">[</span><span class="n">action</span><span class="p">]</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">Xy</span><span class="p">[</span><span class="n">action</span><span class="p">])</span>
+
+            <span class="c1"># test strategies</span>
+            <span class="n">vs_baseline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_play_games</span><span class="p">(</span>
+                    <span class="n">save_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">vs_random</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline</span><span class="p">:</span>
+                <span class="n">vs_best</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_play_games</span><span class="p">(</span>
+                        <span class="n">save_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">vs_strategy</span><span class="o">=</span><span class="n">best_strategy</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># if best scores yet, export strategy as best</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">best_idx</span> <span class="o">:=</span> <span class="n">get_best_idx</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">vs_baseline</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">best_strategy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategies</span><span class="p">)</span>
+
+            <span class="c1"># if not best, restore best strategy, check for early stopping</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">strategies</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">best_strategy</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">best_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">vs_baseline</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patience</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+        <span class="c1"># return</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">POCTrainer</span><span class="p">(</span><span class="n">Trainer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple proof-of-concept trainer that demonstrates learning</span>
+
+<span class="sd">    This trainer removes all non-Energy abilities from the cards before playing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_init_game</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Game</span><span class="p">:</span>
+        <span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">game</span><span class="o">.</span><span class="n">cards</span><span class="p">:</span>
+            <span class="n">card</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">ability</span><span class="p">:</span> <span class="n">value</span>
+                <span class="k">for</span> <span class="n">ability</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">card</span><span class="o">.</span><span class="n">abilities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ability</span> <span class="o">==</span> <span class="n">Ability</span><span class="o">.</span><span class="n">ENERGY</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">game</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

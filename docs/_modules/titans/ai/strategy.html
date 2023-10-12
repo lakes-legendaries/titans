@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.strategy &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.strategy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.strategy</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Strategy module&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">callbacks</span><span class="p">,</span> <span class="n">layers</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">titans.ai.constants</span> <span class="kn">import</span> <span class="n">NUM_CHOICES</span><span class="p">,</span> <span class="n">NUM_FEATURES</span>
+
+
+<div class="viewcode-block" id="Strategy"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.Strategy">[docs]</a><span class="k">class</span> <span class="nc">Strategy</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Strategy abstract base class&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Strategy.fit"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.Strategy.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Strategy</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit model</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: np.ndarray</span>
+<span class="sd">            data to use for fitting</span>
+<span class="sd">        y: np.ndarray</span>
+<span class="sd">            labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Strategy</span>
+<span class="sd">            calling instance</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Strategy.predict"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.Strategy.predict">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Predict best course of action</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: np.ndarray</span>
+<span class="sd">            data to predict for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            predictions, returned as the predicted probability of winning given</span>
+<span class="sd">            each possible choice</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="RandomStrategy"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.RandomStrategy">[docs]</a><span class="k">class</span> <span class="nc">RandomStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Strategy for making random decisions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    random_state: int, optional, default=None</span>
+<span class="sd">        random seed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RandomStrategy.predict"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.RandomStrategy.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">NUM_CHOICES</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">NUM_CHOICES</span><span class="p">)</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StandardStrategy"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.StandardStrategy">[docs]</a><span class="k">class</span> <span class="nc">StandardStrategy</span><span class="p">(</span><span class="n">RandomStrategy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standard strategy for making decisions</span>
+
+<span class="sd">    This class scales data (via z-score normalization) and then using an MLP</span>
+<span class="sd">    (feedforward regression ANN) to predict best courses of action (given the</span>
+<span class="sd">    player&#39;s / game&#39;s state).</span>
+
+<span class="sd">    This model is designed so that you can resume fitting at any point: If you</span>
+<span class="sd">    call the fit function multiple times, the ANN will simply resume fitting</span>
+<span class="sd">    from where you left off. (The scaler will be static, though, configured</span>
+<span class="sd">    through your first time you called fit. This ensures that new data is on</span>
+<span class="sd">    the same scale as old data.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scale: bool, optional, default=True</span>
+<span class="sd">        use `sklearn.preprocessing.StandardScaler` to scale data</span>
+<span class="sd">    **kwargs: Any</span>
+<span class="sd">        passed to `RandomStrategy` on `__init__()`</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    restricted: list[int] | None</span>
+<span class="sd">        If set, then don&#39;t predict these values. This must be manually set, and</span>
+<span class="sd">        is provided for exploring the relative values of cards</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># initialize parent</span>
+        <span class="n">RandomStrategy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># initialize scaler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span> <span class="k">if</span> <span class="n">scale</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaler_fitted</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># initialize model</span>
+        <span class="n">input_layer</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">NUM_FEATURES</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">input_layer</span><span class="p">)</span>
+        <span class="n">output_layer</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">NUM_CHOICES</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nanmse_loss</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_fitted</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># initialize attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">restricted</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Strategy</span><span class="p">:</span>
+        <span class="c1"># initialize copy</span>
+        <span class="n">copy</span> <span class="o">=</span> <span class="n">StandardStrategy</span><span class="p">()</span>
+
+        <span class="c1"># copy inheritted</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
+
+        <span class="c1"># copy standard attributes</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_scaler</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span><span class="p">)</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_scaler_fitted</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaler_fitted</span><span class="p">)</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_model_fitted</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_fitted</span><span class="p">)</span>
+
+        <span class="c1"># copy neural network</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">clone_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">)</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nanmse_loss</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># copy attributes</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">restricted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">restricted</span>
+
+        <span class="c1"># return copy</span>
+        <span class="k">return</span> <span class="n">copy</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="s2">&quot;titans.ai.strategy&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_nanmse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;MSE that ignores NaN entries&quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">is_nan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">mask</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="StandardStrategy.fit"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.StandardStrategy.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Strategy</span><span class="p">:</span>
+        <span class="c1"># scale data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaler_fitted</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_scaler_fitted</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># train model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span>
+                    <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                    <span class="n">restore_best_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_fitted</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># return</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="StandardStrategy.predict"><a class="viewcode-back" href="../../../ai.html#titans.ai.strategy.StandardStrategy.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">/</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># use random if untrained</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_fitted</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RandomStrategy</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># make 2D</span>
+        <span class="n">is_one_dimensional</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">is_one_dimensional</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">X</span><span class="p">])</span>
+
+        <span class="c1"># scale data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># make predictions</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="c1"># modify via restricted list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">restricted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">restricted</span><span class="p">:</span>
+                <span class="n">pred</span><span class="p">[:,</span> <span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+
+        <span class="c1"># return (matching input shape)</span>
+        <span class="k">return</span> <span class="n">pred</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_one_dimensional</span> <span class="k">else</span> <span class="n">pred</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

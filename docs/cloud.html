@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Ops &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="AI Code" href="ai.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ai.html">AI Code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cloud Ops</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cloud-infra">Cloud Infra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cloud-vm">Cloud VM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#website">Website</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#html">HTML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#css">CSS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#js">JS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compiling">Compiling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assets">Assets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deploying">Deploying</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#to-dev">To Dev</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-production">To Production</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#online-demo">Online Demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#videos">Videos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#databases">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api">API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#updates">Updates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#emails">Emails</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#authenticating">Authenticating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sending-emails">Sending Emails</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dev-testing">Dev: Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polls">Polls</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Cloud Ops</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cloud.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cloud-ops">
+<h1>Cloud Ops<a class="headerlink" href="#cloud-ops" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>This repo controls all of the cloud operations for Titans Of Eden. This
+includes:</p>
+<ol class="arabic simple">
+<li><p>Website HTML/CSS/JS</p></li>
+<li><p>Online Demo</p></li>
+<li><p>Blender Video-Rendering &amp; Formatting</p></li>
+<li><p>Database Creation &amp; Management</p></li>
+<li><p>Web-based API</p></li>
+<li><p>Email Listserv Management</p></li>
+</ol>
+</section>
+<section id="cloud-infra">
+<h2>Cloud Infra<a class="headerlink" href="#cloud-infra" title="Permalink to this heading"></a></h2>
+<p>The following infrastructure was setup for this project:</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://titansfileserver.z13.web.core.windows.net/">(Production) File Server / Static Website</a></p></li>
+<li><p><a class="reference external" href="https://titansfileserverdev.z13.web.core.windows.net/">Dev File Server / Static Website</a></p></li>
+<li><p>Batch Account (for parallel computing / video rendering)</p></li>
+<li><p>MySQL Server (as a general database)</p></li>
+<li><p>Container Registry</p></li>
+<li><p><a class="reference external" href="https://www.titansofeden.com">CDN (for public-facing website)</a></p></li>
+<li><p><a class="reference external" href="https://titansapi.eastus.cloudapp.azure.com/">Linux VM</a> (which provides
+all API functionality)</p></li>
+</ol>
+<p>All infrastructure resides on Azure.</p>
+</section>
+<section id="cloud-vm">
+<h2>Cloud VM<a class="headerlink" href="#cloud-vm" title="Permalink to this heading"></a></h2>
+<p>This project has a cloud VM. All development work should be carried out on this
+VM (e.g. by SSH’ing into it).</p>
+<p>The VM’s IP is whitelisted, which allows it to access the database and other
+cloud services. Additionally, credentials are securely stored on this VM.</p>
+<p>If the cloud VM ever goes down and needs to be re-provisioned, once the VM is
+up again, you can re-provision by:</p>
+<ol class="arabic">
+<li><p>Placing a MySQL connection string in <code class="code docutils literal notranslate"><span class="pre">~/secrets/titans-mysql</span></code></p></li>
+<li><p>Whitelisting the VM’s IP</p></li>
+<li><p>Running the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>https://raw.githubusercontent.com/lakes-legendaries/titans/main/webserver/provision.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</pre></div>
+</div>
+</li>
+</ol>
+<p>This will install all dependencies, establish credentials for a secure HTTPS
+connection, launch the API, and schedule regular updates and upgrades.</p>
+</section>
+<section id="website">
+<h2>Website<a class="headerlink" href="#website" title="Permalink to this heading"></a></h2>
+<p>All (most?) website code is contained in <code class="code docutils literal notranslate"><span class="pre">titans/website</span></code>.</p>
+<p>Please note that I am <strong>not</strong> a frontend developer: Cut me some slack if this
+doesn’t look perfect!</p>
+<section id="html">
+<h3>HTML<a class="headerlink" href="#html" title="Permalink to this heading"></a></h3>
+<p>HTML code is contained in the subfolder <cite>html</cite>. I wrote my own compiler for
+HTML code: Comments that include the name of a file substitute in that file’s
+contents on compilation. E.g. the comment <code class="code docutils literal notranslate"><span class="pre">&lt;!--</span> <span class="pre">html/partial/include.html</span>
+<span class="pre">--&gt;</span></code> in <code class="code docutils literal notranslate"><span class="pre">html/constructed.html</span></code> substitutes in the contents of
+<cite>html/partial/include.html</cite> on compilation.</p>
+<p>Instructions on how to run the compiler are below.</p>
+</section>
+<section id="css">
+<h3>CSS<a class="headerlink" href="#css" title="Permalink to this heading"></a></h3>
+<p>All CSS code is in the subfolder <code class="code docutils literal notranslate"><span class="pre">style</span></code>, including code for dynamic
+scaling to mobile / desktop screens.</p>
+</section>
+<section id="js">
+<h3>JS<a class="headerlink" href="#js" title="Permalink to this heading"></a></h3>
+<p>All JS code is located in the subfolder <code class="code docutils literal notranslate"><span class="pre">script</span></code>. JQuery was used
+heavily. This code could definitely use some TLC by a real frontend developer
+(e.g. within the React framework).</p>
+</section>
+<section id="compiling">
+<h3>Compiling<a class="headerlink" href="#compiling" title="Permalink to this heading"></a></h3>
+<p>To run the compiler, simpy run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/website/compile.py
+</pre></div>
+</div>
+<p>and all html files will be compiled and output to <code class="code docutils literal notranslate"><span class="pre">titans/website/site</span></code>.</p>
+</section>
+<section id="assets">
+<h3>Assets<a class="headerlink" href="#assets" title="Permalink to this heading"></a></h3>
+<p>There are a handful of image files that are NOT managed by this repo, but are
+expected to be uploaded to the dev fileserver by other processes. This includes
+various card images, instructional images, and rules PDFs, among some other
+scattered files. The code to upload those files lives with each of the
+respective files.</p>
+<p>(Some other assets, like videos and online demo code, are discussed below.)</p>
+</section>
+<section id="deploying">
+<h3>Deploying<a class="headerlink" href="#deploying" title="Permalink to this heading"></a></h3>
+<section id="to-dev">
+<h4>To Dev<a class="headerlink" href="#to-dev" title="Permalink to this heading"></a></h4>
+<p>Once all code has been compiled, you can deploy from local to dev by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/website/deploy.py
+</pre></div>
+</div>
+<p>This will only deploy the HTML/JS/CSS files, and will NOT deploy other website
+files (e.g. online demo files, video files).</p>
+</section>
+<section id="to-production">
+<h4>To Production<a class="headerlink" href="#to-production" title="Permalink to this heading"></a></h4>
+<p>After reviewing the files on the dev fileserver, you can deploy from dev to
+production by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/website/deploy.py<span class="w"> </span>--prod
+</pre></div>
+</div>
+<p>Unlike the dev deployment code, this will copy over all files from dev to
+production, including demo files and video files. (The rationale is that, when
+you move from local to dev, with this script, you’re testing out HTML code;
+and, when you move from dev to prod, you are testing out all files and code on
+the server.)</p>
+</section>
+</section>
+</section>
+<section id="online-demo">
+<h2>Online Demo<a class="headerlink" href="#online-demo" title="Permalink to this heading"></a></h2>
+<p>Code for the online demo lives in <code class="code docutils literal notranslate"><span class="pre">titans/demo</span></code>. To upload to the dev
+fileserver, simply run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/demo
+</pre></div>
+</div>
+<p>This code was written in Phaser 3. Potential future upgrades include upgrading
+the AI system; enabling P2P versus, and including additional cards. However, as
+the goal of this demo is to serve as a try-before-you-buy, this does NOT have a
+high priority.</p>
+</section>
+<section id="videos">
+<h2>Videos<a class="headerlink" href="#videos" title="Permalink to this heading"></a></h2>
+<p>Several blender videos have been created to demo this project. These use
+Blender to render, and have been setup to work using Azure Batch, which allows
+for massively-parallel rendering. (At one point, these were all running
+sequentially on my desktop, and would take several weeks to finish; now, they
+complete in mere hours.)</p>
+<p>A Dockerfile has been provided for use by Azure Batch, so that each pod doesn’t
+have to install its own dependencies. To build the docker image and store it on
+a container registry, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/videos/build_img.py<span class="w"> </span>--verbose
+</pre></div>
+</div>
+<p>Once this completes, you can launch various rendering tasks via the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/videos
+</pre></div>
+</div>
+<p>The main commands that should be run, in order, are:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/videos<span class="w"> </span>animate
+python<span class="w"> </span>titans/videos<span class="w"> </span>render
+python<span class="w"> </span>titans/videos<span class="w"> </span>convert
+</pre></div>
+</div>
+<p>Each command should only be run after all jobs on Azure complete. Several of
+these jobs string together multiple jobs that all depend on one another. (These
+could have all been strung together into a single job; however, I wanted to
+encourage users to look at the output of each job before moving onto the next.)</p>
+<p>The first command, animate, creates video frames as png files. The second,
+render, combines pngs to create videos. The third, convert, transforms videos
+into modern codec formats.</p>
+<p>Each of these commands has many command-line options for rerunning only certain
+subsets. Refer to the documentation of each for help.</p>
+</section>
+<section id="databases">
+<h2>Databases<a class="headerlink" href="#databases" title="Permalink to this heading"></a></h2>
+<p>This repo creates and manages a MySQL database with three tables: contacts,
+comments, and creds.</p>
+<p>Comments and creds are tables meant to store user input from the website. These
+were created via the python command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/sql/comments.py<span class="w"> </span>--create
+python<span class="w"> </span>titans/sql/contacts.py<span class="w"> </span>--create
+</pre></div>
+</div>
+<p>Some db management is available via flags on those arguments. Use with caution.</p>
+<p>Various credentials are also stored in this database. This is probably not best
+practice, but works, as all dev work happens on this project’s cloud VM, which
+is the only IP able to access the database. This credentials table was made,
+and can be updated, via:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/sql/creds.py
+</pre></div>
+</div>
+<p>Refer to the docstrings for additional information.</p>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
+<p>I setup a cloud VM to act as an API for this project. This API will one day be
+upgraded to handle the decisions made by the AI for the online demo (which will
+eventually be expanded into an online client).</p>
+<p>The API was setup with FastAPI, and it handles all database queries and
+insertions made from the website. This includes:</p>
+<ol class="arabic simple">
+<li><p>Subscribing to the email list (which adds a user’s name and email to the
+contacts table)</p></li>
+<li><p>Unsubscribing (removing name/email)</p></li>
+<li><p>Commenting (saving comment, and optionally email, to the comments table)</p></li>
+</ol>
+<p>Entries and scanned, sanitizied, and validating before insertions take place.</p>
+<p>Emails are additionally automatically sent by the API whenever a comment is
+left on the website, or whenever a new subscriber joins the email list.</p>
+<p>The API can be accessed <a class="reference external" href="https://titansapi.eastus.cloudapp.azure.com/">here</a>.
+FastAPI docs for this API are located <a class="reference external" href="https://titansapi.eastus.cloudapp.azure.com/docs">here</a>.</p>
+<section id="updates">
+<h3>Updates<a class="headerlink" href="#updates" title="Permalink to this heading"></a></h3>
+<p>If you want to test changes to the API before going live, you can update the
+code, and then run (on the webserver):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>webserver/test-api.sh
+</pre></div>
+</div>
+<p>This will spin up a copy of the API on the webserver at the port 1024, which
+can be accessed <a class="reference external" href="https://titansapi.eastus.cloudapp.azure.com:1024">here</a>.</p>
+<p>To update the real API, push your changes to GitHub, then run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>webserver/run-service.sh
+</pre></div>
+</div>
+<p>This command is automatically run every time the webserver restarts.</p>
+</section>
+</section>
+<section id="emails">
+<h2>Emails<a class="headerlink" href="#emails" title="Permalink to this heading"></a></h2>
+<p>This package handles sending emails to all of our subscribers, all from the
+command line. This uses the MS 365 Graph API to execute sending.</p>
+<p>Emails are additionally automatically sent whenever a comment is left on the
+website, or whenever a new subscriber joins the email list.</p>
+<section id="authenticating">
+<h3>Authenticating<a class="headerlink" href="#authenticating" title="Permalink to this heading"></a></h3>
+<p>For first-time use, you must authenticate with Office365 by following these
+steps:</p>
+<p>In the Azure portal:</p>
+<ol class="arabic">
+<li><p>Go to <code class="code docutils literal notranslate"><span class="pre">Azure</span> <span class="pre">Active</span> <span class="pre">Directory</span></code> -&gt; <code class="code docutils literal notranslate"><span class="pre">App</span> <span class="pre">Registrations</span></code></p></li>
+<li><p>Create a new app registration. Set the redirect URI to
+<code class="code docutils literal notranslate"><span class="pre">http://localhost</span></code>.</p></li>
+<li><p>Go to <code class="code docutils literal notranslate"><span class="pre">Certificates</span> <span class="pre">&amp;</span> <span class="pre">secrets</span></code>, then create a new client secret. Copy
+the <code class="code docutils literal notranslate"><span class="pre">Value</span></code>, as you’ll only be able to see this once.</p></li>
+<li><p>Go to <code class="code docutils literal notranslate"><span class="pre">API</span> <span class="pre">Permissions</span></code>, and from Microsoft Graph the Delegated
+Permission of Mail.Send.</p></li>
+<li><p>Create a <code class="code docutils literal notranslate"><span class="pre">~/secrets/titans-email-creds</span></code> file that looks like:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;tenant&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;directory (tenant) id&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;application (client) id&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;client_secret&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;certifiacte &amp; secrets value&gt;&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>In this repo:</p>
+<ol class="arabic">
+<li><p>Make sure you have a <code class="code docutils literal notranslate"><span class="pre">SECRETS_DIR</span></code> environmental variable set, e.g.
+<code class="code docutils literal notranslate"><span class="pre">~/secrets</span></code>.</p></li>
+<li><p>Run <code class="code docutils literal notranslate"><span class="pre">titans/email/get-code.sh</span></code>. Follow the website it points you to,
+and authenticate with your office account. It’ll redirect you to an error
+page. On that page, look at the url, and copy the <code class="code docutils literal notranslate"><span class="pre">code</span></code> parameter
+from the URL (i.e. the portion that reads <code class="code docutils literal notranslate"><span class="pre">&amp;code=...&amp;</span></code>). Paste that
+code into a <code class="code docutils literal notranslate"><span class="pre">$SECRETS_DIR/titans-email-code</span></code> file in this repo.</p></li>
+<li><p>Run <cite>auth/get-token.sh</cite>. This will create a
+<code class="code docutils literal notranslate"><span class="pre">$SECRETS_DIR/titans-email-token</span></code> file, containing your
+authentication token.</p></li>
+<li><p>Finally, update the <code class="code docutils literal notranslate"><span class="pre">creds</span></code> table in sql by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/sql/creds.py
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="sending-emails">
+<h3>Sending Emails<a class="headerlink" href="#sending-emails" title="Permalink to this heading"></a></h3>
+<p>To send emails, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/email<span class="w"> </span>yamlconfig
+</pre></div>
+</div>
+<p>where <code class="code docutils literal notranslate"><span class="pre">yamlconfig</span></code> is a configuration yaml file that is unpacked to
+initialize <code class="code docutils literal notranslate"><span class="pre">titans.email.sender.SendEmails</span></code>. An example configuration
+yaml file would look like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">subject</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">We&#39;re Back!</span>
+<span class="nt">body</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2022-07/body.html</span>
+<span class="nt">attachments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+<span class="w">  </span><span class="nv">2022-07/box.png</span><span class="p p-Indicator">,</span>
+<span class="w">  </span><span class="nv">2022-07/divider.png</span><span class="p p-Indicator">,</span>
+<span class="w">  </span><span class="nv">2022-07/final_judgment.png</span><span class="p p-Indicator">,</span>
+<span class="w">  </span><span class="nv">2022-07/logo.png</span><span class="p p-Indicator">,</span>
+<span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>where <code class="code docutils literal notranslate"><span class="pre">2022-07/body.html</span></code> is the name of an html file you want to send,
+and the attachments are names of attachments you want to attach.</p>
+<p>Please note that any attachments can be referenced and inserted in <code class="code docutils literal notranslate"><span class="pre">body</span></code>
+via their cid:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;cid:logo&quot;</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>and the string <code class="code docutils literal notranslate"><span class="pre">#|EMAIL|#</span></code> will be replaced with the receipient’s email
+address.</p>
+</section>
+<section id="dev-testing">
+<h3>Dev: Testing<a class="headerlink" href="#dev-testing" title="Permalink to this heading"></a></h3>
+<p>To send a test email, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tests/titans/api/subscribe_test.py
+</pre></div>
+</div>
+<p>Please note that this test will fail unless it’s run on the whitelisted VM!</p>
+</section>
+<section id="polls">
+<h3>Polls<a class="headerlink" href="#polls" title="Permalink to this heading"></a></h3>
+<p>Periodically, we run polls out of the email service. To do so:</p>
+<ol class="arabic">
+<li><p>Create a new table in the database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>titans/sql/polls.py<span class="w"> </span>table_name
+</pre></div>
+</div>
+<p>This table will store the poll responses.</p>
+</li>
+<li><p>Build the email that will contain this poll. This email needs to have links
+that the recipient can click on that query the API. These responses have to
+look like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>https://titansapi.eastus.cloudapp.azure.com/poll/POLL_NAME?email=#|EMAIL|#&amp;response=RESPONSE
+</pre></div>
+</div>
+<p>which includes the parameters:</p>
+<ol class="arabic simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">POLL_NAME`</span></code>: The name of the poll, which is the name of the table
+created in the previous step.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">EMAIL</span></code>: The email of the responder, which will be auto-inserted by
+the email client. (The string <code class="code docutils literal notranslate"><span class="pre">#|EMAIL|#</span></code> is a special string that
+is processed by the email client.)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">RESPONSE</span></code>: The response to the poll, which should be hard-coded
+for each clickable link.</p></li>
+</ol>
+</li>
+<li><p>Send the email, and check the results as they roll in!</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ai.html" class="btn btn-neutral float-left" title="AI Code" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

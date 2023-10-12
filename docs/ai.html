@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Code &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cloud Ops" href="cloud.html" />
+    <link rel="prev" title="Titans Of Eden" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AI Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vs-random-player">Vs Random Player</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vs-previous-best">Vs Previous-Best</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#card-discovery">Card Discovery</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bonus-optimization">Bonus: Optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#future-work">Future Work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#strategies">Strategies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#randomstrategy">RandomStrategy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#standardstrategy">StandardStrategy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#strategy">Strategy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#basic-game-constructs">Basic game constructs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#card">Card</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#player">Player</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#game">Game</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trainer">Trainer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#constants-and-enums">Constants and enums</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#num-choices">NUM_CHOICES</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#num-features">NUM_FEATURES</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ability">Ability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#action">Action</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#element">Element</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#identity">Identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#name">Name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#species">Species</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#zone">Zone</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">AI Code</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ai.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ai-code">
+<h1>AI Code<a class="headerlink" href="#ai-code" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>For this project, I designed an AI engine for two reasons:</p>
+<ol class="arabic simple">
+<li><p>To control the online demo; and</p></li>
+<li><p>To assist with card evaluation and discovery.</p></li>
+</ol>
+<p>The first point should be obvious (even if it’s not yet implemented); while the
+second is more subtle: I want to make sure that the cards that are in this game
+are all completely balanced against one another, and that there’s no
+overpowered card in this game. (This can be evaluated by investigating the
+weights and win percentages given various strategies as the system plays itself
+and learns.)</p>
+</section>
+<section id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading"></a></h2>
+<p>Each <span class="xref std std-ref">~titans.ai.strategy.StandardStrategy</span> object is a feedforward neural
+network that maps from the game’s current state (described as the number of
+cards in each game <span class="xref std std-ref">~titans.ai.enum.Zone</span>) to the decision that should be
+made (e.g. awaken such-and-such card, or choose to do nothing). Each
+<span class="xref std std-ref">~titans.ai.player.Player</span> has multiple strategy objects: one for each
+type of decision they make (e.g. they’d have one for awakening cards and a
+seperate one for playing cards).</p>
+<p>When training a strategy, each player starts with randomly-initialized neural
+networks (or with an explicit <span class="xref std std-ref">~titans.ai.strategy.RandomStrategy</span> state)
+and plays many games against another (virtual) player. During each game, each
+time a decision is made, the game state (neural network input) and the chosen
+decision (neural network output) is recorded. Additionally, at the completion
+of each game, each decision is labeled according to whether the player won or
+lost the game. These decisions can then be coalesced into a dataset: Each game
+state can be assigned labels for each decision based upon that decision’s win
+percentage. (Of course, most decisions will be labeled with <code class="code docutils literal notranslate"><span class="pre">np.NaN</span></code>,
+since they did not occur during the game.)</p>
+<p>Using this setup, players can play many games against one another, and have
+their strategies updated every so-many-number of games. Players can thus learn
+strategies through bootstrapping: As they learn, their opponent learns, and
+after playing many games, they’ll be left with (hopefully) decent strategies.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<section id="vs-random-player">
+<h3>Vs Random Player<a class="headerlink" href="#vs-random-player" title="Permalink to this heading"></a></h3>
+<p>As a proof-of-concept, a learning player was set up to play against a random
+player. After ~800 games, the learning player won &gt;90% of the time.</p>
+<p>Code and results can be found <a class="reference external" href="https://github.com/lakes-legendaries/titans/blob/main/nbs/baseline.ipynb">here</a>.</p>
+</section>
+<section id="vs-previous-best">
+<h3>Vs Previous-Best<a class="headerlink" href="#vs-previous-best" title="Permalink to this heading"></a></h3>
+<p>Work-in-progress</p>
+</section>
+<section id="card-discovery">
+<h3>Card Discovery<a class="headerlink" href="#card-discovery" title="Permalink to this heading"></a></h3>
+<p>Work-in-progress</p>
+</section>
+<section id="bonus-optimization">
+<h3>Bonus: Optimization<a class="headerlink" href="#bonus-optimization" title="Permalink to this heading"></a></h3>
+<p>A batch decision-making process was implemented to accelerate training. With
+it, playtime was accelerated approximately 10x. Results can be found <a class="reference external" href="https://github.com/lakes-legendaries/titans/blob/main/nbs/speed_test.ipynb">here</a>.</p>
+</section>
+</section>
+<section id="future-work">
+<h2>Future Work<a class="headerlink" href="#future-work" title="Permalink to this heading"></a></h2>
+<p>The biggest additions I hope to make to the AI package include:</p>
+<ol class="arabic simple">
+<li><p>Deploying this as part of the demo. I’ll stand up a top-performing set of
+strategies in a Fast-API container (similar to the website API bot that’s
+working now), and have it accept (likely) JSON input while returning
+integer-decisions and/or probability distributions.</p></li>
+<li><p>Getting card discovery / weighting working. I think a straightforward way of
+showing card strength would be to take a highly-trained strategy, and
+compare win percentages between two players, where one player doesn’t have
+access to any given card. If losing access to a single card greatly
+decreases win percentage, that’d be a sign of an overpowered card.</p></li>
+<li><p>Implement the remaining cards in code.</p></li>
+</ol>
+</section>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this heading"></a></h2>
+<p>Tests can be invoked by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>tests/titans/ai
+</pre></div>
+</div>
+<p>(We recommend executing <code class="code docutils literal notranslate"><span class="pre">ai</span></code> tests separately from other tests.)</p>
+</section>
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading"></a></h2>
+<section id="strategies">
+<h3>Strategies<a class="headerlink" href="#strategies" title="Permalink to this heading"></a></h3>
+<p>Strategies are the basic “thinking” (and learning!) units of the game. Think of
+them as sklearn-compliant classes for making decisions. The base (abstract)
+class is <a class="reference internal" href="#titans.ai.strategy.Strategy" title="titans.ai.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>, which is inherited by
+<a class="reference internal" href="#titans.ai.strategy.RandomStrategy" title="titans.ai.strategy.RandomStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomStrategy</span></code></a> and
+<a class="reference internal" href="#titans.ai.strategy.StandardStrategy" title="titans.ai.strategy.StandardStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">StandardStrategy</span></code></a>.</p>
+<section id="randomstrategy">
+<h4>RandomStrategy<a class="headerlink" href="#randomstrategy" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.strategy.RandomStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.strategy.</span></span><span class="sig-name descname"><span class="pre">RandomStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/strategy.html#RandomStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.RandomStrategy" title="Permalink to this definition"></a></dt>
+<dd><p>Strategy for making random decisions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>random_state: int, optional, default=None</strong></dt><dd><p>random seed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code>(X, y, /)</p></td>
+<td><p>Fit model</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.strategy.RandomStrategy.predict" title="titans.ai.strategy.RandomStrategy.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X, /)</p></td>
+<td><p>Predict best course of action</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.strategy.RandomStrategy.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#RandomStrategy.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.RandomStrategy.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Predict best course of action</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: np.ndarray</strong></dt><dd><p>data to predict for</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>predictions, returned as the predicted probability of winning given
+each possible choice</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="standardstrategy">
+<h4>StandardStrategy<a class="headerlink" href="#standardstrategy" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.strategy.StandardStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.strategy.</span></span><span class="sig-name descname"><span class="pre">StandardStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/strategy.html#StandardStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.StandardStrategy" title="Permalink to this definition"></a></dt>
+<dd><p>Standard strategy for making decisions</p>
+<p>This class scales data (via z-score normalization) and then using an MLP
+(feedforward regression ANN) to predict best courses of action (given the
+player’s / game’s state).</p>
+<p>This model is designed so that you can resume fitting at any point: If you
+call the fit function multiple times, the ANN will simply resume fitting
+from where you left off. (The scaler will be static, though, configured
+through your first time you called fit. This ensures that new data is on
+the same scale as old data.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>scale: bool, optional, default=True</strong></dt><dd><p>use <cite>sklearn.preprocessing.StandardScaler</cite> to scale data</p>
+</dd>
+<dt><strong>**kwargs: Any</strong></dt><dd><p>passed to <cite>RandomStrategy</cite> on <cite>__init__()</cite></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>restricted: list[int] | None</strong></dt><dd><p>If set, then don’t predict these values. This must be manually set, and
+is provided for exploring the relative values of cards</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.strategy.StandardStrategy.fit" title="titans.ai.strategy.StandardStrategy.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, y, /)</p></td>
+<td><p>Fit model</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.strategy.StandardStrategy.predict" title="titans.ai.strategy.StandardStrategy.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X, /)</p></td>
+<td><p>Predict best course of action</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.strategy.StandardStrategy.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#titans.ai.strategy.Strategy" title="titans.ai.strategy.Strategy"><span class="pre">Strategy</span></a></span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#StandardStrategy.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.StandardStrategy.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: np.ndarray</strong></dt><dd><p>data to use for fitting</p>
+</dd>
+<dt><strong>y: np.ndarray</strong></dt><dd><p>labels</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Strategy</dt><dd><p>calling instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.strategy.StandardStrategy.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#StandardStrategy.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.StandardStrategy.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Predict best course of action</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: np.ndarray</strong></dt><dd><p>data to predict for</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>predictions, returned as the predicted probability of winning given
+each possible choice</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="strategy">
+<h4>Strategy<a class="headerlink" href="#strategy" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.strategy.Strategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.strategy.</span></span><span class="sig-name descname"><span class="pre">Strategy</span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#Strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.Strategy" title="Permalink to this definition"></a></dt>
+<dd><p>Strategy abstract base class</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.strategy.Strategy.fit" title="titans.ai.strategy.Strategy.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, y, /)</p></td>
+<td><p>Fit model</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.strategy.Strategy.predict" title="titans.ai.strategy.Strategy.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X, /)</p></td>
+<td><p>Predict best course of action</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.strategy.Strategy.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#titans.ai.strategy.Strategy" title="titans.ai.strategy.Strategy"><span class="pre">Strategy</span></a></span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#Strategy.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.Strategy.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: np.ndarray</strong></dt><dd><p>data to use for fitting</p>
+</dd>
+<dt><strong>y: np.ndarray</strong></dt><dd><p>labels</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Strategy</dt><dd><p>calling instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.strategy.Strategy.predict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/titans/ai/strategy.html#Strategy.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.strategy.Strategy.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Predict best course of action</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: np.ndarray</strong></dt><dd><p>data to predict for</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>predictions, returned as the predicted probability of winning given
+each possible choice</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="basic-game-constructs">
+<h3>Basic game constructs<a class="headerlink" href="#basic-game-constructs" title="Permalink to this heading"></a></h3>
+<p>Here, we list the basic game constructs that are strung together to simulate
+games. <a class="reference internal" href="#titans.ai.card.Card" title="titans.ai.card.Card"><code class="xref py py-class docutils literal notranslate"><span class="pre">Card</span></code></a> objects are used to represent actual
+in-game cards. <a class="reference internal" href="#titans.ai.player.Player" title="titans.ai.player.Player"><code class="xref py py-class docutils literal notranslate"><span class="pre">Player</span></code></a> objects use decks of cards to
+play against each other. <a class="reference internal" href="#titans.ai.game.Game" title="titans.ai.game.Game"><code class="xref py py-class docutils literal notranslate"><span class="pre">Game</span></code></a> objects orchestrate two
+players playing against one another. <a class="reference internal" href="#titans.ai.trainer.Trainer" title="titans.ai.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a>
+objects take players through many games to learn how to play the game well.</p>
+<section id="card">
+<h4>Card<a class="headerlink" href="#card" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.card.Card">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.card.</span></span><span class="sig-name descname"><span class="pre">Card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#titans.ai.enum.Name" title="titans.ai.enum.Name"><span class="pre">Name</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/card.html#Card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.card.Card" title="Permalink to this definition"></a></dt>
+<dd><p>Card, with all properties</p>
+<p>This class both has all the logic to instantiate cards, and holds all
+properties as a player uses cards in a game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name: Name</strong></dt><dd><p>Name of card</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>abilities: dict[Ability, int]</strong></dt><dd><p>card abilities (count of each ability)</p>
+</dd>
+<dt><strong>cost: int</strong></dt><dd><p>amount of energy required to awaken</p>
+</dd>
+<dt><strong>element: Element</strong></dt><dd><p>card element</p>
+</dd>
+<dt><strong>name: Name</strong></dt><dd><p>card name</p>
+</dd>
+<dt><strong>power: int</strong></dt><dd><p>card power</p>
+</dd>
+<dt><strong>species: Species</strong></dt><dd><p>card species</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="player">
+<h4>Player<a class="headerlink" href="#player" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.player.Player">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.player.</span></span><span class="sig-name descname"><span class="pre">Player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#titans.ai.enum.Identity" title="titans.ai.enum.Identity"><span class="pre">Identity</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.card.Card" title="titans.ai.card.Card"><span class="pre">titans.ai.card.Card</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.enum.Action" title="titans.ai.enum.Action"><span class="pre">titans.ai.enum.Action</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#titans.ai.strategy.Strategy" title="titans.ai.strategy.Strategy"><span class="pre">titans.ai.strategy.Strategy</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/player.html#Player"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player" title="Permalink to this definition"></a></dt>
+<dd><p>Player class</p>
+<p>This class performs all of the core operations of each player. These
+actions are meant to be relatively low-level: The logic of walking through
+an actual game is located in the <cite>titans.ai.game.Game</cite> class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>identity: Identity</strong></dt><dd><p>player’s identity</p>
+</dd>
+<dt><strong>cards: list[Card]</strong></dt><dd><p>cards used in this game</p>
+</dd>
+<dt><strong>strategies: dict[Action, Strategy] | None, optional, default=None</strong></dt><dd><p>strategies for performing actions. If None, random choices will be used</p>
+</dd>
+<dt><strong>random_state: int | None, optional, default=None</strong></dt><dd><p>player’s random seed</p>
+</dd>
+<dt><strong>temperature: float | None, optional, default=None</strong></dt><dd><p>randomness to add into decision making. This is important for making
+sure strategies don’t get stuck in local minimums during training.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cards: dict[Zone, list[Card]]</strong></dt><dd><p>player’s cards, in each zone</p>
+</dd>
+<dt><strong>identity: Identity</strong></dt><dd><p>player’s identity</p>
+</dd>
+<dt><strong>ritual_piles: list[Card]</strong></dt><dd><p>cards in the shared ritual piles. This is harmonized between players in
+Player.handshake()</p>
+</dd>
+<dt><strong>strategies: dict[Action, Strategy]</strong></dt><dd><p>strategies for performing actions</p>
+</dd>
+<dt><strong>temples: int</strong></dt><dd><p>number of temples under player’s control</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.player.Player.awaken_card" title="titans.ai.player.Player.awaken_card"><code class="xref py py-obj docutils literal notranslate"><span class="pre">awaken_card</span></code></a>()</p></td>
+<td><p>Awaken a card from the ritual piles</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.player.Player.battle_opponent" title="titans.ai.player.Player.battle_opponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">battle_opponent</span></code></a>()</p></td>
+<td><p>Battle opponent</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.player.Player.draw_cards" title="titans.ai.player.Player.draw_cards"><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw_cards</span></code></a>([count])</p></td>
+<td><p>Draw cards</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.player.Player.freeze_state" title="titans.ai.player.Player.freeze_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze_state</span></code></a>()</p></td>
+<td><p>Freeze state (for simultaneous actions)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.player.Player.get_energy" title="titans.ai.player.Player.get_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_energy</span></code></a>()</p></td>
+<td><p>Get total energy from all cards in play</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.player.Player.get_power" title="titans.ai.player.Player.get_power"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_power</span></code></a>()</p></td>
+<td><p>Get total power from all cards in play</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.player.Player.get_state" title="titans.ai.player.Player.get_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_state</span></code></a>()</p></td>
+<td><p>Player's state</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.player.Player.handshake" title="titans.ai.player.Player.handshake"><code class="xref py py-obj docutils literal notranslate"><span class="pre">handshake</span></code></a>(opponent, /)</p></td>
+<td><p>Set this player's opponent (and vice-versa)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.player.Player.play_cards" title="titans.ai.player.Player.play_cards"><code class="xref py py-obj docutils literal notranslate"><span class="pre">play_cards</span></code></a>([count])</p></td>
+<td><p>Play one or more cards</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.player.Player.shuffle_cards" title="titans.ai.player.Player.shuffle_cards"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shuffle_cards</span></code></a>()</p></td>
+<td><p>Shuffle all cards together</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.awaken_card">
+<span class="sig-name descname"><span class="pre">awaken_card</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.card.Card" title="titans.ai.card.Card"><span class="pre">titans.ai.card.Card</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.awaken_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.awaken_card" title="Permalink to this definition"></a></dt>
+<dd><p>Awaken a card from the ritual piles</p>
+<p>The awakened card is added to your discard pile. You can always choose
+to not awaken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Card | None</dt><dd><p>awakened card. This is automatically added to the discard zone but
+is returned here for easy debugging / logging. None is returned if
+we choose to not awaken.</p>
+</dd>
+<dt>int</dt><dd><p>decision made. This is the index of the decision matrix that was
+ultimately chosen.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.battle_opponent">
+<span class="sig-name descname"><span class="pre">battle_opponent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#titans.ai.enum.Identity" title="titans.ai.enum.Identity"><span class="pre">Identity</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.battle_opponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.battle_opponent" title="Permalink to this definition"></a></dt>
+<dd><p>Battle opponent</p>
+<p>This should NOT be called for each player, but only once</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Identity | None</dt><dd><p>winner of the battle</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.draw_cards">
+<span class="sig-name descname"><span class="pre">draw_cards</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.card.Card" title="titans.ai.card.Card"><span class="pre">titans.ai.card.Card</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.draw_cards"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.draw_cards" title="Permalink to this definition"></a></dt>
+<dd><p>Draw cards</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>count: int</strong></dt><dd><p>number of cards to draw</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list[Card]</dt><dd><p>the cards drawn. These are added to the hand zone, but are also
+returned for easy debugging / logging.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.freeze_state">
+<span class="sig-name descname"><span class="pre">freeze_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.freeze_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.freeze_state" title="Permalink to this definition"></a></dt>
+<dd><p>Freeze state (for simultaneous actions)</p>
+<p>This causes self.get_state() to return what the state is when you call
+self.freeze_state().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.get_energy">
+<span class="sig-name descname"><span class="pre">get_energy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.get_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.get_energy" title="Permalink to this definition"></a></dt>
+<dd><p>Get total energy from all cards in play</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>available energy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.get_power">
+<span class="sig-name descname"><span class="pre">get_power</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.get_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.get_power" title="Permalink to this definition"></a></dt>
+<dd><p>Get total power from all cards in play</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>total power</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.get_state">
+<span class="sig-name descname"><span class="pre">get_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.get_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.get_state" title="Permalink to this definition"></a></dt>
+<dd><p>Player’s state</p>
+<p>This is the numeric state that is fed into the ML model as the training
+data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>state, from this instance’s point-of-view</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.handshake">
+<span class="sig-name descname"><span class="pre">handshake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#titans.ai.player.Player" title="titans.ai.player.Player"><span class="pre">Player</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.handshake"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.handshake" title="Permalink to this definition"></a></dt>
+<dd><p>Set this player’s opponent (and vice-versa)</p>
+<p>This sets self.opponent, which is used when getting the game state</p>
+<p>You always must handshake before starting a game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>opponent: Player</strong></dt><dd><p>this instance’s competitor for the game</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.play_cards">
+<span class="sig-name descname"><span class="pre">play_cards</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.card.Card" title="titans.ai.card.Card"><span class="pre">titans.ai.card.Card</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.play_cards"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.play_cards" title="Permalink to this definition"></a></dt>
+<dd><p>Play one or more cards</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>count: int, optional, default=1</strong></dt><dd><p>how many cards to play</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list[Card]</dt><dd><p>cards played. The played card is automatically added to the play
+zone, but is also returned here for easy debugging / logging</p>
+</dd>
+<dt>list[int]</dt><dd><p>decisions made (i.e. the indices of the decision matrix that were
+executed)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.player.Player.shuffle_cards">
+<span class="sig-name descname"><span class="pre">shuffle_cards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/titans/ai/player.html#Player.shuffle_cards"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.player.Player.shuffle_cards" title="Permalink to this definition"></a></dt>
+<dd><p>Shuffle all cards together</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="game">
+<h4>Game<a class="headerlink" href="#game" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.game.Game">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.game.</span></span><span class="sig-name descname"><span class="pre">Game</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.enum.Identity" title="titans.ai.enum.Identity"><span class="pre">titans.ai.enum.Identity</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">turn_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/game.html#Game"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.game.Game" title="Permalink to this definition"></a></dt>
+<dd><p>Game Class</p>
+<p>This class contains all the logic to play a full game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]]</strong></dt><dd><p>These dictionaries are unpacked as kwargs to initialize the players. If
+you provide a dictionary of strings, then the provided values will be
+unpacked to initialize both players. If you provide a dictionary of
+identities mapping to a dictionary of strings, then each player will be
+initialized with the corresponding kwargs provided for that player.</p>
+</dd>
+<dt><strong>turn_limit: int, optional, default=1000</strong></dt><dd><p>max number of turns before a draw is declared</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cards: list[Card]</strong></dt><dd><p>cards in the game</p>
+</dd>
+<dt><strong>history: dict[bytes, dict[Action, dict[Identity, list[int]]]]</strong></dt><dd><p>here, the history of each player’s state, and the choices they made
+given that state, are recorded. This variable contains three nested
+dictionaries:</p>
+<ol class="arabic simple">
+<li><p>The top-level dictionary is indexed by each game state at which a
+decision was made (converted from np.ndarrary -&gt; bytes, for
+hashability)</p></li>
+<li><p>The mid-level dictionary is indexed by each action made at that
+decision point</p></li>
+<li><p>The bottom-level dictionary is indexed by the player that made that
+action, and maps to the choice(s) that player made at that decision
+point</p></li>
+</ol>
+</dd>
+<dt><strong>players: list[Players]</strong></dt><dd><p>players playing the game</p>
+</dd>
+<dt><strong>transcript: str</strong></dt><dd><p>human-readable transcript (log) of the game</p>
+</dd>
+<dt><strong>winner: Identity | None</strong></dt><dd><p>winner of game</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.game.Game.parallel_play" title="titans.ai.game.Game.parallel_play"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parallel_play</span></code></a>()</p></td>
+<td><p>Play game, returning a generator that pauses at each decision point</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.game.Game.play" title="titans.ai.game.Game.play"><code class="xref py py-obj docutils literal notranslate"><span class="pre">play</span></code></a>()</p></td>
+<td><p>Play game end-to-end</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.game.Game.parallel_play">
+<span class="sig-name descname"><span class="pre">parallel_play</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.enum.Identity" title="titans.ai.enum.Identity"><span class="pre">titans.ai.enum.Identity</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.enum.Identity" title="titans.ai.enum.Identity"><span class="pre">titans.ai.enum.Identity</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#titans.ai.enum.Action" title="titans.ai.enum.Action"><span class="pre">titans.ai.enum.Action</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/titans/ai/game.html#Game.parallel_play"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.game.Game.parallel_play" title="Permalink to this definition"></a></dt>
+<dd><p>Play game, returning a generator that pauses at each decision point</p>
+<p>This lets an operator simultaneously make decisions across many
+different games. This is important because the slowest part of
+processing is using the ANNs to make decisions. So, using this function
+lets operators speed up game simulations considerably.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt>Generator</dt><dd><p>This generator will play the game to each decision point, and will
+then expect you to send in the <cite>decision_matrices</cite> that rank each
+possible choice.</p>
+<dl>
+<dt>Yields: dict[Identity, np.ndarray] | None</dt><dd><p>dictionary mapping from each player to their current state. If
+None is yielded, the game is over.</p>
+</dd>
+<dt>Send: dict[Identity, dict[Action, np.ndarray]]</dt><dd><dl class="simple">
+<dt>dictionary mapping from each player to (</dt><dd><p>dictionary mapping from each action to the choices that
+player should make for that action, wherein each possible
+choice is ranked by its relative value. (highest value =
+perform that decision)</p>
+</dd>
+</dl>
+<p>)</p>
+</dd>
+</dl>
+<p>Returns: None</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.game.Game.play">
+<span class="sig-name descname"><span class="pre">play</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#titans.ai.game.Game" title="titans.ai.game.Game"><span class="pre">Game</span></a></span></span><a class="reference internal" href="_modules/titans/ai/game.html#Game.play"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.game.Game.play" title="Permalink to this definition"></a></dt>
+<dd><p>Play game end-to-end</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Game</dt><dd><p>calling instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="trainer">
+<h4>Trainer<a class="headerlink" href="#trainer" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.trainer.Trainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">games_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/trainer.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.trainer.Trainer" title="Permalink to this definition"></a></dt>
+<dd><p>Standard trainer</p>
+<p>This class trains up strategies for execellently-playing Titans of Eden. It
+works by executing a number of training epochs, wherein each epoch a bunch
+of games are played, and then data from those games is used to train up
+better and better strategies.</p>
+<p>During each epoch, the current strategy is played against the previous-best
+strategy to generate new training data.</p>
+<p>Early-stopping, weight restoration, and patience are all used to ensure the
+best strategy dominates. Callback is judged on the strategy that (1) plays
+the best against baseline, and (2) outperforms previous-best strategies.</p>
+<p>A temperature parameter is used and varied across games to make ensure that
+strategies don’t get stuck in local minima.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>baseline: bool, optional, default=False</strong></dt><dd><p>if True, only play against random-card-choosing strategies (instead of
+playing against latest-gen-minus-one)</p>
+</dd>
+<dt><strong>epochs: int, optional, default=10</strong></dt><dd><p>number of training epochs to execute</p>
+</dd>
+<dt><strong>games_per_epoch: int, optioanl, default=100</strong></dt><dd><p>number of games to play each epoch</p>
+</dd>
+<dt><strong>parallel: bool, optional, default=True</strong></dt><dd><p>play games in parallel, performing batch decision making at each
+decision point. This is much faster than making decisions
+one-at-a-time.</p>
+</dd>
+<dt><strong>retention: int, optional, default=3</strong></dt><dd><p>when training, keep game histories across this many epochs to train on.
+(i.e. training data from games more than <cite>retention</cite> epochs ago will be
+forgotten.)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>history: deque[dict[bytes, dict[Action, dict[bool, list[int]]]]]</strong></dt><dd><p>here, the history of winning and losing players is recorded. This
+variable maps every state to every choice made given that state,
+recording whether the player that made that choice ultimately won or
+lost the game.</p>
+<p>This is saved as a circular buffer (deque), so that the Trainer can
+retain the histories from the most recent N games.</p>
+</dd>
+<dt><strong>strategies: dict[Action, Strategy]</strong></dt><dd><p>Strategies trained by this class</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#titans.ai.trainer.Trainer.discover" title="titans.ai.trainer.Trainer.discover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discover</span></code></a>()</p></td>
+<td><p>Discover best cards</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#titans.ai.trainer.Trainer.train" title="titans.ai.trainer.Trainer.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a>()</p></td>
+<td><p>Train network</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.trainer.Trainer.discover">
+<span class="sig-name descname"><span class="pre">discover</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/titans/ai/trainer.html#Trainer.discover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.trainer.Trainer.discover" title="Permalink to this definition"></a></dt>
+<dd><p>Discover best cards</p>
+<p>This function uses this trainer’s strategy to weight each card
+according to its relative value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray of shape(len(Name),) of dtype float</dt><dd><p>weights (relative value) of each card</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="titans.ai.trainer.Trainer.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="_modules/titans/ai/trainer.html#Trainer.train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.trainer.Trainer.train" title="Permalink to this definition"></a></dt>
+<dd><p>Train network</p>
+<p>All parameters for training are set in <cite>__init__</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="constants-and-enums">
+<h3>Constants and enums<a class="headerlink" href="#constants-and-enums" title="Permalink to this heading"></a></h3>
+<p>Here, we list all the constants and enums that are available for easy-to-read
+code references. Please note that most enum members are not themselves
+documented, as we assume self-explanability to anyone familiar with the game.</p>
+<p>The constants are mostly used internally for sizing neural networks.</p>
+<p>Most enums here do <strong>not</strong> resolve to integers (without explicit casting),
+which helps catch code errors in mixing them up / supplying them in the wrong
+order.</p>
+<section id="num-choices">
+<h4>NUM_CHOICES<a class="headerlink" href="#num-choices" title="Permalink to this heading"></a></h4>
+<dl class="py data">
+<dt class="sig sig-object py" id="titans.ai.constants.NUM_CHOICES">
+<span class="sig-prename descclassname"><span class="pre">titans.ai.constants.</span></span><span class="sig-name descname"><span class="pre">NUM_CHOICES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">21</span></em><a class="headerlink" href="#titans.ai.constants.NUM_CHOICES" title="Permalink to this definition"></a></dt>
+<dd><p>Number of choices for each action</p>
+</dd></dl>
+
+</section>
+<section id="num-features">
+<h4>NUM_FEATURES<a class="headerlink" href="#num-features" title="Permalink to this heading"></a></h4>
+<dl class="py data">
+<dt class="sig sig-object py" id="titans.ai.constants.NUM_FEATURES">
+<span class="sig-prename descclassname"><span class="pre">titans.ai.constants.</span></span><span class="sig-name descname"><span class="pre">NUM_FEATURES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">148</span></em><a class="headerlink" href="#titans.ai.constants.NUM_FEATURES" title="Permalink to this definition"></a></dt>
+<dd><p>Size of player states, fed as input to ML models</p>
+</dd></dl>
+
+</section>
+<section id="ability">
+<h4>Ability<a class="headerlink" href="#ability" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Ability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Ability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Ability" title="Permalink to this definition"></a></dt>
+<dd><p>Card Abilities</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.BOLSTER_FIRE">
+<span class="sig-name descname"><span class="pre">BOLSTER_FIRE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Ability.BOLSTER_FIRE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.BOLSTER_ICE">
+<span class="sig-name descname"><span class="pre">BOLSTER_ICE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Ability.BOLSTER_ICE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.BOLSTER_RIVALS">
+<span class="sig-name descname"><span class="pre">BOLSTER_RIVALS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#titans.ai.enum.Ability.BOLSTER_RIVALS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.BOLSTER_ROCK">
+<span class="sig-name descname"><span class="pre">BOLSTER_ROCK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#titans.ai.enum.Ability.BOLSTER_ROCK" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.BOLSTER_STORM">
+<span class="sig-name descname"><span class="pre">BOLSTER_STORM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#titans.ai.enum.Ability.BOLSTER_STORM" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.DISCARD">
+<span class="sig-name descname"><span class="pre">DISCARD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#titans.ai.enum.Ability.DISCARD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.DRAW">
+<span class="sig-name descname"><span class="pre">DRAW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#titans.ai.enum.Ability.DRAW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.ENERGY">
+<span class="sig-name descname"><span class="pre">ENERGY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#titans.ai.enum.Ability.ENERGY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.ENERGY_ARC">
+<span class="sig-name descname"><span class="pre">ENERGY_ARC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#titans.ai.enum.Ability.ENERGY_ARC" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.FLASH">
+<span class="sig-name descname"><span class="pre">FLASH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#titans.ai.enum.Ability.FLASH" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.HAUNT">
+<span class="sig-name descname"><span class="pre">HAUNT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#titans.ai.enum.Ability.HAUNT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.PROTECT">
+<span class="sig-name descname"><span class="pre">PROTECT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#titans.ai.enum.Ability.PROTECT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.PURIFY">
+<span class="sig-name descname"><span class="pre">PURIFY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#titans.ai.enum.Ability.PURIFY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SACRIFICE">
+<span class="sig-name descname"><span class="pre">SACRIFICE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SACRIFICE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUBSTITUTE">
+<span class="sig-name descname"><span class="pre">SUBSTITUTE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUBSTITUTE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUBVERT_CAVE_IN">
+<span class="sig-name descname"><span class="pre">SUBVERT_CAVE_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUBVERT_CAVE_IN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUBVERT_HARMLESS">
+<span class="sig-name descname"><span class="pre">SUBVERT_HARMLESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUBVERT_HARMLESS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUBVERT_MINDLESS">
+<span class="sig-name descname"><span class="pre">SUBVERT_MINDLESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUBVERT_MINDLESS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUBVERT_TRAITOROUS">
+<span class="sig-name descname"><span class="pre">SUBVERT_TRAITOROUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUBVERT_TRAITOROUS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Ability.SUMMON">
+<span class="sig-name descname"><span class="pre">SUMMON</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">19</span></em><a class="headerlink" href="#titans.ai.enum.Ability.SUMMON" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="action">
+<h4>Action<a class="headerlink" href="#action" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Action">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Action" title="Permalink to this definition"></a></dt>
+<dd><p>Various actions (one for each strategy)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Action.AWAKEN">
+<span class="sig-name descname"><span class="pre">AWAKEN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Action.AWAKEN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Action.PLAY">
+<span class="sig-name descname"><span class="pre">PLAY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Action.PLAY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="element">
+<h4>Element<a class="headerlink" href="#element" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Element">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Element" title="Permalink to this definition"></a></dt>
+<dd><p>Card Elements</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.DESERT">
+<span class="sig-name descname"><span class="pre">DESERT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Element.DESERT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.FIRE">
+<span class="sig-name descname"><span class="pre">FIRE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#titans.ai.enum.Element.FIRE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.FOREST">
+<span class="sig-name descname"><span class="pre">FOREST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Element.FOREST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.ICE">
+<span class="sig-name descname"><span class="pre">ICE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#titans.ai.enum.Element.ICE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.ROCK">
+<span class="sig-name descname"><span class="pre">ROCK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#titans.ai.enum.Element.ROCK" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Element.STORM">
+<span class="sig-name descname"><span class="pre">STORM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#titans.ai.enum.Element.STORM" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="identity">
+<h4>Identity<a class="headerlink" href="#identity" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Identity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Identity" title="Permalink to this definition"></a></dt>
+<dd><p>Player names</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Identity.BRYAN">
+<span class="sig-name descname"><span class="pre">BRYAN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Identity.BRYAN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Identity.MIKE">
+<span class="sig-name descname"><span class="pre">MIKE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Identity.MIKE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="name">
+<h4>Name<a class="headerlink" href="#name" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Name">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Name" title="Permalink to this definition"></a></dt>
+<dd><p>Card Names</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.AKARI_TIMELESS_FIGHTER">
+<span class="sig-name descname"><span class="pre">AKARI_TIMELESS_FIGHTER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#titans.ai.enum.Name.AKARI_TIMELESS_FIGHTER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.AURORA_DRACO">
+<span class="sig-name descname"><span class="pre">AURORA_DRACO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#titans.ai.enum.Name.AURORA_DRACO" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.CAVERNS_DEFENDER">
+<span class="sig-name descname"><span class="pre">CAVERNS_DEFENDER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#titans.ai.enum.Name.CAVERNS_DEFENDER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.FINAL_JUDGMENT">
+<span class="sig-name descname"><span class="pre">FINAL_JUDGMENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#titans.ai.enum.Name.FINAL_JUDGMENT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.FROSTBREATH">
+<span class="sig-name descname"><span class="pre">FROSTBREATH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></em><a class="headerlink" href="#titans.ai.enum.Name.FROSTBREATH" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.GHOST">
+<span class="sig-name descname"><span class="pre">GHOST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#titans.ai.enum.Name.GHOST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.HELL_FROZEN_OVER">
+<span class="sig-name descname"><span class="pre">HELL_FROZEN_OVER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#titans.ai.enum.Name.HELL_FROZEN_OVER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.JACE_WINTERS_FIRSTBORN">
+<span class="sig-name descname"><span class="pre">JACE_WINTERS_FIRSTBORN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#titans.ai.enum.Name.JACE_WINTERS_FIRSTBORN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.LIVING_VOLCANO">
+<span class="sig-name descname"><span class="pre">LIVING_VOLCANO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#titans.ai.enum.Name.LIVING_VOLCANO" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.MADNESS_OF_A_THOUSAND_STARS">
+<span class="sig-name descname"><span class="pre">MADNESS_OF_A_THOUSAND_STARS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#titans.ai.enum.Name.MADNESS_OF_A_THOUSAND_STARS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.MONK">
+<span class="sig-name descname"><span class="pre">MONK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Name.MONK" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.NIKOLAI_THE_CURSED">
+<span class="sig-name descname"><span class="pre">NIKOLAI_THE_CURSED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#titans.ai.enum.Name.NIKOLAI_THE_CURSED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.RETURN_OF_THE_FROST_GIANTS">
+<span class="sig-name descname"><span class="pre">RETURN_OF_THE_FROST_GIANTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#titans.ai.enum.Name.RETURN_OF_THE_FROST_GIANTS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.SMOLDERING_DRAGON">
+<span class="sig-name descname"><span class="pre">SMOLDERING_DRAGON</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#titans.ai.enum.Name.SMOLDERING_DRAGON" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.SPINE_SPLITTER">
+<span class="sig-name descname"><span class="pre">SPINE_SPLITTER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17</span></em><a class="headerlink" href="#titans.ai.enum.Name.SPINE_SPLITTER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.TRAVELER">
+<span class="sig-name descname"><span class="pre">TRAVELER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#titans.ai.enum.Name.TRAVELER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.WHAT_LIES_BELOW">
+<span class="sig-name descname"><span class="pre">WHAT_LIES_BELOW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">19</span></em><a class="headerlink" href="#titans.ai.enum.Name.WHAT_LIES_BELOW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.WINDS_HOWL">
+<span class="sig-name descname"><span class="pre">WINDS_HOWL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#titans.ai.enum.Name.WINDS_HOWL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.WIZARD">
+<span class="sig-name descname"><span class="pre">WIZARD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Name.WIZARD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Name.ZODIAC_THE_ETERNAL">
+<span class="sig-name descname"><span class="pre">ZODIAC_THE_ETERNAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#titans.ai.enum.Name.ZODIAC_THE_ETERNAL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="species">
+<h4>Species<a class="headerlink" href="#species" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Species">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Species"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Species" title="Permalink to this definition"></a></dt>
+<dd><p>Card Species</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Species.BEAST">
+<span class="sig-name descname"><span class="pre">BEAST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#titans.ai.enum.Species.BEAST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Species.DRAGON">
+<span class="sig-name descname"><span class="pre">DRAGON</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#titans.ai.enum.Species.DRAGON" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Species.DWELLER">
+<span class="sig-name descname"><span class="pre">DWELLER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Species.DWELLER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Species.TITAN">
+<span class="sig-name descname"><span class="pre">TITAN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#titans.ai.enum.Species.TITAN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Species.WARRIOR">
+<span class="sig-name descname"><span class="pre">WARRIOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Species.WARRIOR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="zone">
+<h4>Zone<a class="headerlink" href="#zone" title="Permalink to this heading"></a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="titans.ai.enum.Zone">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">titans.ai.enum.</span></span><span class="sig-name descname"><span class="pre">Zone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/titans/ai/enum.html#Zone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#titans.ai.enum.Zone" title="Permalink to this definition"></a></dt>
+<dd><p>Different zones a player’s cards can be in</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Zone.DECK">
+<span class="sig-name descname"><span class="pre">DECK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#titans.ai.enum.Zone.DECK" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Zone.DISCARD">
+<span class="sig-name descname"><span class="pre">DISCARD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#titans.ai.enum.Zone.DISCARD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Zone.HAND">
+<span class="sig-name descname"><span class="pre">HAND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#titans.ai.enum.Zone.HAND" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="titans.ai.enum.Zone.PLAY">
+<span class="sig-name descname"><span class="pre">PLAY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#titans.ai.enum.Zone.PLAY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Titans Of Eden" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cloud.html" class="btn btn-neutral float-right" title="Cloud Ops" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.game &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.game</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.game</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Game Module&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">titans.ai.card</span> <span class="kn">import</span> <span class="n">Card</span>
+<span class="kn">from</span> <span class="nn">titans.ai.enum</span> <span class="kn">import</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Identity</span><span class="p">,</span> <span class="n">Zone</span>
+<span class="kn">from</span> <span class="nn">titans.ai.player</span> <span class="kn">import</span> <span class="n">Player</span>
+
+
+<div class="viewcode-block" id="Game"><a class="viewcode-back" href="../../../ai.html#titans.ai.game.Game">[docs]</a><span class="k">class</span> <span class="nc">Game</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Game Class</span>
+
+<span class="sd">    This class contains all the logic to play a full game.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]]</span>
+<span class="sd">        These dictionaries are unpacked as kwargs to initialize the players. If</span>
+<span class="sd">        you provide a dictionary of strings, then the provided values will be</span>
+<span class="sd">        unpacked to initialize both players. If you provide a dictionary of</span>
+<span class="sd">        identities mapping to a dictionary of strings, then each player will be</span>
+<span class="sd">        initialized with the corresponding kwargs provided for that player.</span>
+<span class="sd">    turn_limit: int, optional, default=1000</span>
+<span class="sd">        max number of turns before a draw is declared</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cards: list[Card]</span>
+<span class="sd">        cards in the game</span>
+<span class="sd">    history: dict[bytes, dict[Action, dict[Identity, list[int]]]]</span>
+<span class="sd">        here, the history of each player&#39;s state, and the choices they made</span>
+<span class="sd">        given that state, are recorded. This variable contains three nested</span>
+<span class="sd">        dictionaries:</span>
+
+<span class="sd">        1. The top-level dictionary is indexed by each game state at which a</span>
+<span class="sd">           decision was made (converted from np.ndarrary -&gt; bytes, for</span>
+<span class="sd">           hashability)</span>
+<span class="sd">        2. The mid-level dictionary is indexed by each action made at that</span>
+<span class="sd">           decision point</span>
+<span class="sd">        3. The bottom-level dictionary is indexed by the player that made that</span>
+<span class="sd">           action, and maps to the choice(s) that player made at that decision</span>
+<span class="sd">           point</span>
+
+<span class="sd">    players: list[Players]</span>
+<span class="sd">        players playing the game</span>
+<span class="sd">    transcript: str</span>
+<span class="sd">        human-readable transcript (log) of the game</span>
+<span class="sd">    winner: Identity | None</span>
+<span class="sd">        winner of game</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">player_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">turn_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># save parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_turn_limit</span> <span class="o">=</span> <span class="n">turn_limit</span>
+
+        <span class="c1"># construct cards</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Card</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">Name</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="k">match</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">MONK</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="mi">16</span>
+                <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">WIZARD</span> <span class="o">|</span> <span class="n">Name</span><span class="o">.</span><span class="n">TRAVELER</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="mi">8</span>
+                <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">GHOST</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="mi">12</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">Card</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)])</span>
+
+        <span class="c1"># construct players</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">Player</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">identity</span><span class="p">:</span> <span class="n">Player</span><span class="p">(</span>
+                <span class="n">identity</span><span class="p">,</span>
+                <span class="n">cards</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">,</span>
+                <span class="o">**</span><span class="p">(</span>
+                    <span class="p">{}</span>
+                    <span class="k">if</span> <span class="n">player_kwargs</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">player_kwargs</span>
+                    <span class="k">if</span> <span class="n">identity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">player_kwargs</span>
+                    <span class="k">else</span> <span class="n">player_kwargs</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">Identity</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">Identity</span><span class="o">.</span><span class="n">MIKE</span><span class="p">]</span><span class="o">.</span><span class="n">handshake</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">Identity</span><span class="o">.</span><span class="n">BRYAN</span><span class="p">])</span>
+
+        <span class="c1"># initialize history tracking</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">winner</span><span class="p">:</span> <span class="n">Identity</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_play_age</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_generators</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute an age</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_generators: bool, optional, default=False</span>
+<span class="sd">            If True, then yield an interactive generator; if False, yield a</span>
+<span class="sd">            zero-length generator that executes the whole method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Generator</span>
+<span class="sd">            A generator that yields at each decision point (if</span>
+<span class="sd">            `use_generators`; otherwise, generator is zero-length). See `_play`</span>
+<span class="sd">            for more details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># freeze states</span>
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">Identity</span><span class="o">.</span><span class="n">MIKE</span><span class="p">]</span><span class="o">.</span><span class="n">freeze_state</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">Identity</span><span class="o">.</span><span class="n">BRYAN</span><span class="p">]</span><span class="o">.</span><span class="n">freeze_state</span><span class="p">(),</span>
+        <span class="p">):</span>
+            <span class="c1"># yield player states, make decisions outside of this game</span>
+            <span class="k">if</span> <span class="n">use_generators</span><span class="p">:</span>
+                <span class="n">decision_matrices</span> <span class="o">=</span> <span class="k">yield</span> <span class="p">{</span>
+                    <span class="n">identity</span><span class="p">:</span> <span class="n">player</span><span class="o">.</span><span class="n">_frozen_state</span>
+                    <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">decision_matrices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span><span class="o">.</span><span class="n">_decision_matrices</span> <span class="o">=</span> <span class="n">matrix</span>
+
+            <span class="c1"># play and awaken cards, saving states</span>
+            <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">frozen_state</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">_frozen_state</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">Player</span><span class="o">.</span><span class="n">play_cards</span><span class="p">,</span> <span class="n">Action</span><span class="o">.</span><span class="n">PLAY</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">Player</span><span class="o">.</span><span class="n">awaken_card</span><span class="p">,</span> <span class="n">Action</span><span class="o">.</span><span class="n">AWAKEN</span><span class="p">),</span>
+                <span class="p">]:</span>
+                    <span class="c1"># do action, get consistent formatting</span>
+                    <span class="n">cards</span><span class="p">,</span> <span class="n">choices</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+                        <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="n">choices</span><span class="p">]</span>
+                        <span class="n">cards</span> <span class="o">=</span> <span class="p">[</span><span class="n">cards</span><span class="p">]</span>
+
+                    <span class="c1"># update state dictionary</span>
+                    <span class="n">state_dict</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">frozen_state</span><span class="p">,</span> <span class="p">{})</span>
+                        <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">{})</span>
+                        <span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="p">)</span>
+                    <span class="n">state_dict</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span>
+
+                    <span class="c1"># update transcript</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="s2">&quot;        &quot;</span>
+                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">identity</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">:</span><span class="s2">5s</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">:</span><span class="s2">6s</span><span class="si">}</span><span class="s2">&#39;d &quot;</span>
+                        <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="p">[</span>
+                                <span class="p">(</span>
+                                    <span class="n">card</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">name</span>
+                                    <span class="k">if</span> <span class="n">card</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                                    <span class="k">else</span> <span class="s2">&quot;None&quot;</span>
+                                <span class="p">)</span>
+                                <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">choice</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">Name</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot; (default)&quot;</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">choice</span><span class="p">,</span> <span class="n">card</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">cards</span><span class="p">)</span>
+                            <span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># void out decision matrices</span>
+        <span class="k">if</span> <span class="n">use_generators</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">player</span><span class="o">.</span><span class="n">_decision_matrices</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># stop iteration</span>
+        <span class="k">yield from</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_play_turn</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_generators</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute a complete turn</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_generators: bool, optional, default=False</span>
+<span class="sd">            if True, yield at each decision point. Otherwise, play end-to-end</span>
+<span class="sd">            (i.e. yielding a zero-length generator).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Generator</span>
+<span class="sd">            A generator that yields at each decision point (if</span>
+<span class="sd">            `use_generators`; otherwise, generator is zero-length). See `_play`</span>
+<span class="sd">            for more details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># shuffle step (we do this first)</span>
+        <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">player</span><span class="o">.</span><span class="n">shuffle_cards</span><span class="p">()</span>
+            <span class="n">player</span><span class="o">.</span><span class="n">draw_cards</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+        <span class="c1"># play ages</span>
+        <span class="k">for</span> <span class="n">age_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    Age </span><span class="si">{</span><span class="n">age_num</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_play_age</span><span class="p">(</span><span class="n">use_generators</span><span class="o">=</span><span class="n">use_generators</span><span class="p">)</span>
+
+        <span class="c1"># battle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="s2">&quot;    Battle</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;        </span><span class="si">{</span><span class="n">identity</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">:</span><span class="s2">5s</span><span class="si">}</span><span class="s2">&#39;s power:&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">player</span><span class="o">.</span><span class="n">get_power</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">winner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">[</span><span class="n">Identity</span><span class="o">.</span><span class="n">MIKE</span><span class="p">]</span><span class="o">.</span><span class="n">battle_opponent</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">winner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;        Winner: </span><span class="si">{</span><span class="n">winner</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;        </span><span class="si">{</span><span class="n">identity</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;s temples:&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">player</span><span class="o">.</span><span class="n">temples</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># overview</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="s2">&quot;    Overview</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">Zone</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="si">:</span><span class="s2">8s</span><span class="si">}{</span><span class="n">zone</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="si">:</span><span class="s2">12s</span><span class="si">}{</span><span class="n">identity</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="si">:</span><span class="s2">16s</span><span class="si">}{</span><span class="n">player</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="n">zone</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_play</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">use_generators</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Play game</span>
+
+<span class="sd">        This function is modularly designed to either yield a generator that</span>
+<span class="sd">        you can interact with (if you set `use_generators=True`), or to return</span>
+<span class="sd">        a zero-length generator so you can execute the whole age with</span>
+<span class="sd">        `tuple(Game._play_age())`. It&#39;s set up this way so that you have the</span>
+<span class="sd">        option to run many games in parallel with one another, syncing</span>
+<span class="sd">        decisions across games (which allows for much faster decision matrix</span>
+<span class="sd">        computation).</span>
+
+<span class="sd">        If you are using this as a generator, the function will yield at each</span>
+<span class="sd">        decision point, and let you send in the decision each player is to</span>
+<span class="sd">        make.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Generator</span>
+<span class="sd">            A generator that yields at each decision point (if</span>
+<span class="sd">            `use_generators`; otherwise, generator is zero-length). The only</span>
+<span class="sd">            difference between the return here and the return in</span>
+<span class="sd">            `parallel_play` is that this function will never yield `None`; that</span>
+<span class="sd">            is added by `parallel_play` once the game completes. See</span>
+<span class="sd">            `parallel_play` for more information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># play game</span>
+        <span class="k">for</span> <span class="n">turn_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_turn_limit</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Turn </span><span class="si">{</span><span class="n">turn_num</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_play_turn</span><span class="p">(</span><span class="n">use_generators</span><span class="o">=</span><span class="n">use_generators</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">player</span><span class="o">.</span><span class="n">temples</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">winner</span> <span class="o">=</span> <span class="n">player</span><span class="o">.</span><span class="n">opponent</span><span class="o">.</span><span class="n">identity</span>
+                    <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="c1"># no winner after N turns -- tie game</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">winner</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Game.parallel_play"><a class="viewcode-back" href="../../../ai.html#titans.ai.game.Game.parallel_play">[docs]</a>    <span class="k">def</span> <span class="nf">parallel_play</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="n">Identity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Action</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Play game, returning a generator that pauses at each decision point</span>
+
+<span class="sd">        This lets an operator simultaneously make decisions across many</span>
+<span class="sd">        different games. This is important because the slowest part of</span>
+<span class="sd">        processing is using the ANNs to make decisions. So, using this function</span>
+<span class="sd">        lets operators speed up game simulations considerably.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Generator</span>
+<span class="sd">            This generator will play the game to each decision point, and will</span>
+<span class="sd">            then expect you to send in the `decision_matrices` that rank each</span>
+<span class="sd">            possible choice.</span>
+
+<span class="sd">            Yields: dict[Identity, np.ndarray] | None</span>
+<span class="sd">                dictionary mapping from each player to their current state. If</span>
+<span class="sd">                None is yielded, the game is over.</span>
+<span class="sd">            Send: dict[Identity, dict[Action, np.ndarray]]</span>
+<span class="sd">                dictionary mapping from each player to (</span>
+<span class="sd">                    dictionary mapping from each action to the choices that</span>
+<span class="sd">                    player should make for that action, wherein each possible</span>
+<span class="sd">                    choice is ranked by its relative value. (highest value =</span>
+<span class="sd">                    perform that decision)</span>
+<span class="sd">                )</span>
+<span class="sd">            Returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_play</span><span class="p">(</span><span class="n">use_generators</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Game.play"><a class="viewcode-back" href="../../../ai.html#titans.ai.game.Game.play">[docs]</a>    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Game</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Play game end-to-end</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Game</span>
+<span class="sd">            calling instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_play</span><span class="p">(</span><span class="n">use_generators</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

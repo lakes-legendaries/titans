@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.card &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.card</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.card</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;All cards a player can add to their deck&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">titans.ai.enum</span> <span class="kn">import</span> <span class="n">Ability</span><span class="p">,</span> <span class="n">Element</span><span class="p">,</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Species</span>
+
+
+<div class="viewcode-block" id="Card"><a class="viewcode-back" href="../../../ai.html#titans.ai.card.Card">[docs]</a><span class="k">class</span> <span class="nc">Card</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card, with all properties</span>
+
+<span class="sd">    This class both has all the logic to instantiate cards, and holds all</span>
+<span class="sd">    properties as a player uses cards in a game.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: Name</span>
+<span class="sd">        Name of card</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    abilities: dict[Ability, int]</span>
+<span class="sd">        card abilities (count of each ability)</span>
+<span class="sd">    cost: int</span>
+<span class="sd">        amount of energy required to awaken</span>
+<span class="sd">    element: Element</span>
+<span class="sd">        card element</span>
+<span class="sd">    name: Name</span>
+<span class="sd">        card name</span>
+<span class="sd">    power: int</span>
+<span class="sd">        card power</span>
+<span class="sd">    species: Species</span>
+<span class="sd">        card species</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Name</span><span class="p">,</span>
+        <span class="o">/</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># check parameters</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not a member of titans.ai.enum.Name&quot;</span><span class="p">)</span>
+
+        <span class="c1"># save name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="c1"># assign properties</span>
+        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="c1"># forest cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">MONK</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span><span class="n">Ability</span><span class="o">.</span><span class="n">ENERGY</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FOREST</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DWELLER</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">WIZARD</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FOREST</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DWELLER</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">TRAVELER</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">ENERGY</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FOREST</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DWELLER</span>
+
+            <span class="c1"># desert cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">GHOST</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">DESERT</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DWELLER</span>
+
+            <span class="c1"># storm cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">NIKOLAI_THE_CURSED</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUMMON</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">STORM</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">WARRIOR</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">WINDS_HOWL</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">FLASH</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">STORM</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">BEAST</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">AURORA_DRACO</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">HAUNT</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">BOLSTER_FIRE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">STORM</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DRAGON</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">MADNESS_OF_A_THOUSAND_STARS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">ENERGY_ARC</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">4</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">STORM</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">TITAN</span>
+
+            <span class="c1"># fire cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">ZODIAC_THE_ETERNAL</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">PURIFY</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FIRE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">WARRIOR</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">LIVING_VOLCANO</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">FLASH</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">DISCARD</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FIRE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">BEAST</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">SMOLDERING_DRAGON</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">PROTECT</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">BOLSTER_ICE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FIRE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DRAGON</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">FINAL_JUDGMENT</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">DISCARD</span><span class="p">:</span> <span class="mi">3000</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">4</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">FIRE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">TITAN</span>
+
+            <span class="c1"># ice cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">JACE_WINTERS_FIRSTBORN</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUBVERT_HARMLESS</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ICE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">WARRIOR</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">RETURN_OF_THE_FROST_GIANTS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">FLASH</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUBSTITUTE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ICE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">BEAST</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">FROSTBREATH</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUBVERT_MINDLESS</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">BOLSTER_ROCK</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ICE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DRAGON</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">HELL_FROZEN_OVER</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUBVERT_TRAITOROUS</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">4</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ICE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">TITAN</span>
+
+            <span class="c1"># rock cards</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">AKARI_TIMELESS_FIGHTER</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">DRAW</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ROCK</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">WARRIOR</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">SPINE_SPLITTER</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">FLASH</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SACRIFICE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ROCK</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">BEAST</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">CAVERNS_DEFENDER</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">SUBVERT_CAVE_IN</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">BOLSTER_STORM</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ROCK</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">DRAGON</span>
+            <span class="k">case</span> <span class="n">Name</span><span class="o">.</span><span class="n">WHAT_LIES_BELOW</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">Ability</span><span class="o">.</span><span class="n">BOLSTER_RIVALS</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="mi">4</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">ROCK</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="n">Species</span><span class="o">.</span><span class="n">TITAN</span>
+
+            <span class="c1"># error</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Missing properties for </span><span class="si">{</span><span class="n">name</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

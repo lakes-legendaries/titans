@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>titans.ai.enum &mdash; titans  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            titans
+          </a>
+              <div class="version">
+                1.0.16
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ai.html">AI Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud.html">Cloud Ops</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">titans</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">titans.ai.enum</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for titans.ai.enum</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Common enums</span>
+
+<span class="sd">There are used as Enum, instead of IntEnum, so that users don&#39;t accidently mix</span>
+<span class="sd">up dictionaries that are index by a given enum type. E.g.</span>
+<span class="sd">`my_dict[Action][Identity]` would resolve calls to `my_dict[Identity][Action]`</span>
+<span class="sd">if both were IntEnums.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">auto</span><span class="p">,</span> <span class="n">Enum</span>
+
+
+<div class="viewcode-block" id="Ability"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Ability">[docs]</a><span class="k">class</span> <span class="nc">Ability</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card Abilities&quot;&quot;&quot;</span>
+
+    <span class="n">BOLSTER_FIRE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">BOLSTER_ICE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">BOLSTER_RIVALS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">BOLSTER_ROCK</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">BOLSTER_STORM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">DISCARD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">DRAW</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">ENERGY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">ENERGY_ARC</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">FLASH</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">HAUNT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">PROTECT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">PURIFY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SACRIFICE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUBSTITUTE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUBVERT_CAVE_IN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUBVERT_HARMLESS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUBVERT_MINDLESS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUBVERT_TRAITOROUS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SUMMON</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Action"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Action">[docs]</a><span class="k">class</span> <span class="nc">Action</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Various actions (one for each strategy)&quot;&quot;&quot;</span>
+
+    <span class="n">AWAKEN</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">PLAY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Element"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Element">[docs]</a><span class="k">class</span> <span class="nc">Element</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card Elements&quot;&quot;&quot;</span>
+
+    <span class="n">FOREST</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DESERT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">STORM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">FIRE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">ICE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">ROCK</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Identity"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Identity">[docs]</a><span class="k">class</span> <span class="nc">Identity</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Player names&quot;&quot;&quot;</span>
+
+    <span class="n">MIKE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">BRYAN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Name"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Name">[docs]</a><span class="k">class</span> <span class="nc">Name</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card Names&quot;&quot;&quot;</span>
+
+    <span class="c1"># Forest</span>
+    <span class="n">MONK</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">WIZARD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">TRAVELER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1"># Desert</span>
+    <span class="n">GHOST</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1"># Storm</span>
+    <span class="n">NIKOLAI_THE_CURSED</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">WINDS_HOWL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">AURORA_DRACO</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">MADNESS_OF_A_THOUSAND_STARS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1"># Fire</span>
+    <span class="n">ZODIAC_THE_ETERNAL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">LIVING_VOLCANO</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SMOLDERING_DRAGON</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">FINAL_JUDGMENT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1"># Ice</span>
+    <span class="n">JACE_WINTERS_FIRSTBORN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">RETURN_OF_THE_FROST_GIANTS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">FROSTBREATH</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">HELL_FROZEN_OVER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1"># Rock</span>
+    <span class="n">AKARI_TIMELESS_FIGHTER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SPINE_SPLITTER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">CAVERNS_DEFENDER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">WHAT_LIES_BELOW</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Species"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Species">[docs]</a><span class="k">class</span> <span class="nc">Species</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card Species&quot;&quot;&quot;</span>
+
+    <span class="n">DWELLER</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">WARRIOR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">BEAST</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">DRAGON</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">TITAN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Zone"><a class="viewcode-back" href="../../../ai.html#titans.ai.enum.Zone">[docs]</a><span class="k">class</span> <span class="nc">Zone</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Different zones a player&#39;s cards can be in&quot;&quot;&quot;</span>
+
+    <span class="n">DECK</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DISCARD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">HAND</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">PLAY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
