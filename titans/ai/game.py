@@ -52,6 +52,7 @@ class Game:
     winner: Identity | None
         winner of game
     """
+
     def __init__(
         self,
         player_kwargs: dict[str, Any] | dict[Identity, dict[str, Any]] = None,
@@ -126,14 +127,12 @@ class Game:
             self.players[Identity.MIKE].freeze_state(),
             self.players[Identity.BRYAN].freeze_state(),
         ):
-
             # yield player states, make decisions outside of this game
             if use_generators:
-                decision_matrices = \
-                    yield {
-                        identity: player._frozen_state
-                        for identity, player in self.players.items()
-                    }
+                decision_matrices = yield {
+                    identity: player._frozen_state
+                    for identity, player in self.players.items()
+                }
                 for identity, matrix in decision_matrices.items():
                     self.players[identity]._decision_matrices = matrix
 
@@ -152,8 +151,7 @@ class Game:
 
                     # update state dictionary
                     state_dict = (
-                        self.history
-                        .setdefault(frozen_state, {})
+                        self.history.setdefault(frozen_state, {})
                         .setdefault(action, {})
                         .setdefault(identity, [])
                     )
@@ -164,18 +162,18 @@ class Game:
                         "        "
                         + f"{identity.name.title():5s}"
                         + f" {action.name.lower():6s}'d "
-                        + ", ".join([
-                            (
-                                card.name.name
-                                if card is not None
-                                else "None"
-                            ) + (
-                                ""
-                                if choice < len(Name)
-                                else " (default)"
-                            )
-                            for choice, card in zip(choices, cards)
-                        ]) + "\n"
+                        + ", ".join(
+                            [
+                                (
+                                    card.name.name
+                                    if card is not None
+                                    else "None"
+                                )
+                                + ("" if choice < len(Name) else " (default)")
+                                for choice, card in zip(choices, cards)
+                            ]
+                        )
+                        + "\n"
                     )
 
         # void out decision matrices
@@ -290,7 +288,9 @@ class Game:
         self.winner = None
         return self
 
-    def parallel_play(self) -> Generator[
+    def parallel_play(
+        self,
+    ) -> Generator[
         dict[Identity, np.ndarray] | None,
         dict[Identity, dict[Action, np.ndarray]],
         None,

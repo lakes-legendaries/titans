@@ -38,10 +38,9 @@ class SendEmails:
         body: str,
         *,
         attachments: list[str] = [],
-        recipients: Union[str, list[str]] = 'mike@lakeslegendaries.com',
+        recipients: Union[str, list[str]] = "mike@lakeslegendaries.com",
         send_to_all: bool = False,
     ):
-
         # save passed
         self._subject = subject
         self._body = body
@@ -68,37 +67,35 @@ class SendEmails:
         """
 
         # read email body from html file
-        is_html = self._body.endswith('.html')
-        body = (
-            self._body
-            if not is_html
-            else open(self._body, 'r').read()
-        )
+        is_html = self._body.endswith(".html")
+        body = self._body if not is_html else open(self._body, "r").read()
 
         # create email dictionary
         email_dict = {
-            'message': {
-                'subject': self._subject,
-                'body': {
-                    'contentType': 'HTML' if is_html else 'Text',
-                    'content': body,
+            "message": {
+                "subject": self._subject,
+                "body": {
+                    "contentType": "HTML" if is_html else "Text",
+                    "content": body,
                 },
-                'attachments': [],
+                "attachments": [],
             },
-            'saveToSentItems': False,
+            "saveToSentItems": False,
         }
 
         # add attachments
         for attachment in self._attachments:
-            bytes = b64encode(open(attachment, 'rb').read()).decode('utf-8')
-            email_dict['message']['attachments'].append({
-                '@odata.type': '#microsoft.graph.fileAttachment',
-                'name': basename(attachment),
-                'isInline': True,
-                'contentId': basename(attachment).rsplit('.')[0],
-                'contentType': f"image/{basename(attachment).rsplit('.')[1]}",
-                'contentBytes': bytes,
-            })
+            bytes = b64encode(open(attachment, "rb").read()).decode("utf-8")
+            email_dict["message"]["attachments"].append(
+                {
+                    "@odata.type": "#microsoft.graph.fileAttachment",
+                    "name": basename(attachment),
+                    "isInline": True,
+                    "contentId": basename(attachment).rsplit(".")[0],
+                    "contentType": f"image/{basename(attachment).rsplit('.')[1]}",
+                    "contentBytes": bytes,
+                }
+            )
 
         # return
         return email_dict
@@ -115,14 +112,10 @@ class SendEmails:
         # send to all recepients
         if self._send_to_all:
             emails = connect().execute("""SELECT email FROM Contacts""")
-            recipients = [
-                email[0]
-                for email in emails
-            ]
+            recipients = [email[0] for email in emails]
 
         # send to provided recipients
         else:
-
             # load repients
             recipients = self._recipients
 
@@ -133,11 +126,11 @@ class SendEmails:
         # get confirmation for large sends
         if len(recipients) > 5:
             prompt = (
-                f'Sending to {len(recipients)} contacts. '
-                'Type \'Y\' to continue: '
+                f"Sending to {len(recipients)} contacts. "
+                "Type 'Y' to continue: "
             )
-            if input(prompt) != 'Y':
-                print('Aborting')
+            if input(prompt) != "Y":
+                print("Aborting")
                 quit()
 
         # return
@@ -156,22 +149,22 @@ class SendEmails:
 
         # send to each recipient
         for recipient in recipients:
-
             # get fresh copy of email
             email = deepcopy(email_dict)
 
             # substitute in email address
-            email['message']['body']['content'] = \
-                email['message']['body']['content'].replace(
-                    r'#|EMAIL|#',
-                    recipient,
-                )
+            email["message"]["body"]["content"] = email["message"]["body"][
+                "content"
+            ].replace(
+                r"#|EMAIL|#",
+                recipient,
+            )
 
             # add recipient to email dictionary
-            email['message']['toRecipients'] = [
+            email["message"]["toRecipients"] = [
                 {
-                    'emailAddress': {
-                        'address': recipient,
+                    "emailAddress": {
+                        "address": recipient,
                     },
                 },
             ]
@@ -182,57 +175,58 @@ class SendEmails:
                 engine = connect()
 
                 # lock credentials table
-                engine.execute('LOCK TABLES creds WRITE')
+                engine.execute("LOCK TABLES creds WRITE")
 
                 # pull credentials
                 creds = {
                     key: value
                     for key, value in engine.execute(
-                        'SELECT * FROM creds'
+                        "SELECT * FROM creds"
                     ).fetchall()
                 }
 
                 # refresh email token
-                url = 'https://login.microsoftonline.com'
+                url = "https://login.microsoftonline.com"
                 refreshed = requests.get(
                     f"{url}/{creds['tenant']}/oauth2/v2.0/token",
                     data={
-                        'client_id': creds['client_id'],
-                        'client_secret': creds['client_secret'],
-                        'scope': 'offline_access mail.send',
-                        'refresh_token': creds['refresh_token'],
-                        'grant_type': 'refresh_token',
+                        "client_id": creds["client_id"],
+                        "client_secret": creds["client_secret"],
+                        "scope": "offline_access mail.send",
+                        "refresh_token": creds["refresh_token"],
+                        "grant_type": "refresh_token",
                     },
                     headers={
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        "Content-Type": "application/x-www-form-urlencoded",
                     },
                 ).json()
 
                 # upload refreshed token
-                for field in ['refresh_token', 'access_token']:
-                    engine.execute(f"""
+                for field in ["refresh_token", "access_token"]:
+                    engine.execute(
+                        f"""
                         UPDATE creds
                         SET Value = "{refreshed[field]}"
                         WHERE Name = "{field}"
-                    """)
+                    """
+                    )
 
                 # send email
                 response = requests.post(
-                    'https://graph.microsoft.com/v1.0/me/sendMail',
+                    "https://graph.microsoft.com/v1.0/me/sendMail",
                     data=json.dumps(email),
                     headers={
-                        'Authorization': refreshed['access_token'],
-                        'Content-type': 'application/json',
-                        'Host': 'graph.microsoft.com',
+                        "Authorization": refreshed["access_token"],
+                        "Content-type": "application/json",
+                        "Host": "graph.microsoft.com",
                     },
                 )
 
                 # make sure completed successfully
                 if response.status_code == 400:
-                    print(f'Failed to send to {recipient}')
+                    print(f"Failed to send to {recipient}")
 
             # clean-up
             finally:
-
                 # unlock email credentials table
-                engine.execute('UNLOCK TABLES')
+                engine.execute("UNLOCK TABLES")

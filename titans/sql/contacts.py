@@ -10,7 +10,8 @@ from titans.sql.common import connect, sanitize
 
 def create():
     """Create contacts table"""
-    connect().execute("""
+    connect().execute(
+        """
         CREATE TABLE contacts (
             _ROWID_ INT NOT NULL AUTO_INCREMENT,
             Date DATETIME DEFAULT now(),
@@ -18,16 +19,17 @@ def create():
             PRIMARY KEY (_ROWID_),
             KEY(Email)
         )
-    """)
+    """
+    )
 
 
 def delete():
     """Delete contacts table"""
     response = input(
-        'WARNING: Contacts table will be dropped. Continue? [y/n] '
+        "WARNING: Contacts table will be dropped. Continue? [y/n] "
     )
-    if response == 'y':
-        connect().execute('DROP TABLE contacts')
+    if response == "y":
+        connect().execute("DROP TABLE contacts")
 
 
 def upload(fname: str):
@@ -39,9 +41,8 @@ def upload(fname: str):
         text file containing emails
     """
     engine = connect()
-    data = open(fname, 'r').read().splitlines()
+    data = open(fname, "r").read().splitlines()
     for email in np.unique(data):
-
         # sanitize email
         email = sanitize(email).lower()
 
@@ -51,35 +52,36 @@ def upload(fname: str):
 
         # try to insert, ignore if duplicate
         try:
-            engine.execute(f"""
+            engine.execute(
+                f"""
                 INSERT INTO contacts (Email)
                 VALUES ("{email}")
-            """)
+            """
+            )
         except IntegrityError:
             pass
 
 
 # command-line interface
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # parse cli
-    parser = ArgumentParser(description='Interface with MySQL database')
+    parser = ArgumentParser(description="Interface with MySQL database")
     parser.add_argument(
-        '--create',
+        "--create",
         default=False,
-        action='store_true',
-        help='Create contacts table',
+        action="store_true",
+        help="Create contacts table",
     )
     parser.add_argument(
-        '--delete',
+        "--delete",
         default=False,
-        action='store_true',
-        help='Drop contacts table',
+        action="store_true",
+        help="Drop contacts table",
     )
     parser.add_argument(
-        '--upload',
+        "--upload",
         default=None,
-        help='Upload emails in file to contacts table',
+        help="Upload emails in file to contacts table",
     )
     args = parser.parse_args()
 

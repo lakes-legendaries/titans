@@ -23,14 +23,16 @@ def _download_containers(*containers: str):
     """
     for container in containers:
         Path(container).mkdir(exist_ok=True)
-        sh.azcopy.copy([
-            (
-                "https://titansfileserver.blob.core.windows.net/"
-                + f"{container}/*{os.environ['AZCOPY_SAS']}"
-            ),
-            f"{container}",
-            "--recursive",
-        ])
+        sh.azcopy.copy(
+            [
+                (
+                    "https://titansfileserver.blob.core.windows.net/"
+                    + f"{container}/*{os.environ['AZCOPY_SAS']}"
+                ),
+                f"{container}",
+                "--recursive",
+            ]
+        )
 
 
 @app.command()
@@ -56,29 +58,33 @@ def animate(
 
     # run blender
     odir = "animated"
-    ofname = f'{odir}/{fname}'
+    ofname = f"{odir}/{fname}"
     Path(odir).mkdir(exist_ok=True)
-    sh.Command('/blender/blender')([
-        '-b',
-        f'blend/{fname}.blend',
-        '--render-output',
-        ofname,
-        '-s',
-        f'{first_frame}',
-        '-e',
-        f'{final_frame}',
-        '-a',
-    ])
+    sh.Command("/blender/blender")(
+        [
+            "-b",
+            f"blend/{fname}.blend",
+            "--render-output",
+            ofname,
+            "-s",
+            f"{first_frame}",
+            "-e",
+            f"{final_frame}",
+            "-a",
+        ]
+    )
 
     # upload result
-    sh.azcopy.copy([
-        f"{ofname}*",
-        (
-            "https://titansfileserver.blob.core.windows.net/"
-            + f"{odir}/{os.environ['AZCOPY_SAS']}"
-        ),
-        "--recursive",
-    ])
+    sh.azcopy.copy(
+        [
+            f"{ofname}*",
+            (
+                "https://titansfileserver.blob.core.windows.net/"
+                + f"{odir}/{os.environ['AZCOPY_SAS']}"
+            ),
+            "--recursive",
+        ]
+    )
 
 
 @app.command()
@@ -106,23 +112,27 @@ def render(
     odir = "rendered"
     ofname = join(odir, fname) + (".mkv" if mkv else "")
     Path(odir).mkdir(exist_ok=True)
-    sh.Command('/blender/blender')([
-        '-b',
-        f'blend/{fname}.blend',
-        '--render-output',
-        ofname,
-        '-a',
-    ])
+    sh.Command("/blender/blender")(
+        [
+            "-b",
+            f"blend/{fname}.blend",
+            "--render-output",
+            ofname,
+            "-a",
+        ]
+    )
 
     # upload result
-    sh.azcopy.copy([
-        f"{ofname}*",
-        (
-            "https://titansfileserver.blob.core.windows.net/"
-            + f"{odir}/{os.environ['AZCOPY_SAS']}"
-        ),
-        "--recursive",
-    ])
+    sh.azcopy.copy(
+        [
+            f"{ofname}*",
+            (
+                "https://titansfileserver.blob.core.windows.net/"
+                + f"{odir}/{os.environ['AZCOPY_SAS']}"
+            ),
+            "--recursive",
+        ]
+    )
 
 
 def _make_clip(name: str, ofname: str):
@@ -139,69 +149,69 @@ def _make_clip(name: str, ofname: str):
 
     # parameters for clip extraction
     params = {
-        'Elements Clip': {
-            'source': 'rendered/Landing Video.mkv',
-            'start': '00:00:15.75',
-            'duration': '00:00:05.00',
+        "Elements Clip": {
+            "source": "rendered/Landing Video.mkv",
+            "start": "00:00:15.75",
+            "duration": "00:00:05.00",
         },
-        'Interactive Clip': {
-            'source': 'rendered/Landing Video.mkv',
-            'start': '00:00:22.00',
-            'duration': '00:00:15.50',
+        "Interactive Clip": {
+            "source": "rendered/Landing Video.mkv",
+            "start": "00:00:22.00",
+            "duration": "00:00:15.50",
         },
-        'No-Wait Clip': {
-            'source': 'rendered/Landing Video.mkv',
-            'start': '00:00:38.00',
-            'duration': '00:00:11.00',
+        "No-Wait Clip": {
+            "source": "rendered/Landing Video.mkv",
+            "start": "00:00:38.00",
+            "duration": "00:00:11.00",
         },
-        'Constructed Clip': {
-            'source': 'rendered/Landing Video.mkv',
-            'start': '00:01:04.50',
-            'duration': '00:00:09.00',
+        "Constructed Clip": {
+            "source": "rendered/Landing Video.mkv",
+            "start": "00:01:04.50",
+            "duration": "00:00:09.00",
         },
-        'Empire Clip': {
-            'source': 'rendered/Empire Video.mkv',
-            'start': '00:01:11.50',
-            'duration': '00:00:19.50',
-            'speedup': 2,
+        "Empire Clip": {
+            "source": "rendered/Empire Video.mkv",
+            "start": "00:01:11.50",
+            "duration": "00:00:19.50",
+            "speedup": 2,
         },
     }
 
     # crop video
-    tmp_ofname = [f'{name}-cropped.mp4']
+    tmp_ofname = [f"{name}-cropped.mp4"]
     sh.ffmpeg(
-        '-ss',
+        "-ss",
         params[name]["start"],
-        '-i',
+        "-i",
         params[name]["source"],
-        '-t',
+        "-t",
         params[name]["duration"],
-        '-y',
-        '-an',
-        '-filter:v',
-        'crop=1920:1000:0:0',
+        "-y",
+        "-an",
+        "-filter:v",
+        "crop=1920:1000:0:0",
         tmp_ofname[-1],
     )
 
     # speedup video
     if "speedup" in params[name]:
-        tmp_ofname.append(f'{name}-speedup.mp4')
+        tmp_ofname.append(f"{name}-speedup.mp4")
         sh.ffmpeg(
-            '-i',
+            "-i",
             tmp_ofname[-2],
-            '-y',
-            '-filter:v',
+            "-y",
+            "-filter:v",
             f"setpts=PTS/{params[name]['speedup']}",
             tmp_ofname[-1],
         )
 
     # add pause to end of video
     sh.ffmpeg(
-        '-i',
+        "-i",
         tmp_ofname[-1],
-        '-y',
-        '-vf',
-        'tpad=stop_mode=clone:stop_duration=2',
+        "-y",
+        "-vf",
+        "tpad=stop_mode=clone:stop_duration=2",
         ofname,
     )
 
@@ -226,7 +236,8 @@ def convert(fname: str = typer.Option(...)):
             r"[^a-zA-Z0-9.]",
             r"_",
             fname,
-        ).lower()
+        )
+        .lower()
         .removesuffix(".mkv")
     )
 
@@ -236,14 +247,16 @@ def convert(fname: str = typer.Option(...)):
 
     # function to upload
     def upload(ofname_full: str):
-        sh.azcopy.copy([
-            f"{ofname_full}",
-            (
-                "https://titansfileserverdev.blob.core.windows.net/"
-                + f"$web/vid/{os.environ['AZCOPY_DEV_SAS']}"
-            ),
-            "--recursive",
-        ])
+        sh.azcopy.copy(
+            [
+                f"{ofname_full}",
+                (
+                    "https://titansfileserverdev.blob.core.windows.net/"
+                    + f"$web/vid/{os.environ['AZCOPY_DEV_SAS']}"
+                ),
+                "--recursive",
+            ]
+        )
 
     # convert to H.264
     ofname_h264 = f"{ofname}.h264.mp4"
@@ -305,12 +318,11 @@ def convert(fname: str = typer.Option(...)):
 
 
 # cli
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # check env
     conn_key = "AZCOPY_SAS"
     if conn_key not in os.environ:
-        raise OSError(f'env var {conn_key} missing: cannot connect to azure')
+        raise OSError(f"env var {conn_key} missing: cannot connect to azure")
 
     # run app
     app()

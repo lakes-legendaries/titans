@@ -9,15 +9,15 @@ from titans.sql.common import connect
 
 
 def create(
-    secrets_dir: str = os.environ['SECRETS_DIR'],
-    batch_fname: str = 'titans-batch',
-    container_fname: str = 'titans-container-registry',
-    email_creds_fname: str = 'titans-email-creds',
-    email_token_fname: str = 'titans-email-token',
-    fileserver_dev_fname: str = 'titans-fileserver-dev',
-    fileserver_dev_sas_fname: str = 'titans-fileserver-dev-sas',
-    fileserver_fname: str = 'titans-fileserver',
-    fileserver_sas_fname: str = 'titans-fileserver-sas',
+    secrets_dir: str = os.environ["SECRETS_DIR"],
+    batch_fname: str = "titans-batch",
+    container_fname: str = "titans-container-registry",
+    email_creds_fname: str = "titans-email-creds",
+    email_token_fname: str = "titans-email-token",
+    fileserver_dev_fname: str = "titans-fileserver-dev",
+    fileserver_dev_sas_fname: str = "titans-fileserver-dev-sas",
+    fileserver_fname: str = "titans-fileserver",
+    fileserver_sas_fname: str = "titans-fileserver-sas",
 ):
     """Create email credentials table
 
@@ -46,67 +46,74 @@ def create(
 
     # load credentials and token
     pairs = {}
-    token_data = json.load(open(join(secrets_dir, email_token_fname), 'r'))
-    pairs = json.load(open(join(secrets_dir, email_creds_fname), 'r'))
-    pairs['access_token'] = token_data['access_token']
-    pairs['refresh_token'] = token_data['refresh_token']
-    pairs['dev_conn'] = \
-        open(join(secrets_dir, fileserver_dev_fname), 'r').read().strip()
-    pairs['dev_sas'] = \
-        open(join(secrets_dir, fileserver_dev_sas_fname), 'r').read().strip()
-    pairs['prod_conn'] = \
-        open(join(secrets_dir, fileserver_fname), 'r').read().strip()
-    pairs['prod_sas'] = \
-        open(join(secrets_dir, fileserver_sas_fname), 'r').read().strip()
-    pairs['azurecr'] = \
-        open(join(secrets_dir, container_fname), 'r').read().strip()
-    pairs['batch'] = \
-        open(join(secrets_dir, batch_fname), 'r').read().strip()
+    token_data = json.load(open(join(secrets_dir, email_token_fname), "r"))
+    pairs = json.load(open(join(secrets_dir, email_creds_fname), "r"))
+    pairs["access_token"] = token_data["access_token"]
+    pairs["refresh_token"] = token_data["refresh_token"]
+    pairs["dev_conn"] = (
+        open(join(secrets_dir, fileserver_dev_fname), "r").read().strip()
+    )
+    pairs["dev_sas"] = (
+        open(join(secrets_dir, fileserver_dev_sas_fname), "r").read().strip()
+    )
+    pairs["prod_conn"] = (
+        open(join(secrets_dir, fileserver_fname), "r").read().strip()
+    )
+    pairs["prod_sas"] = (
+        open(join(secrets_dir, fileserver_sas_fname), "r").read().strip()
+    )
+    pairs["azurecr"] = (
+        open(join(secrets_dir, container_fname), "r").read().strip()
+    )
+    pairs["batch"] = open(join(secrets_dir, batch_fname), "r").read().strip()
 
     # create table
     engine = connect()
-    engine.execute("""
+    engine.execute(
+        """
         CREATE TABLE IF NOT EXISTS creds (
             Name TEXT,
             Value TEXT
         )
-    """)
+    """
+    )
 
     # insert values
     for key, value in pairs.items():
-        engine.execute(f"""
+        engine.execute(
+            f"""
             INSERT INTO creds
             VALUES ("{key}", "{value.replace('%', '%%')}")
-        """)
+        """
+        )
 
 
 def delete():
     """Delete credentials table"""
     response = input(
-        'WARNING: Credentials table will be dropped. Continue? [y/n] '
+        "WARNING: Credentials table will be dropped. Continue? [y/n] "
     )
-    if response == 'y':
-        connect().execute('DROP TABLE creds')
+    if response == "y":
+        connect().execute("DROP TABLE creds")
 
 
 # command-line interface
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # parse cli
     parser = ArgumentParser(
-        description='Interface with MySQL credentials table'
+        description="Interface with MySQL credentials table"
     )
     parser.add_argument(
-        '--create',
+        "--create",
         default=False,
-        action='store_true',
-        help='Create email credentials table',
+        action="store_true",
+        help="Create email credentials table",
     )
     parser.add_argument(
-        '--delete',
+        "--delete",
         default=False,
-        action='store_true',
-        help='Drop email credentials table',
+        action="store_true",
+        help="Drop email credentials table",
     )
     args = parser.parse_args()
 

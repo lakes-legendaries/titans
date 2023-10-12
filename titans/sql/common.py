@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 
 
 def connect(
-    connection_str_fname: str = 'titans-mysql',
+    connection_str_fname: str = "titans-mysql",
 ) -> Engine:
     """Connect to MySQL database
 
@@ -24,8 +24,8 @@ def connect(
     sqlalchemy.engine.Engine
         sqlalchemy connection engine
     """
-    fname = os.path.join(os.environ['SECRETS_DIR'], connection_str_fname)
-    connection_str = open(fname, 'r').read().strip()
+    fname = os.path.join(os.environ["SECRETS_DIR"], connection_str_fname)
+    connection_str = open(fname, "r").read().strip()
     return create_engine(connection_str)
 
 
@@ -43,10 +43,10 @@ def sanitize(input: str) -> str:
         sanitized input
     """
     for original, replacement in [
-        (r'"', r'`'),
-        (r"'", r'`'),
-        (r';', r','),
-        (r'\\', r'/'),
+        (r'"', r"`"),
+        (r"'", r"`"),
+        (r";", r","),
+        (r"\\", r"/"),
     ]:
         input = input.replace(original, replacement)
     return input

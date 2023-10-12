@@ -29,6 +29,7 @@ class Card:
     species: Species
         card species
     """
+
     def __init__(
         self,
         name: Name,
@@ -43,12 +44,9 @@ class Card:
 
         # assign properties
         match self.name:
-
             # forest cards
             case Name.MONK:
-                self.abilities = {
-                    Ability.ENERGY: 1
-                }
+                self.abilities = {Ability.ENERGY: 1}
                 self.cost = 0
                 self.element = Element.FOREST
                 self.power = 0

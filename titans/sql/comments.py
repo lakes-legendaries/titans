@@ -7,7 +7,8 @@ from titans.sql.common import connect
 
 def create():
     """Create contacts table"""
-    connect().execute("""
+    connect().execute(
+        """
         CREATE TABLE comments (
             _ROWID_ INT NOT NULL AUTO_INCREMENT,
             Date DATETIME DEFAULT now(),
@@ -16,34 +17,34 @@ def create():
             PRIMARY KEY (_ROWID_),
             KEY(Email)
         )
-    """)
+    """
+    )
 
 
 def delete():
     """Delete contacts table"""
     response = input(
-        'WARNING: Comments table will be dropped. Continue? [y/n] '
+        "WARNING: Comments table will be dropped. Continue? [y/n] "
     )
-    if response == 'y':
-        connect().execute('DROP TABLE comments')
+    if response == "y":
+        connect().execute("DROP TABLE comments")
 
 
 # command-line interface
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # parse cli
-    parser = ArgumentParser(description='Interface with MySQL database')
+    parser = ArgumentParser(description="Interface with MySQL database")
     parser.add_argument(
-        '--create',
+        "--create",
         default=False,
-        action='store_true',
-        help='Create contacts table',
+        action="store_true",
+        help="Create contacts table",
     )
     parser.add_argument(
-        '--delete',
+        "--delete",
         default=False,
-        action='store_true',
-        help='Drop contacts table',
+        action="store_true",
+        help="Drop contacts table",
     )
     args = parser.parse_args()
 

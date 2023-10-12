@@ -12,9 +12,9 @@ def upload(
     source: str,
     /,
     *args,
-    container: str = '$web',
+    container: str = "$web",
     dest: str = None,
-    server: str = 'dev',
+    server: str = "dev",
 ):
     """Upload file or directory to website server
 
@@ -37,26 +37,32 @@ def upload(
     """
 
     # check parameters
-    if server not in ['prod', 'dev']:
-        raise ValueError('Invalid server')
+    if server not in ["prod", "dev"]:
+        raise ValueError("Invalid server")
 
     # get credentials from sql database
     try:
-        conn_str = connect().execute(f"""
+        conn_str = (
+            connect()
+            .execute(
+                f"""
             SELECT Value from creds
             Where Name = '{server}_conn'
-        """).fetchone()[0]
+        """
+            )
+            .fetchone()[0]
+        )
 
     # get credentials from local file
     except Exception:
-        conn_basename = 'titans-fileserver'
-        if server == 'dev':
-            conn_basename += '-dev'
-        conn_fname = join(os.environ['SECRETS_DIR'], conn_basename)
-        conn_str = open(conn_fname, 'r').read().strip()
+        conn_basename = "titans-fileserver"
+        if server == "dev":
+            conn_basename += "-dev"
+        conn_fname = join(os.environ["SECRETS_DIR"], conn_basename)
+        conn_str = open(conn_fname, "r").read().strip()
 
     # save credentials as env var
-    os.environ['AZURE_STORAGE_CONNECTION_STRING'] = conn_str
+    os.environ["AZURE_STORAGE_CONNECTION_STRING"] = conn_str
 
     # determine file or directory, and get destination
     is_dir = isdir(source)
@@ -66,41 +72,21 @@ def upload(
     # build command
     cmd = [
         # command name
-        'az',
-        'storage',
-        'blob',
-        (
-            'upload'
-            if not is_dir
-            else 'upload-batch'
-        ),
-
+        "az",
+        "storage",
+        "blob",
+        ("upload" if not is_dir else "upload-batch"),
         # container
-        (
-            '-c'
-            if not is_dir
-            else '-d'
-        ),
+        ("-c" if not is_dir else "-d"),
         container,
-
         # destination
-        (
-            '-n'
-            if not is_dir
-            else '--destination-path'
-        ),
+        ("-n" if not is_dir else "--destination-path"),
         dest,
-
         # source
-        (
-            '-f'
-            if not is_dir
-            else '-s'
-        ),
+        ("-f" if not is_dir else "-s"),
         source,
-
         # common flags
-        '--overwrite',
+        "--overwrite",
     ]
     # add in extra flags
     cmd.extend(args)
@@ -108,9 +94,9 @@ def upload(
     # execute upload command
     output = run(cmd, capture_output=True, check=True, text=True)
     if output.returncode:
-        print('stdout:', output.stdout)
-        print('stderr:', output.stderr)
-        raise SubprocessError(f'Command {cmd} failed')
+        print("stdout:", output.stdout)
+        print("stderr:", output.stderr)
+        raise SubprocessError(f"Command {cmd} failed")
 
 
 def download(
@@ -129,11 +115,17 @@ def download(
     """
 
     # get credentials
-    conn_str = connect().execute("""
+    conn_str = (
+        connect()
+        .execute(
+            """
         SELECT Value from creds
         Where Name = 'prod_conn'
-    """).fetchone()[0]
-    os.environ['AZURE_STORAGE_CONNECTION_STRING'] = conn_str
+    """
+        )
+        .fetchone()[0]
+    )
+    os.environ["AZURE_STORAGE_CONNECTION_STRING"] = conn_str
 
     # get default dest dir
     if dest is None:
@@ -145,15 +137,15 @@ def download(
     # download from server
     run(
         [
-            'az',
-            'storage',
-            'blob',
-            'download-batch',
-            '--source',
+            "az",
+            "storage",
+            "blob",
+            "download-batch",
+            "--source",
             source,
-            '--destination',
+            "--destination",
             dest,
-            '--overwrite',
+            "--overwrite",
         ],
         capture_output=True,
         check=True,
@@ -165,30 +157,34 @@ def release():
 
     # get credentials
     engine = connect()
-    dev_sas = engine.execute("""
+    dev_sas = engine.execute(
+        """
         SELECT Value from creds
         Where Name = 'dev_sas'
-    """).fetchone()[0]
-    prod_sas = engine.execute("""
+    """
+    ).fetchone()[0]
+    prod_sas = engine.execute(
+        """
         SELECT Value from creds
         Where Name = 'prod_sas'
-    """).fetchone()[0]
+    """
+    ).fetchone()[0]
 
     # get urls
-    prefix_url = 'https://titansfileserver'
-    suffix_url = '.blob.core.windows.net/$web/'
-    dev_url = f'{prefix_url}dev{suffix_url}{dev_sas}'
-    prod_url = f'{prefix_url}{suffix_url}{prod_sas}'
+    prefix_url = "https://titansfileserver"
+    suffix_url = ".blob.core.windows.net/$web/"
+    dev_url = f"{prefix_url}dev{suffix_url}{dev_sas}"
+    prod_url = f"{prefix_url}{suffix_url}{prod_sas}"
 
     # delete all blobs in production
     run(
         [
-            'azcopy',
-            'rm',
+            "azcopy",
+            "rm",
             prod_url,
-            '--recursive',
-            '--include-pattern',
-            '*',
+            "--recursive",
+            "--include-pattern",
+            "*",
         ],
         capture_output=True,
         check=True,
@@ -197,13 +193,13 @@ def release():
     # copy dev -> prod
     run(
         [
-            'azcopy',
-            'copy',
+            "azcopy",
+            "copy",
             dev_url,
             prod_url,
-            '--recursive',
-            '--include-pattern',
-            '*',
+            "--recursive",
+            "--include-pattern",
+            "*",
         ],
         # capture_output=True,
         check=True,

@@ -61,6 +61,7 @@ class Trainer:
     strategies: dict[Action, Strategy]
         Strategies trained by this class
     """
+
     def __init__(
         self,
         /,
@@ -82,8 +83,7 @@ class Trainer:
 
         # initialize strategies
         self.strategies: dict[Action, Strategy] = {
-            action: StandardStrategy()
-            for action in Action
+            action: StandardStrategy() for action in Action
         }
 
         # initialize history
@@ -114,22 +114,19 @@ class Trainer:
                 for action, action_dict in state_dict.items():
                     for is_winner, choices in action_dict.items():
                         (
-                            history
-                            .setdefault(state, {})
+                            history.setdefault(state, {})
                             .setdefault(action, {})
                             .setdefault(is_winner, [])
                         ).extend(choices)
 
         # initialize Xy data
         Xy: dict[Action, tuple[list[np.ndarray], list[np.ndarray]]] = {
-            action: ([], [])
-            for action in Action
+            action: ([], []) for action in Action
         }
 
         # process each action and each state
         for state, state_dict in history.items():
             for action, action_dict in state_dict.items():
-
                 # translate wins and losses from list[int] -> np.ndarray
                 win_loss_count: dict[bool, np.ndarray] = {
                     is_winner: np.zeros(NUM_CHOICES)
@@ -149,8 +146,7 @@ class Trainer:
 
         # return, converting from list[1d np.ndarrays] to 2d np.ndarrays
         return {
-            action: (np.array(X), np.array(y))
-            for action, (X, y) in Xy.items()
+            action: (np.array(X), np.array(y)) for action, (X, y) in Xy.items()
         }
 
     def _init_game(
@@ -214,16 +210,19 @@ class Trainer:
             identity: {
                 action: (
                     (
-                        player_kwargs
-                        .get(identity)
+                        player_kwargs.get(identity)
                         .get("strategies")
                         .get(action)
-                        .predict(np.vstack([
-                            state[identity]
-                            if state is not None
-                            else np.zeros(NUM_FEATURES)
-                            for state in states
-                        ]))
+                        .predict(
+                            np.vstack(
+                                [
+                                    state[identity]
+                                    if state is not None
+                                    else np.zeros(NUM_FEATURES)
+                                    for state in states
+                                ]
+                            )
+                        )
                     )
                 )
                 for action in Action
@@ -232,20 +231,24 @@ class Trainer:
         }
         return [
             (
-                controller.send({
-                    identity: {
-                        action: decision_matrices[identity][action][c]
-                        for action in Action
+                controller.send(
+                    {
+                        identity: {
+                            action: decision_matrices[identity][action][c]
+                            for action in Action
+                        }
+                        for identity in Identity
                     }
-                    for identity in Identity
-                })
+                )
                 if state is not None
                 else None
             )
-            for c, (controller, state) in enumerate(zip(
-                controllers,
-                states,
-            ))
+            for c, (controller, state) in enumerate(
+                zip(
+                    controllers,
+                    states,
+                )
+            )
         ]
 
     def _play_games(
@@ -297,16 +300,11 @@ class Trainer:
             )
 
         # get strategies
-        random_strategy_dict = {
-            action: RandomStrategy()
-            for action in Action
-        }
+        random_strategy_dict = {action: RandomStrategy() for action in Action}
         player_kwargs: dict[Identity, dict[str, dict[Action, Strategy]]] = {
             Identity.MIKE: {
                 "strategies": (
-                    random_strategy_dict
-                    if use_random
-                    else self.strategies
+                    random_strategy_dict if use_random else self.strategies
                 ),
             },
             Identity.BRYAN: {
@@ -322,14 +320,16 @@ class Trainer:
 
         # initialize games
         games = [
-            self._init_game({
-                **player_kwargs,
-                **(
-                    {"temperature": temperature}
-                    if vary_temperature
-                    else {}
-                ),
-            })
+            self._init_game(
+                {
+                    **player_kwargs,
+                    **(
+                        {"temperature": temperature}
+                        if vary_temperature
+                        else {}
+                    ),
+                }
+            )
             for temperature in np.linspace(0, 1, self._games_per_epoch)
         ]
 
@@ -374,8 +374,7 @@ class Trainer:
                     for identity, choices in action_dict.items():
                         is_winner = identity == game.winner
                         (
-                            history
-                            .setdefault(state, {})
+                            history.setdefault(state, {})
                             .setdefault(action, {})
                             .setdefault(is_winner, [])
                         ).extend(choices)
@@ -412,10 +411,7 @@ class Trainer:
         """
 
         # initialize best strategy as empty standard strategy
-        best_strategy = {
-            action: StandardStrategy()
-            for action in Action
-        }
+        best_strategy = {action: StandardStrategy() for action in Action}
 
         # initialize metrics (win trackers)
         vs_baseline = []
@@ -446,19 +442,14 @@ class Trainer:
             """
             best_idx = 0
             for idx in range(1, len(vs_baseline)):
-                if (
-                    vs_baseline[idx] >= vs_baseline[best_idx]
-                    and (
-                        self._baseline
-                        or vs_best[idx] > 0.50
-                    )
+                if vs_baseline[idx] >= vs_baseline[best_idx] and (
+                    self._baseline or vs_best[idx] > 0.50
                 ):
                     best_idx = idx
             return best_idx
 
         # run training epochs
         for epoch in range(self._epochs):
-
             # train network
             if epoch:
                 self._play_games(
@@ -470,10 +461,12 @@ class Trainer:
                     self.strategies[action].fit(*Xy[action])
 
             # test strategies
-            vs_baseline.append(self._play_games(
-                save_history=False,
-                vs_random=True,
-            ))
+            vs_baseline.append(
+                self._play_games(
+                    save_history=False,
+                    vs_random=True,
+                )
+            )
             if not self._baseline:
                 vs_best.append(
                     self._play_games(
@@ -501,6 +494,7 @@ class POCTrainer(Trainer):
 
     This trainer removes all non-Energy abilities from the cards before playing
     """
+
     def _init_game(self) -> Game:
         game = Game()
         for card in game.cards:

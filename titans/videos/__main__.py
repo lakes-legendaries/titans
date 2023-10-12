@@ -43,32 +43,39 @@ def _submit_jobs(
 
     # pull creds from db
     creds = {
-        key: connect().execute(f"""
+        key: connect()
+        .execute(
+            f"""
             SELECT Value from creds
             Where Name = '{key}'
-        """).fetchone()[0]
-        for key in ['azurecr', 'batch', 'dev_sas', 'prod_sas']
+        """
+        )
+        .fetchone()[0]
+        for key in ["azurecr", "batch", "dev_sas", "prod_sas"]
     }
 
     # set env vars that let us submit jobs to azure batch
     for key, value in {
-        'AZURE_BATCH_ACCOUNT': 'titansbatch',
-        'AZURE_BATCH_ENDPOINT': 'https://titansbatch.eastus.batch.azure.com',
-        'AZURE_BATCH_ACCESS_KEY': creds['batch'],
+        "AZURE_BATCH_ACCOUNT": "titansbatch",
+        "AZURE_BATCH_ENDPOINT": "https://titansbatch.eastus.batch.azure.com",
+        "AZURE_BATCH_ACCESS_KEY": creds["batch"],
     }.items():
         os.environ[key] = value
 
     # function to name tasks
-    submission_time = re.sub(r'[:.]', r'-', datetime.now().isoformat())
+    submission_time = re.sub(r"[:.]", r"-", datetime.now().isoformat())
+
     def task_name(n: int, /) -> str:  # noqa
         return f"{job}-{submission_time}-{n}"
 
     # build tasks json
     all_tasks: list[dict] = []
     for a, argset in enumerate(args):
-
         # create command
-        bash_cmd = re.sub(r'\s+', r' ', f"""
+        bash_cmd = re.sub(
+            r"\s+",
+            r" ",
+            f"""
             docker login titansofeden.azurecr.io
                 --username titansofeden
                 --password "{creds['azurecr']}"
@@ -77,7 +84,8 @@ def _submit_jobs(
                 --env AZCOPY_SAS="{creds['prod_sas']}"
                 titansofeden.azurecr.io/titans:videos
                 {argset}
-        """).strip()
+        """,
+        ).strip()
 
         # run task locally
         if local:
@@ -85,26 +93,30 @@ def _submit_jobs(
             continue
 
         # create batch json
-        all_tasks.append({
-            'id': task_name(a),
-            'commandLine': f"/bin/bash -c '{bash_cmd}'",
-            'userIdentity': {
-                'autoUser': {
-                    'elevationLevel': 'admin',
+        all_tasks.append(
+            {
+                "id": task_name(a),
+                "commandLine": f"/bin/bash -c '{bash_cmd}'",
+                "userIdentity": {
+                    "autoUser": {
+                        "elevationLevel": "admin",
+                    },
                 },
-            },
-            'constraints': {
-                'maxTaskRetryCount': 3,
-                'retentionTime': 'PT1S',
-            },
-            'dependsOn': {
-                'taskIds': (
-                    []
-                    if dependencies is None
-                    else [task_name(dep_num) for dep_num in dependencies[a]]
-                ),
-            },
-        })
+                "constraints": {
+                    "maxTaskRetryCount": 3,
+                    "retentionTime": "PT1S",
+                },
+                "dependsOn": {
+                    "taskIds": (
+                        []
+                        if dependencies is None
+                        else [
+                            task_name(dep_num) for dep_num in dependencies[a]
+                        ]
+                    ),
+                },
+            }
+        )
 
     # skip submitting tasks (if running locally)
     if local:
@@ -112,26 +124,24 @@ def _submit_jobs(
 
     # submit tasks
     for first_task in range(0, len(all_tasks), 100):  # 100 jobs per json
-
         # get task ceiling
         last_task = first_task + min(first_task + 100, len(all_tasks))
 
         # auto-clean-up writing json file
         try:
-
             # write json file
-            json_fname = join('/', 'tmp', f'{submission_time}.json')
-            with open(json_fname, 'w') as file:
-                json.dump(all_tasks[first_task: last_task], file)
+            json_fname = join("/", "tmp", f"{submission_time}.json")
+            with open(json_fname, "w") as file:
+                json.dump(all_tasks[first_task:last_task], file)
 
             # submit batch task
             sh.az(
-                'batch',
-                'task',
-                'create',
-                '--job-id',
+                "batch",
+                "task",
+                "create",
+                "--job-id",
                 job,
-                '--json-file',
+                "--json-file",
                 json_fname,
             )
 
@@ -144,67 +154,78 @@ def _submit_jobs(
 @app.command()
 def animate(
     *,
-    fname: str = Option(None, help="""
+    fname: str = Option(
+        None,
+        help="""
         if provided, only render this blender file (instead of all files). This
         should NOT contain the file extension.
-    """),
-    frame: int = Option(None, help="""
+    """,
+    ),
+    frame: int = Option(
+        None,
+        help="""
         if provided, only render this frame (for debugging). If you provide
         this, we strongly recommend you also provide fname.
-    """),
-    frames_per_job: int = Option(10, help="""
+    """,
+    ),
+    frames_per_job: int = Option(
+        10,
+        help="""
         Number of frames for each batch job. Fewer frames render faster, but
         have a higher marginal cost.
-    """),
-    local: bool = Option(False, help="""
+    """,
+    ),
+    local: bool = Option(
+        False,
+        help="""
         run locally (instead of on batch). For debugging.
-    """),
+    """,
+    ),
 ):
     """Animate frames on azure batch"""
 
     # blender file parameters
     animations: dict[str, int] = {
-        '60-Sec Classic': 540,
-        '60-Sec Constructed': 540,
-        '60-Sec Haunt': 480,
-        '60-Sec No Wait': 720,
-        '60-Sec Opening': 660,
-        '60-Sec Subvert': 540,
-        '60-Sec Temples': 780,
-        'Constructed Anim': 1600,
-        'Empire Anim': 8600,
-        'No-Wait Anim': 1680,
+        "60-Sec Classic": 540,
+        "60-Sec Constructed": 540,
+        "60-Sec Haunt": 480,
+        "60-Sec No Wait": 720,
+        "60-Sec Opening": 660,
+        "60-Sec Subvert": 540,
+        "60-Sec Temples": 780,
+        "Constructed Anim": 1600,
+        "Empire Anim": 8600,
+        "No-Wait Anim": 1680,
     }
 
     # process args
-    render_dict = (
-        animations
-        if not fname
-        else {fname: animations[fname]}
-    )
+    render_dict = animations if not fname else {fname: animations[fname]}
 
     # build argsets
     args = []
     for fname, num_frames in render_dict.items():
         for first_frame in (
-            range(0, num_frames, frames_per_job)
-            if frame is None
-            else [frame]
+            range(0, num_frames, frames_per_job) if frame is None else [frame]
         ):
-
             # get final frame
-            final_frame = min(
-                first_frame + frames_per_job - 1,
-                num_frames - 1,
-            ) if frame is None else frame
+            final_frame = (
+                min(
+                    first_frame + frames_per_job - 1,
+                    num_frames - 1,
+                )
+                if frame is None
+                else frame
+            )
 
             # save argset
-            args.append(f"""
+            args.append(
+                f"""
                 animate
                 --fname "{fname}"
                 --first-frame {first_frame}
                 --final-frame {final_frame}
-            """)
+            """
+            )
 
     # submit jobs
     _submit_jobs(
@@ -215,8 +236,8 @@ def animate(
 
 
 def _render(
-        fname: str = None,
-        local: bool = False,
+    fname: str = None,
+    local: bool = False,
 ):
     """Render videos on azure batch
 
@@ -316,14 +337,10 @@ def _render(
     # extract dependencies
     render_names = list(render_config.keys())
     dependency_names = [
-        config["dependencies"]
-        for config in render_config.values()
+        config["dependencies"] for config in render_config.values()
     ]
     dependency_nums = [
-        [
-            render_names.index(name)
-            for name in dep_list
-        ]
+        [render_names.index(name) for name in dep_list]
         for dep_list in dependency_names
     ]
 
@@ -338,13 +355,19 @@ def _render(
 
 @app.command()
 def render(
-    fname: str = Option(None, help="""
+    fname: str = Option(
+        None,
+        help="""
         if provided, only render this blender file (instead of all files). This
         should NOT contain the file extension.
-    """),
-    local: bool = Option(False, help="""
+    """,
+    ),
+    local: bool = Option(
+        False,
+        help="""
         run locally (instead of on batch). For debugging.
-    """),
+    """,
+    ),
 ):
     """Render videos on azure batch"""
     _render(fname=fname, local=local)
@@ -352,28 +375,37 @@ def render(
 
 @app.command()
 def convert(
-    fname: str = Option(None, help="""
+    fname: str = Option(
+        None,
+        help="""
         if provided, only convert this video file (instead of all video files)
-    """),
-    local: bool = Option(False, help="""
+    """,
+    ),
+    local: bool = Option(
+        False,
+        help="""
         run locally (instead of on batch). For debugging.
-    """),
+    """,
+    ),
 ):
-
     # file list
-    videos: list[str] = [
-        "Card Flip",
-        "Title Video",
-        "Landing Video",
-        "Empire Video",
-        "No-Wait Video",
-        "Constructed Video",
-        "Elements Clip",
-        "Interactive Clip",
-        "No-Wait Clip",
-        "Constructed Clip",
-        "Empire Clip",
-    ] if fname is None else [fname]
+    videos: list[str] = (
+        [
+            "Card Flip",
+            "Title Video",
+            "Landing Video",
+            "Empire Video",
+            "No-Wait Video",
+            "Constructed Video",
+            "Elements Clip",
+            "Interactive Clip",
+            "No-Wait Clip",
+            "Constructed Clip",
+            "Empire Clip",
+        ]
+        if fname is None
+        else [fname]
+    )
 
     # build argsets
     args = []

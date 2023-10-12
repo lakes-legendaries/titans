@@ -58,14 +58,18 @@ class RandomStrategy(Strategy):
     random_state: int, optional, default=None
         random seed
     """
+
     def __init__(self, random_state: int = None):
         self._rng: np.random.Generator = np.random.default_rng(random_state)
 
     def predict(self, X: np.ndarray, /) -> np.ndarray:
-        return np.array([
-            self._rng.random(NUM_CHOICES)
-            for _ in range(X.shape[0])
-        ]) if len(X.shape) > 1 else self._rng.random(NUM_CHOICES)
+        return (
+            np.array(
+                [self._rng.random(NUM_CHOICES) for _ in range(X.shape[0])]
+            )
+            if len(X.shape) > 1
+            else self._rng.random(NUM_CHOICES)
+        )
 
 
 class StandardStrategy(RandomStrategy):
@@ -94,6 +98,7 @@ class StandardStrategy(RandomStrategy):
         If set, then don't predict these values. This must be manually set, and
         is provided for exploring the relative values of cards
     """
+
     def __init__(
         self,
         *,
@@ -123,7 +128,6 @@ class StandardStrategy(RandomStrategy):
         self.restricted: list[int] | None = None
 
     def __deepcopy__(self, memo: dict) -> Strategy:
-
         # initialize copy
         copy = StandardStrategy()
 
@@ -157,7 +161,6 @@ class StandardStrategy(RandomStrategy):
         return tf.reduce_mean(tf.square(y_true[mask] - y_pred[mask]))
 
     def fit(self, X: np.ndarray, y: np.ndarray, /) -> Strategy:
-
         # scale data
         if self._scaler is not None:
             if not self._scaler_fitted:
@@ -169,10 +172,12 @@ class StandardStrategy(RandomStrategy):
         self._model.fit(
             X,
             y,
-            callbacks=[callbacks.EarlyStopping(
-                patience=5,
-                restore_best_weights=True,
-            )],
+            callbacks=[
+                callbacks.EarlyStopping(
+                    patience=5,
+                    restore_best_weights=True,
+                )
+            ],
             epochs=100,
             validation_split=0.25,
             verbose=False,
@@ -183,7 +188,6 @@ class StandardStrategy(RandomStrategy):
         return self
 
     def predict(self, X: np.ndarray, /) -> np.ndarray:
-
         # use random if untrained
         if not self._model_fitted:
             return RandomStrategy.predict(self, X)
@@ -206,8 +210,4 @@ class StandardStrategy(RandomStrategy):
                 pred[:, r] = -np.Inf
 
         # return (matching input shape)
-        return (
-            pred
-            if not is_one_dimensional
-            else pred[0]
-        )
+        return pred if not is_one_dimensional else pred[0]

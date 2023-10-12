@@ -18,8 +18,8 @@ app = FastAPI()
 
 # bundle app info
 app_info = {
-    'service': 'titans.api',
-    'version': __version__,
+    "service": "titans.api",
+    "version": __version__,
 }
 
 # allow cors access
@@ -31,13 +31,13 @@ app.add_middleware(
 )
 
 
-@app.get('/')
+@app.get("/")
 def home():
     """Root prompt"""
     return app_info
 
 
-@app.get('/subscribe/{email}')
+@app.get("/subscribe/{email}")
 def subscribe(email: str):
     """Subscribe to updates
 
@@ -53,36 +53,40 @@ def subscribe(email: str):
     # get job info
     job_info = {
         **app_info,
-        'operation': 'subscribe',
-        'email': email,
+        "operation": "subscribe",
+        "email": email,
     }
 
     # check conforms to expected format
-    if re.fullmatch(r'[^@]+@[^@.]+\.[^@.]+', email) is None:
+    if re.fullmatch(r"[^@]+@[^@.]+\.[^@.]+", email) is None:
         return {
             **app_info,
-            'success': False,
-            'reason': 'Invalid email address format',
+            "success": False,
+            "reason": "Invalid email address format",
         }
 
     # check if email is already in table
     engine = connect()
-    count = engine.execute(f"""
-        SELECT COUNT(*) FROM contacts
-        WHERE Email = "{email}"
-    """).fetchone()[0]
+    count = engine.execute(
+        f"""
+            SELECT COUNT(*) FROM contacts
+            WHERE Email = "{email}"
+        """
+    ).fetchone()[0]
     if count:
         return {
             **job_info,
-            'success': False,
-            'reason': 'Email address is already subscribed',
+            "success": False,
+            "reason": "Email address is already subscribed",
         }
 
     # insert into table
-    engine.execute(f"""
-        INSERT INTO contacts (Email)
-        VALUES ("{email}")
-    """)
+    engine.execute(
+        f"""
+            INSERT INTO contacts (Email)
+            VALUES ("{email}")
+        """
+    )
 
     # send welcome email
     try:
@@ -91,18 +95,18 @@ def subscribe(email: str):
     except Exception:
         return {
             **job_info,
-            'success': False,
-            'reason': 'Failed to send welcome email',
+            "success": False,
+            "reason": "Failed to send welcome email",
         }
 
     # return success
     return {
         **job_info,
-        'success': True,
+        "success": True,
     }
 
 
-@app.get('/unsubscribe/{email}')
+@app.get("/unsubscribe/{email}")
 def unsubscribe(email: str):
     """Unsubscribe from updates
 
@@ -118,36 +122,40 @@ def unsubscribe(email: str):
     # get job info
     job_info = {
         **app_info,
-        'operation': 'unsubscribe',
-        'email': email,
+        "operation": "unsubscribe",
+        "email": email,
     }
 
     # check if email is subscribed
     engine = connect()
-    count = engine.execute(f"""
-        SELECT COUNT(*) FROM contacts
-        WHERE Email = "{email}"
-    """).fetchone()[0]
+    count = engine.execute(
+        f"""
+            SELECT COUNT(*) FROM contacts
+            WHERE Email = "{email}"
+        """
+    ).fetchone()[0]
     if not count:
         return {
             **job_info,
-            'success': False,
-            'reason': "Email address doesn't exist in database",
+            "success": False,
+            "reason": "Email address doesn't exist in database",
         }
 
     # insert into table
-    engine.execute(f"""
-        DELETE FROM contacts
-        WHERE Email = "{email}"
-    """)
+    engine.execute(
+        f"""
+            DELETE FROM contacts
+            WHERE Email = "{email}"
+        """
+    )
     return {
         **job_info,
-        'success': True,
+        "success": True,
     }
 
 
-@app.get('/comment/')
-def comment(comment: str, email: Optional[str] = ''):
+@app.get("/comment/")
+def comment(comment: str, email: Optional[str] = ""):
     """Leave a question or comment
 
     Parameters
@@ -165,38 +173,40 @@ def comment(comment: str, email: Optional[str] = ''):
     # get job info
     job_info = {
         **app_info,
-        'operation': 'comment',
-        'comment': comment,
-        'email': email,
+        "operation": "comment",
+        "comment": comment,
+        "email": email,
     }
 
     # insert into table
-    connect().execute(f"""
-        INSERT INTO comments (Comment, Email)
-        VALUES ("{comment}", "{email}")
-    """)
+    connect().execute(
+        f"""
+            INSERT INTO comments (Comment, Email)
+            VALUES ("{comment}", "{email}")
+        """
+    )
 
     # email comment
     try:
         SendEmails(
-            subject='New Question / Comment',
-            body=comment if not email else f'{comment}\n\n- {email}',
+            subject="New Question / Comment",
+            body=comment if not email else f"{comment}\n\n- {email}",
         )
     except Exception:
         return {
             **job_info,
-            'success': False,
-            'reason': 'Failed to email comments',
+            "success": False,
+            "reason": "Failed to email comments",
         }
 
     # return success
     return {
         **job_info,
-        'success': True,
+        "success": True,
     }
 
 
-@app.get('/poll/{name}')
+@app.get("/poll/{name}")
 def poll(name: str, email: str, response: str):
     """Respond to a poll
 
@@ -218,33 +228,37 @@ def poll(name: str, email: str, response: str):
     # get job info
     job_info = {
         **app_info,
-        'operation': 'poll',
-        'name': name,
-        'email': email,
-        'response': response,
+        "operation": "poll",
+        "name": name,
+        "email": email,
+        "response": response,
     }
 
     # check if email already responded
     engine = connect()
-    count = engine.execute(f"""
-        SELECT COUNT(*) FROM {name}
-        WHERE Email = "{email}"
-    """).fetchone()[0]
+    count = engine.execute(
+        f"""
+            SELECT COUNT(*) FROM {name}
+            WHERE Email = "{email}"
+        """
+    ).fetchone()[0]
     if count:
         return {
             **job_info,
-            'success': False,
-            'reason': "Email address has already responded",
+            "success": False,
+            "reason": "Email address has already responded",
         }
 
     # insert response into table
-    connect().execute(f"""
-        INSERT INTO {name} (Email, Response)
-        VALUES ("{email}", "{response}")
-    """)
+    connect().execute(
+        f"""
+            INSERT INTO {name} (Email, Response)
+            VALUES ("{email}", "{response}")
+        """
+    )
 
     # return success
     return {
         **job_info,
-        'success': True,
+        "success": True,
     }

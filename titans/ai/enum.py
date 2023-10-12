@@ -11,6 +11,7 @@ from enum import auto, Enum
 
 class Ability(Enum):
     """Card Abilities"""
+
     BOLSTER_FIRE = 0
     BOLSTER_ICE = auto()
     BOLSTER_RIVALS = auto()
@@ -35,12 +36,14 @@ class Ability(Enum):
 
 class Action(Enum):
     """Various actions (one for each strategy)"""
+
     AWAKEN = 0
     PLAY = auto()
 
 
 class Element(Enum):
     """Card Elements"""
+
     FOREST = 0
     DESERT = auto()
     STORM = auto()
@@ -51,6 +54,7 @@ class Element(Enum):
 
 class Identity(Enum):
     """Player names"""
+
     MIKE = 0
     BRYAN = auto()
 
@@ -93,6 +97,7 @@ class Name(Enum):
 
 class Species(Enum):
     """Card Species"""
+
     DWELLER = 0
     WARRIOR = auto()
     BEAST = auto()
@@ -102,6 +107,7 @@ class Species(Enum):
 
 class Zone(Enum):
     """Different zones a player's cards can be in"""
+
     DECK = 0
     DISCARD = auto()
     HAND = auto()

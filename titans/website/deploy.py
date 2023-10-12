@@ -8,14 +8,13 @@ from titans.cloud import release, upload
 from titans.website.compile import compile
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # parse cli
-    parser = ArgumentParser(description='Deploy assets to website')
+    parser = ArgumentParser(description="Deploy assets to website")
     parser.add_argument(
-        '--prod',
-        action='store_true',
-        help='Deploy to production (default is deploy to dev)',
+        "--prod",
+        action="store_true",
+        help="Deploy to production (default is deploy to dev)",
     )
     args = parser.parse_args()
 
@@ -25,7 +24,6 @@ if __name__ == '__main__':
 
     # deploy to dev
     else:
-
         # compile files
         compile()
 
@@ -33,10 +31,10 @@ if __name__ == '__main__':
         chdir(dirname(realpath(__file__)))
 
         # upload each html file
-        folder = 'site'
+        folder = "site"
         for fname in listdir(folder):
-            upload(join(folder, fname), '--content-type', 'text/html')
+            upload(join(folder, fname), "--content-type", "text/html")
 
         # upload supporting folders
-        upload('script')
-        upload('style')
+        upload("script")
+        upload("style")

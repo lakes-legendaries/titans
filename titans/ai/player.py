@@ -47,6 +47,7 @@ class Player:
     temples: int
         number of temples under player's control
     """
+
     def __init__(
         self,
         identity: Identity,
@@ -71,18 +72,13 @@ class Player:
 
         # initialize player's card zones and temples
         self.temples: int = 3
-        self.cards: dict[Zone: list[card]] = {
-            zone: []
-            for zone in Zone
-        }
+        self.cards: dict[Zone : list[card]] = {zone: [] for zone in Zone}
 
         # create deck and ritual piles
         self.ritual_piles: list[Card] = []
         for c, card in enumerate(cards):
-
             # make starting deck
             if card.name in [Name.MONK, Name.WIZARD]:
-
                 # this player gets every other starting card
                 if c % len(Identity) == self.identity.value:
                     self.cards[Zone.DECK].append(card)
@@ -147,7 +143,6 @@ class Player:
 
         # get cards in each zone
         for zone in Zone:
-
             # skip hand if public knowledge only
             if public and zone == Zone.HAND:
                 continue
@@ -167,13 +162,12 @@ class Player:
 
         # get overall card counts for each zone. This helps with
         # publicly-available knowledge.
-        state = np.concatenate((
-            state,
-            [
-                len(cards)
-                for cards in self.cards.values()
-            ],
-        ))
+        state = np.concatenate(
+            (
+                state,
+                [len(cards) for cards in self.cards.values()],
+            )
+        )
 
         # return
         return state
@@ -196,11 +190,11 @@ class Player:
         """
 
         # get decision matrix
-        decision_matrix = self._add_stochasticity((
-            self.strategies[Action.AWAKEN].predict(self.get_state())
-        ) if self._decision_matrices is None else (
-            self._decision_matrices[Action.AWAKEN]
-        ))
+        decision_matrix = self._add_stochasticity(
+            (self.strategies[Action.AWAKEN].predict(self.get_state()))
+            if self._decision_matrices is None
+            else (self._decision_matrices[Action.AWAKEN])
+        )
 
         # get our current energy
         energy = self.get_energy()
@@ -208,14 +202,12 @@ class Player:
         # awaken highest-valued accessible card we can afford
         name_list = np.array([card.name.value for card in self.ritual_piles])
         for choice in np.argsort(decision_matrix)[::-1]:
-
             # choose to not awaken
             if choice == len(Name):
                 return None, choice
 
             # check if card is in ritual piles
             if (matches := np.argwhere(name_list == choice)).any():
-
                 # get chosen card
                 ritual_piles_idx = matches[0][0]
                 card = self.ritual_piles[ritual_piles_idx]
@@ -285,7 +277,6 @@ class Player:
         """
         drawn = []
         for _ in range(count):
-
             # if we run out of cards to draw, then stop early
             if not self.cards[Zone.DECK]:
                 return drawn
@@ -358,10 +349,12 @@ class Player:
             return self._frozen_state
 
         # return state
-        return np.concatenate((
-            self._get_individual_state(public=False),
-            self.opponent._get_individual_state(public=True),
-        ))
+        return np.concatenate(
+            (
+                self._get_individual_state(public=False),
+                self.opponent._get_individual_state(public=True),
+            )
+        )
 
     def handshake(self, opponent: Player, /) -> None:
         """Set this player's opponent (and vice-versa)
@@ -410,19 +403,17 @@ class Player:
             return played, choices
 
         # get decision matrix
-        decision_matrix = self._add_stochasticity((
-            self.strategies[Action.PLAY].predict(self.get_state())
-        ) if self._decision_matrices is None else (
-            self._decision_matrices[Action.PLAY]
-        ))
+        decision_matrix = self._add_stochasticity(
+            (self.strategies[Action.PLAY].predict(self.get_state()))
+            if self._decision_matrices is None
+            else (self._decision_matrices[Action.PLAY])
+        )
 
         # play highest-valued card that we can play
-        name_list = np.array([
-            card.name.value
-            for card in self.cards[Zone.HAND]
-        ])
+        name_list = np.array(
+            [card.name.value for card in self.cards[Zone.HAND]]
+        )
         for choice in np.argsort(decision_matrix)[::-1]:
-
             # play top card of deck
             if choice == len(Name) and len(self.cards[Zone.DECK]) > 0:
                 card = self.cards[Zone.DECK].pop()

@@ -29,36 +29,34 @@ class SetWriter:
     titans_dir: str, optional, default='/mnt/d/OneDrive/Titans Of Eden/cards'
         parent directory to :code:`cards_dir` and :code:`sets_dir`
     """
+
     def __init__(
         self,
         /,
         cards: list[tuple[str, int, str]],
         set_name: str,
         *,
-        card_back: str = 'Card Back.png',
-        cards_dir: str = 'production',
-        sets_dir: str = 'sets',
-        titans_dir: str = '/mnt/d/OneDrive/Titans Of Eden/cards',
+        card_back: str = "Card Back.png",
+        cards_dir: str = "production",
+        sets_dir: str = "sets",
+        titans_dir: str = "/mnt/d/OneDrive/Titans Of Eden/cards",
     ):
         # load in card back
-        std_back = self._load_card(
-            join(titans_dir, cards_dir, card_back)
-        )
+        std_back = self._load_card(join(titans_dir, cards_dir, card_back))
 
         # read in cards
         set = []
         for card in cards:
-
             # read in card parmaeters
             back, count, card_name = tuple(card)
 
             # load in card
             card_front = self._load_card(
-                join(titans_dir, cards_dir, f'{card_name}.png')
+                join(titans_dir, cards_dir, f"{card_name}.png")
             )
 
             # get card back
-            if back == 'Major':
+            if back == "Major":
                 card_back = std_back
             else:
                 card_back = card_front
@@ -70,8 +68,8 @@ class SetWriter:
 
         # write set pdf to file
         set[0].save(
-            join(titans_dir, sets_dir, f'{set_name}.pdf'),
-            format='PDF',
+            join(titans_dir, sets_dir, f"{set_name}.pdf"),
+            format="PDF",
             resolution=300,
             save_all=True,
             append_images=set[1:],
@@ -98,8 +96,8 @@ class SetWriter:
         file.close()
 
         # convert rgba -> rgb
-        if card.mode == 'RGBA':
-            temp = Image.new('RGB', card.size, (255, 255, 255))
+        if card.mode == "RGBA":
+            temp = Image.new("RGB", card.size, (255, 255, 255))
             temp.paste(card, mask=card.split()[3])
             card = temp
 
